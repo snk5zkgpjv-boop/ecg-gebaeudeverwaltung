@@ -37,6 +37,19 @@ export default async function handler(req, res) {
       if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) return res.status(400).json({ error: 'Ungültige Daten' });
       const payload = JSON.stringify(req.body);
       const rows = await sql`UPDATE app_state SET data = ${payload}::jsonb, revision = revision + 1, updated_at = now() WHERE id = 'main' RETURNING revision, updated_at`;
+      // Nur die Zeiten der ausdrücklich konfigurierten Person an die private
+      // Organisationszentrale spiegeln. Fehler blockieren das ECG-Speichern nicht.
+      const syncUrl = process.env.ORGANIZATION_API_URL;
+      const syncToken = process.env.ORGANIZATION_SYNC_TOKEN;
+      const syncEmail = (process.env.ORGANIZATION_SYNC_USER_EMAIL || '').trim().toLowerCase();
+      if (syncUrl && syncToken && syncEmail) {
+        const matchedUsers = (req.body.users || []).filter(u => (u.email || '').trim().toLowerCase() === syncEmail);
+        const ids = new Set(matchedUsers.map(u => u.id));
+        const entries = (req.body.timeEntries || []).filter(e => ids.has(e.userId));
+        await fetch(`${syncUrl.replace(/\/$/, '')}/api/organization/ecg-sync`, {
+          method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${syncToken}` }, body: JSON.stringify({ entries })
+        }).catch(error => console.error('organization sync error', error?.message || error));
+      }
       return res.status(200).json({ ok: true, ...rows[0] });
     }
     res.setHeader('Allow', 'GET, PUT');
