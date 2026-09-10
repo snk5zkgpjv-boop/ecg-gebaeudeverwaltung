@@ -154,15 +154,15 @@ const uid = p => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).s
 const nowISO=()=>new Date().toISOString();
 const intervals={daily:'täglich',weekly:'wöchentlich',biweekly:'14-tägig',monthly:'monatlich',quarterly:'vierteljährlich',semiannual:'halbjährlich',annual:'jährlich',asneeded:'bei Bedarf',afteruse:'nach Nutzung',afterevent:'nach Veranstaltung'};
 const roleLabels={admin:'Admin',coordinator:'Objektleitung',cleaner:'Putzkraft',backup:'Vertretung',volunteer:'Ehrenamtlich',technician:'Technik'};
-const permissionLabels={manageRooms:'Räume anlegen und bearbeiten',manageTasks:'Aufgaben und Putzpläne verwalten',manageInventory:'Inventar und Lagerorte verwalten',manageCalendar:'Kalender und Veranstaltungen verwalten',useAI:'KI-Bilderkennung verwenden',viewMaintenance:'Technik und Wartungen sehen',manageMaintenance:'Technik und Wartungen bearbeiten',viewAllTimes:'Zeiten aller Benutzer sehen'};
-const coordinatorDefaults={manageRooms:true,manageTasks:true,manageInventory:true,manageCalendar:true,useAI:true,viewMaintenance:false,manageMaintenance:false,viewAllTimes:false};
+const permissionLabels={manageRooms:'Räume anlegen und bearbeiten',manageTasks:'Aufgaben und Putzpläne verwalten',manageInventory:'Inventar und Lagerorte verwalten',manageCalendar:'Kalender und Veranstaltungen verwalten',manageIssues:'Mängel verwalten',useAI:'KI-Bilderkennung verwenden',viewMaintenance:'Technik und Wartungen sehen',manageMaintenance:'Technik und Wartungen bearbeiten',viewAllTimes:'Zeiten aller Benutzer sehen',manageUsers:'Benutzer verwalten'};
+const coordinatorDefaults={manageRooms:true,manageTasks:true,manageInventory:true,manageCalendar:true,manageIssues:true,useAI:true,viewMaintenance:false,manageMaintenance:false,viewAllTimes:false,manageUsers:false};
 function can(key){if(state.currentRole==='admin')return true;const u=currentUser();return u?.permissions?.[key]??(state.currentRole==='coordinator'?coordinatorDefaults[key]===true:state.currentRole==='technician'&&['viewMaintenance','manageMaintenance'].includes(key))}
-const ECG_CALENDAR_ID='ecg.hussenhofen@gmail.com';
+const ECG_CALENDAR_ID='';
 const ECG_CALENDAR_NAME='ECG Termine/Räume/Gemeindebus';
 const CALENDAR_SYNC_NOTE='Kalenderstand aus Google Calendar vom 07.09.2026';
-const seededCalendarEvents=[{"id": "evt_bib_0909", "title": "Bibelstunde fällt aus", "start": "2026-09-09T19:00:00+02:00", "end": "2026-09-09T20:00:00+02:00", "location": "", "cancelled": true}, {"id": "evt_music_0910", "title": "Probe Musik-Teams", "start": "2026-09-10T18:00:00+02:00", "end": "2026-09-10T22:00:00+02:00", "location": "Saal"}, {"id": "evt_chor_0910", "title": "Chorprobe", "start": "2026-09-10T19:00:00+02:00", "end": "2026-09-10T21:00:00+02:00", "location": "Jugendraum"}, {"id": "evt_gebet_0911", "title": "Gebetstunde", "start": "2026-09-11T19:00:00+02:00", "end": "2026-09-11T20:00:00+02:00", "location": ""}, {"id": "evt_jugend_0911", "title": "Jugendkreis", "start": "2026-09-11T20:15:00+02:00", "end": "2026-09-11T21:45:00+02:00", "location": "Jugendraum"}, {"id": "evt_hochzeit_0912", "title": "Hochzeit Elia & Béatrice Driesner", "start": "2026-09-12T10:00:00+02:00", "end": "2026-09-12T11:30:00+02:00", "location": "Untergeschoss"}, {"id": "evt_gd_0913", "title": "Gottesdienst", "start": "2026-09-13T10:00:00+02:00", "end": "2026-09-13T11:30:00+02:00", "location": ""}, {"id": "evt_kinder_0913", "title": "Kinderstunde (3-6 J.)", "start": "2026-09-13T10:30:00+02:00", "end": "2026-09-13T11:30:00+02:00", "location": ""}, {"id": "evt_bib_0916", "title": "Bibelstunde", "start": "2026-09-16T19:00:00+02:00", "end": "2026-09-16T20:00:00+02:00", "location": ""}, {"id": "evt_krabbel_0917", "title": "Krabbelgruppe", "start": "2026-09-17T09:30:00+02:00", "end": "2026-09-17T11:30:00+02:00", "location": "Freizeitraum"}, {"id": "evt_music_0917", "title": "Probe Musik-Teams", "start": "2026-09-17T18:00:00+02:00", "end": "2026-09-17T22:00:00+02:00", "location": "Saal"}, {"id": "evt_kinder_0918", "title": "Kinderstunde + Jungschar", "start": "2026-09-18T19:00:00+02:00", "end": "2026-09-18T20:00:00+02:00", "location": "Diverse Räume"}, {"id": "evt_gebet_0918", "title": "Gebetstunde", "start": "2026-09-18T19:00:00+02:00", "end": "2026-09-18T20:00:00+02:00", "location": ""}, {"id": "evt_teen_0918", "title": "Teenkreis", "start": "2026-09-18T19:00:00+02:00", "end": "2026-09-18T20:00:00+02:00", "location": "Teeny-Raum"}, {"id": "evt_jugend_0918", "title": "Jugendkreis", "start": "2026-09-18T20:15:00+02:00", "end": "2026-09-18T21:45:00+02:00", "location": "Jugendraum"}, {"id": "evt_gd_0920", "title": "Gottesdienst", "start": "2026-09-20T10:00:00+02:00", "end": "2026-09-20T11:30:00+02:00", "location": ""}, {"id": "evt_kinder_0920", "title": "Kinderstunde (3-6 J.)", "start": "2026-09-20T10:30:00+02:00", "end": "2026-09-20T11:30:00+02:00", "location": ""}];
+const seededCalendarEvents=[];
 
-const floorPlans={"Erdgeschoss":"/assets/embedded-1-b30b048550ec.jpg","Basisgeschoss":"/assets/embedded-2-b7ec380baa86.jpg","Dachgeschoss":"/assets/embedded-3-aa27564533c4.jpg"};
+const floorPlans={};
 
 function t(title, interval='weekly', extra={}){return {id:uid('task'),title,interval,status:'open',lastDone:null,notes:'',...extra}}
 function room(name,floor,type,tasks=[],extra={}){return {id:uid('room'),name,floor,type,tasks,notes:'',photo:null,qrId:uid('qr'),...extra}}
@@ -175,107 +175,30 @@ const wcCommon=(female=false)=>[
 ];
 const initialState={
  version:6,currentRole:'admin',activeTab:'dashboard',settings:{cloudSync:false,personalTimeTracking:true},
- templates:[
-  {id:'tpl_child',name:'Kinderstundenraum',floor:'1. OG',type:'Kinderraum',tasks:childTasks()},
-  {id:'tpl_wc_f',name:'Damen-WC',floor:'',type:'WC',tasks:wcCommon(true)},
-  {id:'tpl_wc_m',name:'Herren-WC',floor:'',type:'WC',tasks:wcCommon(false)}
- ],
- rooms:[
-  room('Foyer','EG','Foyer',[t('Boden reinigen','weekly'),t('Stehtische und Ablagen abwischen','weekly'),t('Glasflächen/Eingangstüren reinigen','weekly'),t('Sitzmöbel absaugen/abwischen','monthly'),t('Informationsständer entstauben','monthly'),t('Fenster und Glasflächen grundreinigen','quarterly')]),
-  room('Garderobe','EG','Garderobe',[t('Boden reinigen','weekly'),t('Garderobenständer abwischen','monthly'),t('Fenster und Fensterbänke reinigen','monthly'),t('Mülleimer/Opferkasten außen abwischen','monthly')]),
-  room('Erste Hilfe / BMZ','EG','Technik & Erste Hilfe',[t('Boden reinigen','weekly'),t('Liege und freie Oberflächen reinigen','weekly'),t('Erste-Hilfe-Schrank außen abwischen','monthly'),t('Defibrillatorgehäuse außen reinigen','monthly'),t('BMZ und Elektroeinbauten nur trocken entstauben','monthly'),t('Putzschrank ordnen und Verbrauchsmaterial prüfen','monthly')],{notes:'Brandmeldezentrale und Erste-Hilfe-Bereich. Technik nicht nass reinigen.'}),
-  room('Herren-WC','EG','WC',[...wcCommon(false),t('Urinale und Trennwände reinigen/desinfizieren','weekly')]),
-  room('Damen-WC','EG','WC',wcCommon(true)),
-  room('WC barrierefrei','EG','WC',[...wcCommon(false),t('Haltegriffe und Notrufzug reinigen/desinfizieren','weekly')]),
-  room('Stillraum','EG','Still-/Elternraum',[t('Boden reinigen','weekly'),t('Ablagen und Möbel abwischen','weekly'),t('Kontaktflächen desinfizieren','weekly'),t('Mülleimer leeren','weekly'),t('Fenster reinigen','quarterly')]),
-  room('Kopierraum','EG','Nebenraum',[t('Boden reinigen','weekly'),t('Freie Oberflächen entstauben','weekly'),t('Papierstaub an zugänglichen Flächen entfernen','monthly'),t('Fenster reinigen','quarterly')]),
-  room('Technikraum','EG','Technik',[t('Boden trocken/nebelfeucht reinigen','monthly'),t('Freie Fensterbank reinigen','monthly'),t('Technik nur trocken entstauben','quarterly')],{notes:'Technik nicht nass reinigen; Kabel und Geräte nicht umstellen.'}),
-  room('Foyer','1. OG','Foyer',[t('Teppichboden saugen','weekly'),t('Sitzmöbel absaugen/abwischen','monthly'),t('Stehtische abwischen','weekly'),t('Geländer/Handlauf reinigen','weekly'),t('Türen und Kontaktflächen reinigen','weekly'),t('Fenster und Glasflächen reinigen','quarterly')]),
-  room('Jugendraum Freizeitzeichen','1. OG','Jugendraum',[t('Teppichboden saugen','weekly'),t('Tische/Stühle/Möbel abwischen','weekly'),t('Küchen-/Barbereich reinigen','weekly'),t('Spüle und Armatur reinigen','weekly'),t('Mülleimer leeren','weekly'),t('Fenster reinigen','quarterly'),t('Nuki Smart Lock Akku prüfen/laden','monthly'),t('Nuki Keypad/Zahlenpad Akku/Batteriestand prüfen und laden/wechseln','monthly')],{notes:'Nuki innen an der Tür und Zahlenpad außen regelmäßig prüfen.'}),
-  room('Teenie-Raum','1. OG','Jugendraum',[t('Teppichboden saugen','weekly'),t('Tische/Stühle/Möbel abwischen','weekly'),t('Küchenzeile, Spüle und Armatur reinigen','weekly'),t('Mülleimer leeren','weekly'),t('Kühlschrank außen reinigen','monthly'),t('Fenster reinigen','quarterly')]),
-  room('Herren-WC','1. OG','WC',[...wcCommon(false),t('Urinale und Trennwände reinigen/desinfizieren','weekly')]),
-  room('Damen-WC','1. OG','WC',[...wcCommon(true),t('Dusche nur bei Benutzung: Kabine, Armaturen und Boden reinigen','afteruse'),t('Nach Duschnutzung Ablauf auf Haare prüfen','afteruse')]),
-  room('Bibliothek','1. OG','Bibliothek',[t('Fenster und Rahmen reinigen','quarterly'),t('Fensterbänke abwischen','monthly'),t('Heizkörper und Sockelleisten entstauben','quarterly')],{notes:'Laufende Reinigung erfolgt überwiegend in Eigenregie der ehrenamtlichen Bibliothekshelfer.'}),
-  room('Kinderraum 1','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 2','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 3','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 4','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 5','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 6','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 7','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 8','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 9','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderraum 10','Basisgeschoss','Kinderraum',childTasks(),{notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'}),
-  room('Kinderstundenraum Vorlage','1. OG','Kinderraum',childTasks(),{notes:'Vorlage für weitere Kinderstundenräume. Jeder Kinderstundenraum hat ein eigenes Waschbecken.'}),
-  room('Technikraum / Heizung','DG','Technik',[t('Fliesenboden reinigen','monthly'),t('Waschbecken und Armatur reinigen','monthly'),t('Fenster und Fensterbank reinigen','quarterly'),t('Anlagenbereich sichtprüfen, nichts umstellen','monthly'),t('Technik nur trocken entstauben','quarterly')],{notes:'Wechselrichter, Batteriespeicher, Pufferspeicher, Pumpen, Gastherme, Durchlauferhitzer und Ausgleichsbehälter.'})
- ],
- materials:[
-  {id:uid('mat'),name:'Mikrofasertücher',location:'Putzschrank EG',qty:28,min:12,target:30,unit:'Stk.'},
-  {id:uid('mat'),name:'WC-Reiniger',location:'Putzschrank EG',qty:3,min:2,target:6,unit:'Fl.'},
-  {id:uid('mat'),name:'Flächendesinfektion',location:'Putzschrank EG',qty:2,min:2,target:5,unit:'Fl.'},
-  {id:uid('mat'),name:'Müllbeutel',location:'Putzschrank EG',qty:18,min:20,target:50,unit:'Stk.'},
-  {id:uid('mat'),name:'Toilettenpapier',location:'Putzschrank EG',qty:48,min:24,target:72,unit:'Rollen'},
-  {id:uid('mat'),name:'Papierhandtücher',location:'Technikraum / Putzschrank 1. OG',qty:6,min:4,target:10,unit:'Pakete'}
- ],
- issues:[], shopping:[], activity:[],
- outdoorAreas:[
-  {id:'out_lawn',name:'Rasenfläche',type:'Grünfläche',tasks:[t('Rasen mähen','biweekly'),t('Kanten und Randbereiche prüfen/nacharbeiten','monthly'),t('Müll und Fremdkörper entfernen','weekly'),t('Bewässerungs-/Trockenschäden sichtprüfen','monthly')]},
-  {id:'out_court',name:'Hoffläche',type:'Hoffläche',tasks:[t('Hoffläche kehren und Müll entfernen','weekly'),t('Unkraut in Fugen entfernen','monthly'),t('Entwässerungsrinnen prüfen/reinigen','monthly'),t('Winterdienst nach Wetterlage','asneeded')]},
-  {id:'out_parking',name:'Parkplätze',type:'Parkfläche',tasks:[t('Müll und Laub entfernen','weekly'),t('Markierungen, Beschilderung und Beleuchtung sichtprüfen','monthly'),t('Winterdienst nach Wetterlage','asneeded')]},
-  {id:'out_volley',name:'Volleyballplatz',type:'Sportfläche',tasks:[t('Spielfläche auf Schäden und Fremdkörper prüfen','weekly'),t('Netz, Pfosten und Befestigungen kontrollieren','monthly'),t('Bereich sauber halten','weekly')]},
-  {id:'out_play',name:'Spielplatz',type:'Spielplatz',tasks:[t('Sichtkontrolle Spielgeräte und Fallschutz','weekly'),t('Müll, Glas und gefährliche Gegenstände entfernen','weekly'),t('Lockere Teile oder Schäden als Mangel melden','weekly'),t('Grundreinigung Spielbereich','monthly')]}
- ],
- storageLocations:[
-  {id:'loc_hh_keller',name:'Hausmeisterhaus – Garage im Keller',owner:'Gemeinde'},
-  {id:'loc_hh_neben',name:'Hausmeisterhaus – Garage neben dem Haus',owner:'Gemeinde'},
-  {id:'loc_technik',name:'Technikraum / Putzschrank 1. OG',owner:'Gemeinde'},
-  {id:'loc_putz_eg',name:'Putzschrank EG',owner:'Gemeinde'}
- ],
- inventory:[],
- 
- users:[{id:'local_admin',name:'Lokaler Admin',email:'',role:'admin',active:true}],
- currentUserId:'local_admin',
- timeEntries:[], timeRunning:null,
- currentRoomId:null, elapsedStart:null
+ templates:[],rooms:[],materials:[],issues:[],shopping:[],activity:[],outdoorAreas:[],
+ storageLocations:[],inventory:[],users:[{id:'local_admin',name:'Lokaler Admin',email:'',role:'admin',active:true}],
+ currentUserId:'local_admin',timeEntries:[],timeRunning:null,currentRoomId:null,elapsedStart:null,
+ calendarEvents:[],eventTaskDone:{},eventRules:[],eventChecklists:[],maintenanceAssets:[],loans:[],
+ eventDocumentSettings:{contactLines:[],bankAccount:'',accountHolder:'',bankName:'',deposits:[],feeRules:[],generalNotes:'',houseRules:[]}
 };
 
 let state=load();
 (function migrateCalendar(){
-  let changed=false;
-  if(!state.calendarEvents){state.calendarEvents=seededCalendarEvents;changed=true}
-  if(!state.eventTaskDone){state.eventTaskDone={};changed=true}
-  if(!state.eventRules){state.eventRules=[
-    {id:'rule_bibel',keyword:'Bibelstunde',label:'Bibelstunde',roomMatch:['Gemeindesaal'],tasks:['Bestuhlung und sichtbare Verschmutzung prüfen','Boden bei Bedarf reinigen','Mülleimer kontrollieren und leeren']},
-    {id:'rule_gebet',keyword:'Gebetstunde',label:'Gebetsstunde',roomMatch:['Gemeindesaal'],tasks:['Saal kontrollieren und bei Bedarf reinigen','Mülleimer kontrollieren und leeren']},
-    {id:'rule_kinder',keyword:'Kinderstunde',label:'Kinderstunde / Jungschar',roomMatch:['Kinderraum'],tasks:['Teppich saugen','Tische und erreichbare Oberflächen abwischen','Waschbecken und Armatur reinigen','Mülleimer leeren','Spielzeug und Mobiliar sichtprüfen']},
-    {id:'rule_teen',keyword:'Teenkreis',label:'Teenkreis',roomMatch:['Teenie','Teeny'],tasks:['Raum aufräumen und sichtbare Verschmutzung entfernen','Boden reinigen','Mülleimer leeren','Tische und Kontaktflächen kontrollieren']},
-    {id:'rule_jugend',keyword:'Jugendkreis',label:'Jugendkreis',roomMatch:['Jugendraum'],tasks:['Jugendraum aufräumen und reinigen','Boden reinigen','Mülleimer leeren','Tische und Kontaktflächen kontrollieren']},
-    {id:'rule_gd',keyword:'Gottesdienst',label:'Gottesdienst',roomMatch:['Gemeindesaal','Foyer','WC Herren','WC Damen','WC barrierefrei'],tasks:['Bereich nach Veranstaltung kontrollieren und reinigen','Mülleimer kontrollieren und leeren']},
-    {id:'rule_chor',keyword:'Chorprobe',label:'Chorprobe',roomMatch:['Jugendraum'],tasks:['Raum nach Probe kontrollieren','Boden und sichtbare Verschmutzung bei Bedarf reinigen']},
-    {id:'rule_musik',keyword:'Probe Musik-Teams',label:'Musik-Team Probe',roomMatch:['Gemeindesaal'],tasks:['Saal nach Probe kontrollieren','Boden und sichtbare Verschmutzung bei Bedarf reinigen']},
-    {id:'rule_krabbel',keyword:'Krabbelgruppe',label:'Krabbelgruppe',roomMatch:['Freizeitraum'],tasks:['Raum nach Nutzung kontrollieren','Boden reinigen','Kontaktflächen kontrollieren','Mülleimer leeren']}
-  ];changed=true}
-  if(changed)localStorage.setItem('cleaningAppState',JSON.stringify(state));
+ let changed=false;
+ if(!Array.isArray(state.calendarEvents)){state.calendarEvents=[];changed=true}
+ if(!state.eventTaskDone){state.eventTaskDone={};changed=true}
+ if(!Array.isArray(state.eventRules)){state.eventRules=[];changed=true}
+ if(!Array.isArray(state.eventChecklists)){state.eventChecklists=[];changed=true}
+ if(changed)localStorage.setItem('cleaningAppState',JSON.stringify(state));
 })();
 (function migrateV3(){
-  let changed=false;
-  if(!state.outdoorAreas){state.outdoorAreas=[
-    {id:'out_lawn',name:'Rasenfläche',type:'Grünfläche',tasks:[t('Rasen mähen','biweekly'),t('Kanten und Randbereiche prüfen/nacharbeiten','monthly'),t('Müll und Fremdkörper entfernen','weekly'),t('Bewässerungs-/Trockenschäden sichtprüfen','monthly')]},
-    {id:'out_court',name:'Hoffläche',type:'Hoffläche',tasks:[t('Hoffläche kehren und Müll entfernen','weekly'),t('Unkraut in Fugen entfernen','monthly'),t('Entwässerungsrinnen prüfen/reinigen','monthly'),t('Winterdienst nach Wetterlage','asneeded')]},
-    {id:'out_parking',name:'Parkplätze',type:'Parkfläche',tasks:[t('Müll und Laub entfernen','weekly'),t('Markierungen, Beschilderung und Beleuchtung sichtprüfen','monthly'),t('Winterdienst nach Wetterlage','asneeded')]},
-    {id:'out_volley',name:'Volleyballplatz',type:'Sportfläche',tasks:[t('Spielfläche auf Schäden und Fremdkörper prüfen','weekly'),t('Netz, Pfosten und Befestigungen kontrollieren','monthly'),t('Bereich sauber halten','weekly')]},
-    {id:'out_play',name:'Spielplatz',type:'Spielplatz',tasks:[t('Sichtkontrolle Spielgeräte und Fallschutz','weekly'),t('Müll, Glas und gefährliche Gegenstände entfernen','weekly'),t('Lockere Teile oder Schäden als Mangel melden','weekly'),t('Grundreinigung Spielbereich','monthly')]}
-  ];changed=true}
-  if(!state.storageLocations){state.storageLocations=[
-    {id:'loc_hh_keller',name:'Hausmeisterhaus – Garage im Keller',owner:'Gemeinde'},
-    {id:'loc_hh_neben',name:'Hausmeisterhaus – Garage neben dem Haus',owner:'Gemeinde'},
-    {id:'loc_technik',name:'Technikraum / Putzschrank 1. OG',owner:'Gemeinde'},
-    {id:'loc_putz_eg',name:'Putzschrank EG',owner:'Gemeinde'}
-  ];changed=true}
-  if(!state.inventory){state.inventory=[];changed=true}
-  if(!state.buildingSubTab)state.buildingSubTab='rooms';
-  if(!state.inventorySubTab)state.inventorySubTab='assets';
-  if(changed)localStorage.setItem('cleaningAppState',JSON.stringify(state));
+ let changed=false;
+ if(!Array.isArray(state.outdoorAreas)){state.outdoorAreas=[];changed=true}
+ if(!Array.isArray(state.storageLocations)){state.storageLocations=[];changed=true}
+ if(!Array.isArray(state.inventory)){state.inventory=[];changed=true}
+ if(!state.buildingSubTab)state.buildingSubTab='rooms';
+ if(!state.inventorySubTab)state.inventorySubTab='assets';
+ if(changed)localStorage.setItem('cleaningAppState',JSON.stringify(state));
 })();
 (function migrateV2(){
   let changed=false;
@@ -289,19 +212,7 @@ let state=load();
   if(u) state.currentRole=u.role;
   if(changed) localStorage.setItem('cleaningAppState',JSON.stringify(state));
 })();
-(function ensureBasisgeschossKinderraeume(){
-  const wanted = Array.from({length:10},(_,i)=>`Kinderraum ${i+1}`);
-  let changed = false;
-  for(const name of wanted){
-    if(!state.rooms.some(r=>r.name===name && r.floor==='Basisgeschoss')){
-      state.rooms.push(room(name,'Basisgeschoss','Kinderraum',childTasks(),{
-        notes:'Kinderstundenraum laut Grundriss Basisgeschoss. Eigenes Waschbecken vorhanden.'
-      }));
-      changed = true;
-    }
-  }
-  if(changed) localStorage.setItem('cleaningAppState',JSON.stringify(state));
-})();
+
 function load(){try{const s=JSON.parse(localStorage.getItem('cleaningAppState'));return s?.version?s:structuredClone(initialState)}catch{return structuredClone(initialState)}}
 // Lagerort-Verknüpfung für bestehende Verbrauchsmaterialien nachrüsten
 (function migrateMaterialLocations(){let changed=false;(state.materials||[]).forEach(m=>{if(!m.locationId&&m.location){const l=(state.storageLocations||[]).find(x=>x.name===m.location);if(l){m.locationId=l.id;changed=true}}});if(changed){try{localStorage.setItem('cleaningAppState',JSON.stringify(state))}catch(e){console.warn(e)}}})();
@@ -309,45 +220,11 @@ function load(){try{const s=JSON.parse(localStorage.getItem('cleaningAppState'))
 (function migrateEventChecklists(){let changed=false;if(!Array.isArray(state.eventChecklists)){state.eventChecklists=[];changed=true}if(changed){try{localStorage.setItem('cleaningAppState',JSON.stringify(state))}catch(e){console.warn(e)}}})();
 (function migrateTechnicalModules(){
  let changed=false;
- if(!Array.isArray(state.maintenanceAssets)){
-  state.maintenanceAssets=[
-   {id:uid('maint'),name:'Aufzug',category:'Aufzug',location:'Gebäude',parentId:'',serviceType:'external',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'Wartungs- und Prüfintervalle gemäß Wartungsvertrag/Prüfvorgaben hinterlegen.',history:[]},
-   {id:uid('maint'),name:'Heizungsanlage',category:'Heizung',location:'Technikbereich',parentId:'',serviceType:'mixed',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'Hauptanlage mit Wärmepumpen und Gastherme.',history:[]},
-   {id:uid('maint'),name:'Wärmepumpe 1',category:'Wärmepumpe',location:'Technikbereich',parentName:'Heizungsanlage',serviceType:'mixed',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]},
-   {id:uid('maint'),name:'Gastherme',category:'Gastherme',location:'Technikbereich',parentName:'Heizungsanlage',serviceType:'external',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]},
-   {id:uid('maint'),name:'PV-Anlage',category:'Photovoltaik',location:'Gebäude',parentId:'',serviceType:'mixed',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'Mit Wechselrichtern und Batteriespeicher.',history:[]},
-   {id:uid('maint'),name:'Batteriespeicher PV',category:'Batteriespeicher',location:'Technikbereich',parentName:'PV-Anlage',serviceType:'mixed',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]},
-   {id:uid('maint'),name:'Wechselrichter PV',category:'Wechselrichter',location:'Technikbereich',parentName:'PV-Anlage',serviceType:'mixed',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]},
-   {id:uid('maint'),name:'Rauchmeldeanlage',category:'Rauchmeldeanlage',location:'Gebäude',parentId:'',serviceType:'external',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'Intervall nach Hersteller/Prüfvorgabe prüfen.',history:[]},
-   {id:uid('maint'),name:'Brandmeldeanlage',category:'Brandmeldeanlage',location:'Gebäude',parentId:'',serviceType:'external',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'Intervall nach Wartungsvertrag/Prüfvorgabe prüfen.',history:[]},
-   {id:uid('maint'),name:'Lüftungsanlage Gebäude',category:'Lüftung',location:'Gebäude',parentId:'',serviceType:'mixed',intervalMonths:6,lastService:'',nextService:'',company:'',contact:'',notes:'Filter- und Wartungsintervalle individuell hinterlegen.',history:[]},
-   {id:uid('maint'),name:'Großküche Basisgeschoss',category:'Großküche',location:'Basisgeschoss',parentId:'',serviceType:'mixed',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'Technikbereich mit mehreren Einzelgeräten.',history:[]},
-   {id:uid('maint'),name:'Dampfgarer / Dampfgarraum',category:'Küchentechnik',location:'Basisgeschoss – Großküche',parentName:'Großküche Basisgeschoss',serviceType:'external',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]},
-   {id:uid('maint'),name:'Kippfritteuse / Kippgerät',category:'Küchentechnik',location:'Basisgeschoss – Großküche',parentName:'Großküche Basisgeschoss',serviceType:'external',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]},
-   {id:uid('maint'),name:'Gewerbespülmaschine',category:'Küchentechnik',location:'Basisgeschoss – Großküche',parentName:'Großküche Basisgeschoss',serviceType:'external',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]},
-   {id:uid('maint'),name:'Küchenlüftung',category:'Lüftung',location:'Basisgeschoss – Großküche',parentName:'Großküche Basisgeschoss',serviceType:'external',intervalMonths:6,lastService:'',nextService:'',company:'',contact:'',notes:'',history:[]}
-  ];changed=true
- }
+ if(!Array.isArray(state.maintenanceAssets)){state.maintenanceAssets=[];changed=true}
  if(!Array.isArray(state.loans)){state.loans=[];changed=true}
  if(!state.eventDocumentSettings){
-  state.eventDocumentSettings={
-   contactLines:['Familie Erhard: 07171 / 997 9099','Robert Erhard: 0163 / 806 9907','Tina Erhard: 0157 / 744 87548'],
-   bankAccount:'',accountHolder:'',bankName:'',
-   deposits:[150,300,500],
-   feeRules:[{label:'Freizeitraum',amount:50},{label:'Saal / Hauptbereich',amount:150},{label:'zwei Geschosse',amount:100}],
-   generalNotes:'Kaution ist bar zu hinterlegen. Nutzungsgebühren werden per Überweisung bezahlt.',
-   houseRules:[
-    'Der Aufbau ist nach vorheriger Absprache möglich.',
-    'Für die Vorbereitung notwendige Utensilien selbst mitbringen. Gemeindeinventar nur nach Freigabe verwenden.',
-    'Nägel und Klebebänder nur nach Absprache verwenden.',
-    'Alle genutzten Räume sind in den Ausgangszustand zurückzuversetzen.',
-    'Der gesamte Müll ist zu leeren und mitzunehmen.',
-    'Türen und Fenster schließen und alle Lichter ausschalten.',
-    'Zugänge zu Kinderstundenräumen und Fluchtwegen müssen frei bleiben.',
-    'Dekoration und abgestellte Gegenstände nur nach Absprache lagern; keine Haftung durch die ECG.',
-    'Eine Abnahme erfolgt zum vereinbarten Termin mit dem Hausmeister.'
-   ]
-  };changed=true
+  state.eventDocumentSettings={contactLines:[],bankAccount:'',accountHolder:'',bankName:'',deposits:[],feeRules:[],generalNotes:'',houseRules:[]};
+  changed=true;
  }
  (state.inventory||[]).forEach(a=>{if(a.loanable===undefined){a.loanable=false;changed=true}if(!a.loanStatus){a.loanStatus='available';changed=true}});
  if(changed){try{localStorage.setItem('cleaningAppState',JSON.stringify(state))}catch(e){console.warn(e)}}
@@ -410,6 +287,7 @@ function nav(){return `<nav class="tabs">${[['dashboard','⌂','Heute'],['buildi
 function currentUser(){return state.users?.find(u=>u.id===state.currentUserId)||null}
 function header(){const u=currentUser();return `<header class="topbar"><div class="brand"><div class="brandmark"><img src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"></div><div><h1>Gebäudeverwaltung</h1><small>Evangeliums-Christengemeinde Hussenhofen</small></div></div><div class="top-actions"><span class="sync">${state.settings.cloudSync?'Cloud aktiv':'Lokal gespeichert'}</span><button class="user-badge" onclick="accountDialog()"><span>👤</span><span><b>${esc(u?.name||'Nicht angemeldet')}</b><span class="email">${u?.email?` · ${esc(u.email)}`:''}</span><br><span class="meta">${esc(roleLabels[u?.role]||'')}</span></span></button></div></header>`}
 function render(){
+ if(state.activeTab==='calendar'&&!can('manageCalendar'))state.activeTab='settings';
  let body=state.activeTab==='dashboard'?dashboard():
           state.activeTab==='building'?buildingView():
           state.activeTab==='inventory'?inventoryView():
@@ -418,7 +296,7 @@ function render(){
           settingsView();
  $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${body}</main>${nav()}</div>`
 }
-window.go=id=>{state.activeTab=id;save();render()};
+window.go=id=>{if(id==='calendar'&&!can('manageCalendar')){alert('Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.');return}state.activeTab=id;save();render()};
 
 function timeElapsed(){
   if(!state.timeRunning)return 0;
@@ -440,9 +318,9 @@ function dashboard(){
     ${recent.length?`<div><div class="meta" style="margin-bottom:6px">Letzte Einträge</div>${recent.map(e=>{const eu=state.users.find(x=>x.id===e.userId);return `<div class="task"><div></div><div><div class="task-title">${esc(timeEntryLabel(e))}</div><small>${esc(eu?.name||'Benutzer')} · ${new Date(e.start).toLocaleString('de-DE')} · ${fmtDuration(new Date(e.end)-new Date(e.start))}${e.note?` · ${esc(e.note)}`:''}</small></div></div>`}).join('')}</div>`:''}
   </div>
   <div class="section-title"><h2>Heute fällig</h2></div>${dueGroups.length?dueGroups.map(([floor,items])=>`<div class="card" style="margin-bottom:12px"><div class="row" style="padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:4px"><h3 style="margin:0">${esc(floor)}</h3><div class="spacer"></div><span class="pill warn">${items.length} fällig</span></div>${items.map(x=>taskRow(x.room,x)).join('')}</div>`).join(''):'<div class="card"><div class="empty">Aktuell nichts fällig.</div></div>'}
-  <div class="section-title"><h2>Kommende Veranstaltungen</h2><div class="spacer"></div><button class="btn tiny" onclick="go('calendar')">Kalender öffnen</button></div>
-  <div class="card calendar-card">${upcoming.length?upcoming.map(ev=>{const d=eventDateLabel(ev),rule=eventRuleFor(ev);return `<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${d.time}${ev.location?` · ${esc(ev.location)}`:''}</div></div><span class="pill ${ev.cancelled?'warn':rule?'ok':''}">${ev.cancelled?'fällt aus':rule?'Aufgabenregel':'Kalender'}</span></div>`}).join(''):'<div class="empty">Keine kommenden Veranstaltungen.</div>'}</div>
-  <div class="section-title"><h2>Technik & Wartung</h2><div class="spacer"></div><button class="btn tiny" onclick="showMaintenance()">Öffnen</button></div><div class="card"><div class="row"><div><b>${(state.maintenanceAssets||[]).filter(m=>['overdue','due'].includes(maintenanceStatus(m).key)).length}</b><div class="meta">Wartungen fällig / bald fällig</div></div><div class="spacer"></div><span class="pill">🔧</span></div></div><div class="section-title"><h2>Schnellzugriff</h2></div><div class="grid room-list"><div class="card room" onclick="go('calendar')"><h3>Kalender & Veranstaltungen</h3><div class="meta">Google-Kalender und Folgeaufgaben</div></div>${state.rooms.slice(0,3).map(roomCard).join('')}</div>`
+  ${can('manageCalendar')?`<div class="section-title"><h2>Kommende Veranstaltungen</h2><div class="spacer"></div><button class="btn tiny" onclick="go('calendar')">Kalender öffnen</button></div>
+  <div class="card calendar-card">${upcoming.length?upcoming.map(ev=>{const d=eventDateLabel(ev),rule=eventRuleFor(ev);return `<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${d.time}${ev.location?` · ${esc(ev.location)}`:''}</div></div><span class="pill ${ev.cancelled?'warn':rule?'ok':''}">${ev.cancelled?'fällt aus':rule?'Aufgabenregel':'Kalender'}</span></div>`}).join(''):'<div class="empty">Keine kommenden Veranstaltungen.</div>'}</div>`:''}
+  ${can('viewMaintenance')?`<div class="section-title"><h2>Technik & Wartung</h2><div class="spacer"></div><button class="btn tiny" onclick="showMaintenance()">Öffnen</button></div><div class="card"><div class="row"><div><b>${(state.maintenanceAssets||[]).filter(m=>['overdue','due'].includes(maintenanceStatus(m).key)).length}</b><div class="meta">Wartungen fällig / bald fällig</div></div><div class="spacer"></div><span class="pill">🔧</span></div></div>`:''}<div class="section-title"><h2>Schnellzugriff</h2></div><div class="grid room-list">${can('manageCalendar')?`<div class="card room" onclick="go('calendar')"><h3>Kalender & Veranstaltungen</h3><div class="meta">Google-Kalender und Folgeaufgaben</div></div>`:''}${state.rooms.slice(0,3).map(roomCard).join('')}</div>`
 }
 window.startTime=()=>{const u=currentUser();if(!u){alert('Bitte zuerst Benutzer auswählen.');return}const roomId=$('#timeRoom')?.value||'',r=state.rooms.find(x=>x.id===roomId),note=$('#timeNote')?.value.trim()||'';state.timeRunning={id:uid('time'),userId:u.id,start:nowISO(),roomId,workLabel:r?`${r.floor} – ${r.name}`:'Allgemein / kein Raum',note};save();render();startTimerTick()};
 window.stopTime=()=>{if(!state.timeRunning)return;const e={...state.timeRunning,end:nowISO()};state.timeEntries.unshift(e);state.timeRunning=null;save();render()};
@@ -450,7 +328,7 @@ let timerInterval=null;function startTimerTick(){clearInterval(timerInterval);ti
 
 function taskRow(r,t){
  if(t.event)return `<div class="task"><button class="check" onclick="completeEventTask('${t.id}')"></button><div><div class="task-title">${esc(t.title)}</div><small>${esc(r.name)} · ${esc(r.floor)}</small><div class="event-task-source">Nach Veranstaltung: ${esc(t.event.title)} · ${new Date(t.event.end).toLocaleDateString('de-DE')}</div></div><button class="btn tiny" onclick="completeEventTask('${t.id}')">erledigt</button></div>`;
- const admin=state.currentRole==='admin';
+ const admin=can('manageTasks');
  return `<div class="task"><button class="check ${t.status==='done'?'done':''}" onclick="toggleTask('${r.id}','${t.id}')">${t.status==='done'?'✓':''}</button><div><div class="task-title">${esc(t.title)}</div><small>${esc(r.name)} · ${esc(r.floor)} · ${intervals[t.interval]||t.interval}${t.lastDone?` · zuletzt ${new Date(t.lastDone).toLocaleDateString('de-DE')}`:''}</small>${admin&&state.currentRoomId===r.id?`<div class="task-admin-actions"><button class="btn tiny" onclick="editTask('${r.id}','${t.id}')">Bearbeiten</button><button class="btn tiny danger" onclick="deleteTask('${r.id}','${t.id}')">Löschen</button></div>`:''}</div><select class="btn tiny" onchange="setTaskStatus('${r.id}','${t.id}',this.value)"><option value="open" ${t.status==='open'?'selected':''}>offen</option><option value="done" ${t.status==='done'?'selected':''}>erledigt</option><option value="na" ${t.status==='na'?'selected':''}>nicht nötig</option><option value="material" ${t.status==='material'?'selected':''}>Material fehlt</option><option value="note" ${t.status==='note'?'selected':''}>Hinweis</option></select></div>`
 }
 window.completeEventTask=id=>{state.eventTaskDone[id]={doneAt:nowISO(),userId:state.currentUserId||null};save();render()};
@@ -486,7 +364,7 @@ function outdoorView(){
  return `<div class="section-title"><h2>Außenbereiche</h2><div class="spacer"></div>${admin?'<button class="btn primary" onclick="editOutdoor()">+ Bereich</button>':''}</div>
  <div class="room-list">${state.outdoorAreas.map(a=>`<div class="card room area-card" onclick="openOutdoor('${a.id}')"><h3>${esc(a.name)}</h3><div class="meta">${esc(a.type)} · ${a.tasks.length} Aufgaben</div><div style="margin-top:9px"><span class="pill">${a.tasks.filter(due).length} fällig</span></div></div>`).join('')}</div>`
 }
-window.openOutdoor=id=>{const a=state.outdoorAreas.find(x=>x.id===id);modal(`<div class="row"><div><h2>${esc(a.name)}</h2><div class="meta">${esc(a.type)}</div></div><div class="spacer"></div>${state.currentRole==='admin'?`<button class="btn tiny" onclick="closeModal();editOutdoor('${a.id}')">Bearbeiten</button>`:''}</div><div class="card" style="box-shadow:none">${a.tasks.map(t=>`<div class="task"><button class="check ${t.status==='done'?'done':''}" onclick="toggleOutdoorTask('${a.id}','${t.id}')">${t.status==='done'?'✓':''}</button><div><div class="task-title">${esc(t.title)}</div><small>${esc(intervals[t.interval]||t.interval)}</small></div></div>`).join('')}</div><div class="row wrap" style="margin-top:12px"><button class="btn danger" onclick="closeModal();addIssue('', '${a.id}')">Mangel melden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
+window.openOutdoor=id=>{const a=state.outdoorAreas.find(x=>x.id===id);modal(`<div class="row"><div><h2>${esc(a.name)}</h2><div class="meta">${esc(a.type)}</div></div><div class="spacer"></div>${can('manageRooms')?`<button class="btn tiny" onclick="closeModal();editOutdoor('${a.id}')">Bearbeiten</button>`:''}</div><div class="card" style="box-shadow:none">${a.tasks.map(t=>`<div class="task"><button class="check ${t.status==='done'?'done':''}" onclick="toggleOutdoorTask('${a.id}','${t.id}')">${t.status==='done'?'✓':''}</button><div><div class="task-title">${esc(t.title)}</div><small>${esc(intervals[t.interval]||t.interval)}</small></div></div>`).join('')}</div><div class="row wrap" style="margin-top:12px"><button class="btn danger" onclick="closeModal();addIssue('', '${a.id}')">Mangel melden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
 window.toggleOutdoorTask=(aid,tid)=>{const a=state.outdoorAreas.find(x=>x.id===aid),t=a.tasks.find(x=>x.id===tid);t.status=t.status==='done'?'open':'done';if(t.status==='done'){t.lastDone=nowISO();t.lastDoneBy=state.currentUserId||null}save();openOutdoor(aid)};
 window.editOutdoor=id=>{const a=id?state.outdoorAreas.find(x=>x.id===id):{name:'',type:'Außenbereich',tasks:[]};modal(`<h2>${id?'Außenbereich bearbeiten':'Außenbereich anlegen'}</h2><div class="field"><label>Bezeichnung</label><input id="oaName" value="${esc(a.name)}"></div><div class="field" style="margin-top:10px"><label>Typ</label><input id="oaType" value="${esc(a.type)}"></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveOutdoor('${id||''}')">Speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>`)};
 window.saveOutdoor=id=>{const name=$('#oaName').value.trim()||'Außenbereich',type=$('#oaType').value.trim()||'Außenbereich';if(id){Object.assign(state.outdoorAreas.find(x=>x.id===id),{name,type})}else state.outdoorAreas.push({id:uid('out'),name,type,tasks:[]});save();closeModal();render()};
@@ -503,7 +381,7 @@ function roomsView(embedded=false){
  <div id="roomList" class="room-list">${state.rooms.map(roomCard).join('')}</div>`
 }
 window.filterRooms=()=>{const q=$('#roomSearch').value.toLowerCase(),f=$('#floorFilter').value;$('#roomList').innerHTML=state.rooms.filter(r=>(f==='Alle'||r.floor===f)&&(`${r.name} ${r.type}`.toLowerCase().includes(q))).map(roomCard).join('')||'<div class="empty">Kein Raum gefunden.</div>'};
-window.openRoom=id=>{state.currentRoomId=id;const r=state.rooms.find(x=>x.id===id),admin=state.currentRole==='admin';modal(`<div class="row"><div><h2>${esc(r.name)}</h2><div class="meta">${esc(r.floor)} · ${esc(r.type)}</div></div><div class="spacer"></div>${admin?`<button class="btn tiny" onclick="duplicateRoom('${r.id}')">Kopieren</button><button class="btn tiny" onclick="editRoom('${r.id}')">Bearbeiten</button>`:''}</div>${r.photo?`<img class="photo" src="${r.photo}" alt="Raumfoto">`:''}${r.notes?`<div class="notice" style="margin:12px 0">${esc(r.notes)}</div>`:''}<div class="row wrap" style="margin:12px 0"><button class="btn soft" onclick="showQR('${r.id}')">QR-Code</button><button class="btn" onclick="addIssue('${r.id}')">Hinweis/Mangel</button>${admin?`<button class="btn" onclick="addTask('${r.id}')">+ Aufgabe</button><button class="btn" onclick="pickRoomPhoto('${r.id}')">Foto</button>`:''}</div><div class="card" style="box-shadow:none">${r.tasks.map(t=>taskRow(r,t)).join('')}</div>`)};
+window.openRoom=id=>{state.currentRoomId=id;const r=state.rooms.find(x=>x.id===id),admin=can('manageRooms'),tasks=can('manageTasks');modal(`<div class="row"><div><h2>${esc(r.name)}</h2><div class="meta">${esc(r.floor)} · ${esc(r.type)}</div></div><div class="spacer"></div>${admin?`<button class="btn tiny" onclick="duplicateRoom('${r.id}')">Kopieren</button><button class="btn tiny" onclick="editRoom('${r.id}')">Bearbeiten</button>`:''}</div>${r.photo?`<img class="photo" src="${r.photo}" alt="Raumfoto">`:''}${r.notes?`<div class="notice" style="margin:12px 0">${esc(r.notes)}</div>`:''}<div class="row wrap" style="margin:12px 0"><button class="btn soft" onclick="showQR('${r.id}')">QR-Code</button><button class="btn" onclick="addIssue('${r.id}')">Hinweis/Mangel</button>${tasks?`<button class="btn" onclick="addTask('${r.id}')">+ Aufgabe</button>`:''}${admin?`<button class="btn" onclick="pickRoomPhoto('${r.id}')">Foto</button>`:''}</div><div class="card" style="box-shadow:none">${r.tasks.map(t=>taskRow(r,t)).join('')}</div>`)};
 
 function editRoom(id){
  if(!can('manageRooms')){alert('Raumverwaltung ist für dieses Konto nicht freigeschaltet.');return}
@@ -684,7 +562,7 @@ window.saveAsset=id=>{
 window.openAsset=id=>{
  const a=state.inventory.find(x=>x.id===id),loc=state.storageLocations.find(l=>l.id===a.locationId),room=state.rooms.find(r=>r.id===a.roomId);
  const where=room?`${room.floor} – ${room.name}`:(loc?.name||'ohne Zuordnung');
- modal(`<div class="row"><div><h2>${esc(a.name)}</h2><div class="meta">${esc(a.category||'')} · ${esc(where)}</div></div><div class="spacer"></div>${state.currentRole==='admin'?`<button class="btn tiny" onclick="closeModal();editAsset('${a.id}')">Bearbeiten</button>`:''}</div>
+ modal(`<div class="row"><div><h2>${esc(a.name)}</h2><div class="meta">${esc(a.category||'')} · ${esc(where)}</div></div><div class="spacer"></div>${can('manageInventory')?`<button class="btn tiny" onclick="closeModal();editAsset('${a.id}')">Bearbeiten</button>`:''}</div>
  ${a.photo?`<img class="photo" src="${a.photo}">`:''}
  <div class="card" style="box-shadow:none;margin-top:12px"><div class="meta">Inventar-ID</div><b class="asset-code">${esc(a.assetId)}</b><p><b>Zuordnung:</b> ${esc(where)}</p><p><b>Zustand:</b> ${esc(a.condition||'')}</p>${a.manufacturer||a.model?`<p><b>Gerät:</b> ${esc([a.manufacturer,a.model].filter(Boolean).join(' '))}</p>`:''}${a.serial?`<p><b>Seriennummer:</b> ${esc(a.serial)}</p>`:''}${a.nextMaintenance?`<p><b>Nächste Wartung/Prüfung:</b> ${esc(a.nextMaintenance)}</p>`:''}${a.notes?`<p>${esc(a.notes)}</p>`:''}</div>
  <div class="row wrap" style="margin-top:12px"><button class="btn" onclick="showAssetQR('${a.id}')">QR-Code</button><button class="btn danger" onclick="closeModal();addIssue('', '', '${a.id}')">Mangel melden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)
@@ -727,7 +605,7 @@ function locationContents(l){
  return {assets,mats};
 }
 function locationQrUrl(l){const payload=encodeURIComponent(`${location.origin}${location.pathname}?location=${l.id}`);return `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${payload}`}
-window.openLocation=id=>{const l=state.storageLocations.find(x=>x.id===id);if(!l)return;const c=locationContents(l);modal(`<h2>${esc(l.name)}</h2><div class="meta">${esc(l.owner||'Gemeinde')} · Dauerhafte Lagerort-ID: ${esc(l.id)}</div>${l.notes?`<div class="notice" style="margin-top:12px">${esc(l.notes)}</div>`:''}<div class="section-title"><h2>Inhalt</h2></div><div class="card"><b>Inventar</b><div style="margin-top:6px">${c.assets.length?c.assets.map(a=>`<div class="task"><div><div class="task-title">${esc(a.name)}</div><small>${esc(a.category||'Inventar')}</small></div></div>`).join(''):'<div class="empty">Kein Inventar zugeordnet.</div>'}</div><div style="height:12px"></div><b>Verbrauchsmaterial</b><div style="margin-top:6px">${c.mats.length?c.mats.map(m=>`<div class="task"><div><div class="task-title">${esc(m.name)}</div><small>${m.qty} ${esc(m.unit)}${m.notes?` · ${esc(m.notes)}`:''}</small></div></div>`).join(''):'<div class="empty">Kein Verbrauchsmaterial zugeordnet.</div>'}</div></div><div class="row wrap" style="margin-top:14px"><button class="btn" onclick="closeModal();showLocationQR('${l.id}')">QR-Code</button>${state.currentRole==='admin'?`<button class="btn primary" onclick="closeModal();editLocation('${l.id}')">Bearbeiten</button>`:''}<button class="btn" onclick="closeModal()">Schließen</button></div>`)};
+window.openLocation=id=>{const l=state.storageLocations.find(x=>x.id===id);if(!l)return;const c=locationContents(l);modal(`<h2>${esc(l.name)}</h2><div class="meta">${esc(l.owner||'Gemeinde')} · Dauerhafte Lagerort-ID: ${esc(l.id)}</div>${l.notes?`<div class="notice" style="margin-top:12px">${esc(l.notes)}</div>`:''}<div class="section-title"><h2>Inhalt</h2></div><div class="card"><b>Inventar</b><div style="margin-top:6px">${c.assets.length?c.assets.map(a=>`<div class="task"><div><div class="task-title">${esc(a.name)}</div><small>${esc(a.category||'Inventar')}</small></div></div>`).join(''):'<div class="empty">Kein Inventar zugeordnet.</div>'}</div><div style="height:12px"></div><b>Verbrauchsmaterial</b><div style="margin-top:6px">${c.mats.length?c.mats.map(m=>`<div class="task"><div><div class="task-title">${esc(m.name)}</div><small>${m.qty} ${esc(m.unit)}${m.notes?` · ${esc(m.notes)}`:''}</small></div></div>`).join(''):'<div class="empty">Kein Verbrauchsmaterial zugeordnet.</div>'}</div></div><div class="row wrap" style="margin-top:14px"><button class="btn" onclick="closeModal();showLocationQR('${l.id}')">QR-Code</button>${can('manageInventory')?`<button class="btn primary" onclick="closeModal();editLocation('${l.id}')">Bearbeiten</button>`:''}<button class="btn" onclick="closeModal()">Schließen</button></div>`)};
 window.showLocationQR=id=>{const l=state.storageLocations.find(x=>x.id===id);if(!l)return;modal(`<h2>QR-Code – ${esc(l.name)}</h2><div class="qrbox"><img src="${locationQrUrl(l)}" alt="QR-Code"><div style="margin-top:10px"><b>${esc(l.name)}</b></div><div class="meta">Dauerhafte Lagerort-ID: ${esc(l.id)}</div></div><p class="meta">Der QR-Code bleibt gültig, auch wenn der Lagerort später umbenannt wird.</p><div class="row wrap"><button class="btn primary" onclick="window.print()">Drucken / als PDF</button><button class="btn" onclick="downloadLocationQR('${l.id}')">QR als Bild exportieren</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
 window.downloadLocationQR=id=>{const l=state.storageLocations.find(x=>x.id===id);if(!l)return;const link=document.createElement('a');link.href=locationQrUrl(l);link.download=`QR-Lagerort-${(l.name||'Lagerort').replace(/[^a-z0-9_-]+/gi,'_')}.png`;link.target='_blank';document.body.appendChild(link);link.click();link.remove()};
 window.showAllLocationQRs=()=>{const locs=[...(state.storageLocations||[])].sort((a,b)=>a.name.localeCompare(b.name,'de'));modal(`<div class="row print-hide"><div><h2>QR-Codes – Lagerorte</h2><div class="meta">${locs.length} Lagerort-QR-Codes</div></div><div class="spacer"></div><button class="btn primary" onclick="window.print()">Drucken / als PDF sichern</button></div><div class="qr-sheet">${locs.map(l=>`<div class="qr-label"><img src="${locationQrUrl(l)}" alt="QR ${esc(l.name)}"><b>${esc(l.name)}</b><small>${esc(l.owner||'Gemeinde')}</small><small>Lagerort-ID: ${esc(l.id)}</small></div>`).join('')}</div><div class="row print-hide" style="margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
@@ -859,19 +737,19 @@ window.saveEventRule=id=>{const data={label:$('#erLabel').value.trim(),keyword:$
 function addMonthsISO(dateStr,months){const d=dateStr?new Date(dateStr+'T12:00:00'):new Date();if(Number.isNaN(d.getTime()))return '';d.setMonth(d.getMonth()+Number(months||0));return d.toISOString().slice(0,10)}
 function maintenanceStatus(m){if(!m.nextService)return {key:'open',label:'Termin offen',cls:'status-due'};const days=(new Date(m.nextService+'T23:59:59')-new Date())/86400000;if(days<0)return {key:'overdue',label:'überfällig',cls:'status-overdue'};if(days<=30)return {key:'due',label:'bald fällig',cls:'status-due'};return {key:'ok',label:'aktuell',cls:'status-ok'}}
 function maintenanceView(){
- const canEdit=['admin','technician'].includes(state.currentRole),items=[...(state.maintenanceAssets||[])].sort((a,b)=>{const sa=maintenanceStatus(a).key,sb=maintenanceStatus(b).key,ord={overdue:0,due:1,open:2,ok:3};return ord[sa]-ord[sb]||a.name.localeCompare(b.name,'de')});
+ const canEdit=can('manageMaintenance'),items=[...(state.maintenanceAssets||[])].sort((a,b)=>{const sa=maintenanceStatus(a).key,sb=maintenanceStatus(b).key,ord={overdue:0,due:1,open:2,ok:3};return ord[sa]-ord[sb]||a.name.localeCompare(b.name,'de')});
  return `<div class="row wrap"><div><h2>Wartung & Prüfungen</h2><div class="meta">Technische Anlagen, interne Kontrollen und externe Wartungen</div></div><div class="spacer"></div>${canEdit?'<button class="btn primary" onclick="editMaintenance()">+ Anlage / Gerät</button>':''}</div>
  <div class="maintenance-grid" style="margin-top:14px">${items.map(m=>{const s=maintenanceStatus(m);return `<div class="maintenance-card"><div class="row"><div><b>${esc(m.name)}</b><div class="meta">${esc(m.category||'Technik')} · ${esc(m.location||'')}</div></div><div class="spacer"></div><span class="pill ${s.cls}">${s.label}</span></div><div class="meta" style="margin-top:8px">${m.serviceType==='internal'?'intern':m.serviceType==='external'?'extern':'intern / extern'} · Intervall ${m.intervalMonths||'–'} Monate</div><div class="meta">Nächster Termin: ${m.nextService?new Date(m.nextService).toLocaleDateString('de-DE'):'noch nicht gesetzt'}</div><div class="row wrap" style="margin-top:10px"><button class="btn tiny" onclick="openMaintenance('${m.id}')">Öffnen</button>${canEdit?`<button class="btn tiny soft" onclick="completeMaintenance('${m.id}')">Wartung eintragen</button><button class="btn tiny" onclick="editMaintenance('${m.id}')">Bearbeiten</button>`:''}</div></div>`}).join('')}</div>`
 }
-window.showMaintenance=()=>modal(`<div>${maintenanceView()}</div><div class="row" style="margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button></div>`);
-window.openMaintenance=id=>{const m=state.maintenanceAssets.find(x=>x.id===id);if(!m)return;const s=maintenanceStatus(m);modal(`<div class="row"><div><h2>${esc(m.name)}</h2><div class="meta">${esc(m.category||'')} · ${esc(m.location||'')}</div></div><div class="spacer"></div><span class="pill ${s.cls}">${s.label}</span></div><div class="card" style="box-shadow:none;margin-top:12px"><p><b>Art:</b> ${m.serviceType==='internal'?'intern':m.serviceType==='external'?'extern':'intern / extern'}</p><p><b>Intervall:</b> ${m.intervalMonths||'–'} Monate</p><p><b>Letzte Wartung:</b> ${m.lastService?new Date(m.lastService).toLocaleDateString('de-DE'):'–'}</p><p><b>Nächste Wartung:</b> ${m.nextService?new Date(m.nextService).toLocaleDateString('de-DE'):'–'}</p>${m.company?`<p><b>Firma:</b> ${esc(m.company)}${m.contact?` · ${esc(m.contact)}`:''}</p>`:''}${m.notes?`<p>${esc(m.notes)}</p>`:''}</div><div class="section-title"><h2>Historie</h2></div><div class="card" style="box-shadow:none">${(m.history||[]).length?m.history.map(h=>`<div class="task"><div></div><div><b>${new Date(h.date).toLocaleDateString('de-DE')}</b><small>${esc(h.type||'Wartung')} · ${esc(h.by||'')}${h.note?` · ${esc(h.note)}`:''}</small></div></div>`).join(''):'<div class="empty">Noch keine Wartung dokumentiert.</div>'}</div><div class="row wrap" style="margin-top:12px">${['admin','technician'].includes(state.currentRole)?`<button class="btn primary" onclick="closeModal();completeMaintenance('${m.id}')">Wartung eintragen</button><button class="btn" onclick="closeModal();editMaintenance('${m.id}')">Bearbeiten</button>`:''}<button class="btn" onclick="closeModal()">Schließen</button></div>`)};
+window.showMaintenance=()=>{if(!can('viewMaintenance')){alert('Technik und Wartungen sind für dieses Konto nicht freigeschaltet.');return}modal(`<div>${maintenanceView()}</div><div class="row" style="margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
+window.openMaintenance=id=>{const m=state.maintenanceAssets.find(x=>x.id===id);if(!m||!can('viewMaintenance'))return;const s=maintenanceStatus(m);modal(`<div class="row"><div><h2>${esc(m.name)}</h2><div class="meta">${esc(m.category||'')} · ${esc(m.location||'')}</div></div><div class="spacer"></div><span class="pill ${s.cls}">${s.label}</span></div><div class="card" style="box-shadow:none;margin-top:12px"><p><b>Art:</b> ${m.serviceType==='internal'?'intern':m.serviceType==='external'?'extern':'intern / extern'}</p><p><b>Intervall:</b> ${m.intervalMonths||'–'} Monate</p><p><b>Letzte Wartung:</b> ${m.lastService?new Date(m.lastService).toLocaleDateString('de-DE'):'–'}</p><p><b>Nächste Wartung:</b> ${m.nextService?new Date(m.nextService).toLocaleDateString('de-DE'):'–'}</p>${m.company?`<p><b>Firma:</b> ${esc(m.company)}${m.contact?` · ${esc(m.contact)}`:''}</p>`:''}${m.notes?`<p>${esc(m.notes)}</p>`:''}</div><div class="section-title"><h2>Historie</h2></div><div class="card" style="box-shadow:none">${(m.history||[]).length?m.history.map(h=>`<div class="task"><div></div><div><b>${new Date(h.date).toLocaleDateString('de-DE')}</b><small>${esc(h.type||'Wartung')} · ${esc(h.by||'')}${h.note?` · ${esc(h.note)}`:''}</small></div></div>`).join(''):'<div class="empty">Noch keine Wartung dokumentiert.</div>'}</div><div class="row wrap" style="margin-top:12px">${can('manageMaintenance')?`<button class="btn primary" onclick="closeModal();completeMaintenance('${m.id}')">Wartung eintragen</button><button class="btn" onclick="closeModal();editMaintenance('${m.id}')">Bearbeiten</button>`:''}<button class="btn" onclick="closeModal()">Schließen</button></div>`)};
 window.editMaintenance=id=>{if(!['admin','technician'].includes(state.currentRole))return;const m=id?state.maintenanceAssets.find(x=>x.id===id):{name:'',category:'Technikgerät',location:'',serviceType:'mixed',intervalMonths:12,lastService:'',nextService:'',company:'',contact:'',notes:''};modal(`<h2>${id?'Anlage / Gerät bearbeiten':'Anlage / Gerät anlegen'}</h2><div class="formgrid"><div class="field"><label>Bezeichnung</label><input id="mtName" value="${esc(m.name)}"></div><div class="field"><label>Kategorie</label><input id="mtCat" value="${esc(m.category||'')}"></div><div class="field"><label>Standort</label><input id="mtLoc" value="${esc(m.location||'')}"></div><div class="field"><label>Wartungsart</label><select id="mtType"><option value="internal" ${m.serviceType==='internal'?'selected':''}>intern</option><option value="external" ${m.serviceType==='external'?'selected':''}>extern</option><option value="mixed" ${m.serviceType==='mixed'?'selected':''}>intern / extern</option></select></div><div class="field"><label>Intervall (Monate)</label><input id="mtInt" type="number" min="0" value="${m.intervalMonths||12}"></div><div class="field"><label>Nächster Termin</label><input id="mtNext" type="date" value="${esc(m.nextService||'')}"></div><div class="field"><label>Wartungsfirma</label><input id="mtCompany" value="${esc(m.company||'')}"></div><div class="field"><label>Ansprechpartner / Kontakt</label><input id="mtContact" value="${esc(m.contact||'')}"></div><div class="field wide"><label>Notizen</label><textarea id="mtNotes" rows="3">${esc(m.notes||'')}</textarea></div></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveMaintenance('${id||''}')">Speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>`)};
 window.saveMaintenance=id=>{const data={name:$('#mtName').value.trim()||'Technikgerät',category:$('#mtCat').value.trim()||'Technik',location:$('#mtLoc').value.trim(),serviceType:$('#mtType').value,intervalMonths:+($('#mtInt').value||0),nextService:$('#mtNext').value,company:$('#mtCompany').value.trim(),contact:$('#mtContact').value.trim(),notes:$('#mtNotes').value.trim()};if(id)Object.assign(state.maintenanceAssets.find(x=>x.id===id),data);else state.maintenanceAssets.push({id:uid('maint'),...data,lastService:'',history:[]});save();closeModal();render()};
 window.completeMaintenance=id=>{const m=state.maintenanceAssets.find(x=>x.id===id);if(!m)return;modal(`<h2>Wartung / Prüfung eintragen</h2><div class="field"><label>Datum</label><input id="mcDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field" style="margin-top:10px"><label>Durchgeführt von / Firma</label><input id="mcBy" value="${esc(currentUser()?.name||m.company||'')}"></div><div class="field" style="margin-top:10px"><label>Art</label><input id="mcType" value="Wartung / Prüfung"></div><div class="field" style="margin-top:10px"><label>Bemerkung</label><textarea id="mcNote" rows="3"></textarea></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveMaintenanceCompletion('${id}')">Eintragen</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>`)};
 window.saveMaintenanceCompletion=id=>{const m=state.maintenanceAssets.find(x=>x.id===id);if(!m)return;const date=$('#mcDate').value||new Date().toISOString().slice(0,10),by=$('#mcBy').value.trim(),type=$('#mcType').value.trim()||'Wartung / Prüfung',note=$('#mcNote').value.trim();m.history=m.history||[];m.history.unshift({id:uid('mh'),date,by,type,note,userId:state.currentUserId||''});m.lastService=date;if(m.intervalMonths)m.nextService=addMonthsISO(date,m.intervalMonths);save();closeModal();render();openMaintenance(id)};
 
 function settingsView(){
-  const admin=state.currentRole==='admin',tech=['admin','technician'].includes(state.currentRole),activeUsers=(state.users||[]).filter(u=>u.active!==false).length;
+  const admin=state.currentRole==='admin',tech=can('viewMaintenance'),calendar=can('manageCalendar'),userAdmin=can('manageUsers'),activeUsers=(state.users||[]).filter(u=>u.active!==false).length;
   return `${admin?`<div class="section-title"><h2>Verwaltung</h2></div>
   <div class="quick-admin">
     <div class="card" onclick="showMaintenance()"><div class="row"><div><b>🔧 Wartung & Prüfungen</b><div class="meta">Technische Anlagen, Termine und Wartungshistorie</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
@@ -881,7 +759,7 @@ function settingsView(){
     <div class="card" onclick="go('calendar')"><div class="row"><div><b>📅 Kalender & Veranstaltungen</b><div class="meta">Termine und automatische Folgeaufgaben</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
     <div class="card" onclick="showTimeReport()"><div class="row"><div><b>⏱ Zeiterfassung</b><div class="meta">Arbeitszeiten aller Benutzer einsehen</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
   </div>`:''}
-  ${!admin?`${tech?`<div class="section-title"><h2>Technik</h2></div><div class="quick-admin"><div class="card" onclick="showMaintenance()"><b>🔧 Wartung & Prüfungen</b><div class="meta">Anlagen ansehen und Wartungen eintragen</div></div></div>`:''}<div class="section-title"><h2>Mein Benutzerkonto</h2></div><div class="card">${userSummaryCard(currentUser())}</div>`:''}
+  ${!admin?`${tech||calendar||userAdmin?`<div class="section-title"><h2>Freigegebene Bereiche</h2></div><div class="quick-admin">${tech?`<div class="card" onclick="showMaintenance()"><b>🔧 Wartung & Prüfungen</b><div class="meta">Anlagen ansehen${can('manageMaintenance')?' und bearbeiten':''}</div></div>`:''}${calendar?`<div class="card" onclick="go('calendar')"><b>📅 Kalender & Veranstaltungen</b><div class="meta">Termine, Folgeaufgaben und Abnahmelisten</div></div>`:''}${userAdmin?`<div class="card" onclick="showUserManagement()"><b>👥 Benutzerverwaltung</b><div class="meta">Benutzer, Rollen und Rechte verwalten</div></div>`:''}</div>`:''}<div class="section-title"><h2>Mein Benutzerkonto</h2></div><div class="card">${userSummaryCard(currentUser())}</div>`:''}
   <div class="section-title"><h2>Infomaterial & Grundrisse</h2></div>
   <div class="floorplan-grid">${Object.entries(floorPlans).map(([name,src])=>`<div class="card floorplan-card"><div class="row"><b>${esc(name)}</b><div class="spacer"></div><button class="btn tiny" onclick="showFloorPlan('${name}')">Groß öffnen</button></div><img src="${src}" alt="Grundriss ${esc(name)}" style="margin-top:10px"></div>`).join('')}</div>
   <div class="section-title"><h2>Cloud & Daten</h2></div><div class="card"><div class="task"><div></div><div><div class="task-title">Cloud-Synchronisierung</div><small>Für gemeinsame Nutzung mit mehreren Geräten.</small></div><input type="checkbox" ${state.settings.cloudSync?'checked':''} onchange="toggleCloud(this.checked)"></div><div class="row wrap" style="margin-top:12px"><button class="btn" onclick="exportData()">JSON-Backup exportieren</button><button class="btn" onclick="importData()">Backup importieren</button><button class="btn danger" onclick="resetDemo()">Auf Ausgangsdaten zurücksetzen</button></div></div>`
@@ -891,7 +769,7 @@ function userSummaryCard(u){
  return `<div class="row"><div><b>${esc(u.name)}</b><div class="meta">${esc(u.email||'keine E-Mail hinterlegt')} · ${esc(roleLabels[u.role])}</div></div><div class="spacer"></div><span class="pill ${u.active===false?'warn':'ok'}">${u.active===false?'inaktiv':'aktiv'}</span></div>`
 }
 window.showUserManagement=()=>{
- if(state.currentRole!=='admin'){alert('Nur Administratoren können Benutzer verwalten.');return}
+ if(!can('manageUsers')){alert('Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.');return}
  const users=state.users||[];
  modal(`<div class="row"><div><h2>Benutzerverwaltung</h2><div class="meta">Benutzer, Rollen und Zugänge verwalten</div></div><div class="spacer"></div><button class="btn primary" onclick="closeModal();editUser()">+ Benutzer</button></div>
  <div class="notice" style="margin:12px 0">Rollen bestimmen, welche Bereiche bearbeitet werden dürfen. Benutzer können deaktiviert werden, ohne ihre bisherigen Zeiterfassungen oder Zuordnungen zu verlieren.</div>
@@ -906,11 +784,12 @@ window.showUserManagement=()=>{
  <div class="section-title"><h2>Rollen</h2></div>
  <div class="card" style="box-shadow:none">
    <div class="user-row"><div><b>Admin</b><div class="meta">Volle Verwaltung: Räume, Aufgaben, Mängel, Inventar, Benutzer, Kalenderregeln und Auswertungen.</div></div></div>
+   <div class="user-row"><div><b>Objektleitung</b><div class="meta">Räume, Aufgaben, Inventar, Kalender, Mängel und KI; Technik, fremde Zeiten und Benutzerverwaltung nur bei ausdrücklicher Freigabe.</div></div></div>
    <div class="user-row"><div><b>Putzkraft</b><div class="meta">Aufgaben abarbeiten, Mängel melden und eigene Zeiten erfassen.</div></div></div>
    <div class="user-row"><div><b>Vertretung</b><div class="meta">Wie Putzkraft, für zeitweise Vertretung vorgesehen.</div></div></div>
    <div class="user-row"><div><b>Ehrenamtlich</b><div class="meta">Für freiwillige Helfer mit einfachem Zugriff auf zugewiesene Aufgaben und Meldungen.</div></div></div><div class="user-row"><div><b>Technik</b><div class="meta">Technische Anlagen und Wartungen ansehen, Wartungen/Prüfungen eintragen und technische Mängel dokumentieren.</div></div></div>
  </div>
- <div class="notice" style="margin-top:12px">Benutzer melden sich sicher mit ihrer eigenen E-Mail-Adresse und einem einmaligen Code an. Die Sitzung bleibt auf dem Gerät gespeichert.</div>
+ <div class="notice" style="margin-top:12px">Benutzer melden sich mit ihrer eigenen E-Mail-Adresse und ihrem Kennwort an. Beim ersten Login muss ein vorläufiges Kennwort geändert werden.</div>
  <div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)
 };
 window.showFloorPlan=name=>modal(`<h2>Grundriss – ${esc(name)}</h2><img src="${floorPlans[name]}" style="width:100%;max-height:72vh;object-fit:contain;border:1px solid var(--line);border-radius:12px"><div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`);
@@ -932,7 +811,7 @@ window.backToEmail=()=>{document.getElementById('authStepCode').classList.add('a
 window.accountDialog=()=>{const u=currentUser();modal(`<h2>Mein Konto</h2><div class="card" style="box-shadow:none">${userSummaryCard(u)}</div><p class="meta">Du bleibst auf diesem Gerät angemeldet, bis du dich bewusst abmeldest oder die Sitzung ungültig wird.</p><div class="row wrap" style="margin-top:12px">${state.currentRole==='admin'?`<button class="btn" onclick="closeModal();showUserManagement()">Benutzerverwaltung</button>`:''}<button class="btn danger" onclick="signOutApp()">Abmelden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
 window.signOutApp=async()=>{try{await window.ecgAuth.signOut()}catch{}authSession=null;closeModal();showLoginGate('Du wurdest abgemeldet.')};
 window.editUser=id=>{
- if(state.currentRole!=='admin'){alert('Nur Administratoren können Benutzer verwalten.');return}
+ if(!can('manageUsers')){alert('Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.');return}
  const u=id?state.users.find(x=>x.id===id):{name:'',email:'',role:'coordinator',active:true,permissions:{...coordinatorDefaults}};
  modal(`<h2>${id?'Benutzer bearbeiten':'Benutzer anlegen'}</h2>
  <div class="formgrid">
@@ -947,7 +826,7 @@ window.editUser=id=>{
  <div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveUser('${id||''}')">Speichern</button>${id&&id!==state.currentUserId?`<button class="btn danger" onclick="deleteUser('${id}')">Löschen</button>`:''}<div class="spacer"></div><button class="btn" onclick="closeModal();showUserManagement()">Abbrechen</button></div>`)
 };
 window.saveUser=async id=>{
- if(state.currentRole!=='admin'){alert('Nur Administratoren können Benutzer verwalten.');return}
+ if(!can('manageUsers')){alert('Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.');return}
  const name=$('#uName').value.trim(),email=$('#uEmail').value.trim().toLowerCase(),role=$('#uRole').value,active=$('#uActive').value==='yes',temporaryPassword=$('#uPassword').value,permissions=Object.fromEntries([...document.querySelectorAll('.user-permission')].map(x=>[x.value,x.checked]));
  if(!name||!email){alert('Bitte Name und E-Mail eintragen.');return}
  if(state.users.some(x=>x.id!==id&&(x.email||'').toLowerCase()===email)){alert('Diese E-Mail ist bereits vergeben.');return}
@@ -967,7 +846,7 @@ window.saveUser=async id=>{
  try{await syncCloud();const target=id?state.users.find(x=>x.id===id):state.users[state.users.length-1];const r=await fetch('/api/auth/admin-user',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({appUserId:target.id,email,name,active,temporaryPassword})});const b=await r.json();if(!r.ok)throw new Error(b.error||'Zugang konnte nicht gespeichert werden.');closeModal();showUserManagement()}catch(e){alert(e.message||'Benutzer konnte nicht gespeichert werden.')}
 };
 window.deleteUser=id=>{
- if(state.currentRole!=='admin'){alert('Nur Administratoren können Benutzer verwalten.');return}
+ if(!can('manageUsers')){alert('Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.');return}
  const u=state.users.find(x=>x.id===id);if(!u)return;
  if(id===state.currentUserId){alert('Der aktuell angemeldete Benutzer kann nicht gelöscht werden.');return}
  if(u.role==='admin'&&state.users.filter(x=>x.id!==id&&x.role==='admin'&&x.active!==false).length===0){alert('Mindestens ein aktiver Administrator muss erhalten bleiben.');return}
@@ -1004,7 +883,7 @@ window.sendLegacyCode=async()=>{const email=$('#legacyEmail').value.trim().toLow
 window.finishLegacyMigration=async()=>{const st=$('#authStatus');try{const email=$('#legacyEmail').value,otp=$('#legacyOtp').value,password=$('#legacyPassword').value,r=await window.ecgAuth.signIn.emailOtp({email,otp});if(r.error)throw r.error;const t=await window.ecgAuth.token();if(t.error||!t.data?.token)throw new Error('PIN-Anmeldung fehlgeschlagen.');const mr=await fetch('/api/auth/migrate',{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${t.data.token}`},body:JSON.stringify({password})}),b=await mr.json();if(!mr.ok)throw new Error(b.error);await bootAuth()}catch(e){st.textContent=e.message||'Umstellung fehlgeschlagen.'}};
 window.changePasswordDialog=forced=>modal(`<h2>${forced?'Vorläufiges Kennwort ändern':'Kennwort ändern'}</h2><p class="meta">Das neue Kennwort muss mindestens 10 Zeichen haben.</p><div class="field"><label>Bisheriges Kennwort</label><input id="oldPw" type="password"></div><div class="field" style="margin-top:10px"><label>Neues Kennwort</label><input id="newPw" type="password"></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="submitPasswordChange()">Ändern</button>${forced?'':'<button class="btn" onclick="closeModal()">Abbrechen</button>'}</div>`);
 window.submitPasswordChange=async()=>{const r=await fetch('/api/auth/change-password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({currentPassword:$('#oldPw').value,newPassword:$('#newPw').value})}),b=await r.json();if(!r.ok)return alert(b.error);alert(b.message);await signOutApp()};
-window.accountDialog=()=>{const u=currentUser();modal(`<h2>Mein Konto</h2><div class="card" style="box-shadow:none">${userSummaryCard(u)}</div><div class="row wrap" style="margin-top:12px">${state.currentRole==='admin'?'<button class="btn" onclick="closeModal();showUserManagement()">Benutzerverwaltung</button>':''}<button class="btn" onclick="closeModal();changePasswordDialog(false)">Kennwort ändern</button><button class="btn danger" onclick="signOutApp()">Abmelden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
+window.accountDialog=()=>{const u=currentUser();modal(`<h2>Mein Konto</h2><div class="card" style="box-shadow:none">${userSummaryCard(u)}</div><div class="row wrap" style="margin-top:12px">${can('manageUsers')?'<button class="btn" onclick="closeModal();showUserManagement()">Benutzerverwaltung</button>':''}<button class="btn" onclick="closeModal();changePasswordDialog(false)">Kennwort ändern</button><button class="btn danger" onclick="signOutApp()">Abmelden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
 window.signOutApp=async()=>{try{await fetch('/api/auth/logout',{method:'POST'})}catch{}authSession=null;closeModal();showLoginGate('Du wurdest abgemeldet.')};
 window.submitResetPassword=async()=>{const token=new URLSearchParams(location.search).get('reset'),r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token,newPassword:$('#resetPw').value})}),b=await r.json();if(!r.ok)return $('#resetStatus').textContent=b.error;history.replaceState({},'',location.pathname);showLoginGate('Kennwort geändert. Du kannst dich jetzt anmelden.')};
 function showResetGate(){document.body.insertAdjacentHTML('beforeend',`<div class="auth-gate" id="authGate"><div class="auth-card"><h2>Neues Kennwort</h2><div class="field"><label>Neues Kennwort (mindestens 10 Zeichen)</label><input id="resetPw" type="password"></div><button class="btn primary" style="width:100%;margin-top:12px" onclick="submitResetPassword()">Kennwort speichern</button><div id="resetStatus" class="auth-status"></div></div></div>`)}
