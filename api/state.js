@@ -1,8 +1,157 @@
-import {neon} from '@neondatabase/serverless';
-import {requireUser} from '../lib/auth.js';
-const defaults={coordinator:{manageRooms:true,manageTasks:true,manageInventory:true,manageCalendar:true,useAI:true,viewMaintenance:false,manageMaintenance:false,manageUsers:false,viewAllTimes:false},technician:{viewMaintenance:true,manageMaintenance:true}};
-const has=(p,k)=>p.role==='admin'||(p.permissions?.[k]??defaults[p.role]?.[k]??false),clone=x=>structuredClone(x||{});
-function visible(s,p){if(p.role==='admin')return s;const o=clone(s),id=p.id;o.users=(s.users||[]).filter(u=>u.id===id);o.timeEntries=(s.timeEntries||[]).filter(e=>e.userId===id);if(o.timeRunning?.userId!==id)o.timeRunning=null;if(!has(p,'viewMaintenance'))delete o.maintenanceAssets;return o}
-function taskProgress(old,inc){const rooms=new Map((inc||[]).map(r=>[r.id,r]));return(old||[]).map(r=>{const nr=rooms.get(r.id);if(!nr)return r;return{...r,tasks:(r.tasks||[]).map(t=>{const nt=(nr.tasks||[]).find(x=>x.id===t.id);return nt?{...t,status:nt.status,lastDone:nt.lastDone,lastDoneBy:nt.lastDoneBy}:t})}})}
-function accepted(cur,inc,p){if(p.role==='admin')return inc;const o=clone(cur),id=p.id;o.timeEntries=[...(cur.timeEntries||[]).filter(e=>e.userId!==id),...(inc.timeEntries||[]).filter(e=>e.userId===id)];o.timeRunning=inc.timeRunning?.userId===id?inc.timeRunning:(cur.timeRunning?.userId===id?null:cur.timeRunning);o.eventTaskDone={...(cur.eventTaskDone||{}),...(inc.eventTaskDone||{})};o.issues=inc.issues||cur.issues;if(has(p,'manageRooms')){o.rooms=inc.rooms||cur.rooms;o.outdoorAreas=inc.outdoorAreas||cur.outdoorAreas;o.templates=inc.templates||cur.templates}else o.rooms=taskProgress(cur.rooms,inc.rooms);if(has(p,'manageInventory'))for(const k of ['inventory','materials','storageLocations','loans'])o[k]=inc[k]||cur[k];if(has(p,'manageCalendar'))for(const k of ['calendarEvents','eventRules','eventChecklists','eventDocumentSettings'])o[k]=inc[k]||cur[k];if(has(p,'manageMaintenance'))o.maintenanceAssets=inc.maintenanceAssets||cur.maintenanceAssets;return o}
-export default async function handler(req,res){if(!process.env.DATABASE_URL)return res.status(500).json({error:'DATABASE_URL fehlt'});const sql=neon(process.env.DATABASE_URL),auth=await requireUser(req,res,sql);if(!auth)return;try{if(req.method==='GET')return res.status(200).json(visible(auth.state,auth.profile));if(req.method==='PUT'){if(!req.body||typeof req.body!=='object'||Array.isArray(req.body))return res.status(400).json({error:'Ungültige Daten'});const next=accepted(auth.state,req.body,auth.profile),payload=JSON.stringify(next);const rows=await sql`UPDATE app_state SET data=${payload}::jsonb,revision=revision+1,updated_at=now() WHERE id='main' RETURNING revision,updated_at`;const url=process.env.ORGANIZATION_API_URL,token=process.env.ORGANIZATION_SYNC_TOKEN,email=(process.env.ORGANIZATION_SYNC_USER_EMAIL||'').trim().toLowerCase();if(url&&token&&email){const ids=new Set((next.users||[]).filter(u=>(u.email||'').trim().toLowerCase()===email).map(u=>u.id)),entries=(next.timeEntries||[]).filter(e=>ids.has(e.userId));await fetch(`${url.replace(/\/$/,'')}/api/organization/ecg-sync`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({entries})}).catch(e=>console.error('organization sync error',e?.message||e))}return res.status(200).json({ok:true,...rows[0]})}res.setHeader('Allow','GET, PUT');return res.status(405).json({error:'Methode nicht erlaubt'})}catch(e){console.error('state api error',e);return res.status(500).json({error:'Datenbankfehler'})}}
+import { neon } from '@neondatabase/serverless';
+import { requireUser } from '../lib/auth.js';
+
+const defaults = {
+  coordinator: {
+    manageRooms: true,
+    manageTasks: true,
+    manageInventory: true,
+    manageCalendar: true,
+    manageIssues: true,
+    useAI: true,
+    viewMaintenance: false,
+    manageMaintenance: false,
+    manageUsers: false,
+    viewAllTimes: false,
+  },
+  technician: { viewMaintenance: true, manageMaintenance: true },
+};
+
+const has = (profile, key) => profile.role === 'admin' || (profile.permissions?.[key] ?? defaults[profile.role]?.[key] ?? false);
+const clone = (value) => structuredClone(value || {});
+
+function visible(state, profile) {
+  if (profile.role === 'admin') return state;
+  const output = clone(state);
+  const userId = profile.id;
+  if (!has(profile, 'manageUsers')) output.users = (state.users || []).filter((user) => user.id === userId);
+  if (!has(profile, 'viewAllTimes')) output.timeEntries = (state.timeEntries || []).filter((entry) => entry.userId === userId);
+  if (!has(profile, 'viewAllTimes') && output.timeRunning?.userId !== userId) output.timeRunning = null;
+  if (!has(profile, 'viewMaintenance')) delete output.maintenanceAssets;
+  if (!has(profile, 'manageCalendar')) {
+    for (const key of ['calendarEvents', 'eventRules', 'eventChecklists', 'eventDocumentSettings']) delete output[key];
+  }
+  return output;
+}
+
+function mergeTaskProgress(currentRooms, incomingRooms) {
+  const incoming = new Map((incomingRooms || []).map((room) => [room.id, room]));
+  return (currentRooms || []).map((room) => {
+    const nextRoom = incoming.get(room.id);
+    if (!nextRoom) return room;
+    return {
+      ...room,
+      tasks: (room.tasks || []).map((task) => {
+        const nextTask = (nextRoom.tasks || []).find((item) => item.id === task.id);
+        return nextTask ? { ...task, status: nextTask.status, lastDone: nextTask.lastDone, lastDoneBy: nextTask.lastDoneBy } : task;
+      }),
+    };
+  });
+}
+
+function keepExistingTasks(incomingRooms, currentRooms) {
+  const current = new Map((currentRooms || []).map((room) => [room.id, room]));
+  return (incomingRooms || []).map((room) => ({ ...room, tasks: current.get(room.id)?.tasks || [] }));
+}
+
+function mergeTaskDefinitions(currentRooms, incomingRooms) {
+  const incoming = new Map((incomingRooms || []).map((room) => [room.id, room]));
+  return (currentRooms || []).map((room) => ({ ...room, tasks: incoming.get(room.id)?.tasks || room.tasks || [] }));
+}
+
+function mergeReportedIssues(currentIssues, incomingIssues, userId) {
+  const known = new Set((currentIssues || []).map((issue) => issue.id));
+  const created = (incomingIssues || [])
+    .filter((issue) => issue?.id && !known.has(issue.id))
+    .map((issue) => ({ ...issue, createdBy: userId }));
+  return [...created, ...(currentIssues || [])];
+}
+
+function accepted(current, incoming, profile) {
+  if (profile.role === 'admin') return incoming;
+  const output = clone(current);
+  const userId = profile.id;
+
+  if (has(profile, 'viewAllTimes')) {
+    output.timeEntries = incoming.timeEntries || current.timeEntries;
+    output.timeRunning = incoming.timeRunning || null;
+  } else {
+    output.timeEntries = [
+      ...(current.timeEntries || []).filter((entry) => entry.userId !== userId),
+      ...(incoming.timeEntries || []).filter((entry) => entry.userId === userId),
+    ];
+    output.timeRunning = incoming.timeRunning?.userId === userId
+      ? incoming.timeRunning
+      : (current.timeRunning?.userId === userId ? null : current.timeRunning);
+  }
+
+  output.eventTaskDone = { ...(current.eventTaskDone || {}), ...(incoming.eventTaskDone || {}) };
+  output.issues = has(profile, 'manageIssues')
+    ? (incoming.issues || current.issues)
+    : mergeReportedIssues(current.issues, incoming.issues, userId);
+
+  if (has(profile, 'manageUsers')) output.users = incoming.users || current.users;
+
+  if (has(profile, 'manageRooms')) {
+    output.rooms = has(profile, 'manageTasks')
+      ? (incoming.rooms || current.rooms)
+      : keepExistingTasks(incoming.rooms, current.rooms);
+    output.outdoorAreas = has(profile, 'manageTasks')
+      ? (incoming.outdoorAreas || current.outdoorAreas)
+      : keepExistingTasks(incoming.outdoorAreas, current.outdoorAreas);
+  } else if (has(profile, 'manageTasks')) {
+    output.rooms = mergeTaskDefinitions(current.rooms, incoming.rooms);
+    output.outdoorAreas = mergeTaskDefinitions(current.outdoorAreas, incoming.outdoorAreas);
+  } else {
+    output.rooms = mergeTaskProgress(current.rooms, incoming.rooms);
+    output.outdoorAreas = mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas);
+  }
+  if (has(profile, 'manageTasks')) output.templates = incoming.templates || current.templates;
+
+  if (has(profile, 'manageInventory')) {
+    for (const key of ['inventory', 'materials', 'storageLocations', 'loans', 'shopping']) output[key] = incoming[key] || current[key];
+  }
+  if (has(profile, 'manageCalendar')) {
+    for (const key of ['calendarEvents', 'eventRules', 'eventChecklists', 'eventDocumentSettings']) output[key] = incoming[key] || current[key];
+  }
+  if (has(profile, 'manageMaintenance')) output.maintenanceAssets = incoming.maintenanceAssets || current.maintenanceAssets;
+  return output;
+}
+
+export default async function handler(req, res) {
+  if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
+  const sql = neon(process.env.DATABASE_URL);
+  const auth = await requireUser(req, res, sql);
+  if (!auth) return;
+
+  try {
+    if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
+    if (req.method === 'PUT') {
+      if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+        return res.status(400).json({ error: 'Ungültige Daten' });
+      }
+      const next = accepted(auth.state, req.body, auth.profile);
+      const payload = JSON.stringify(next);
+      const rows = await sql`UPDATE app_state SET data=${payload}::jsonb,revision=revision+1,updated_at=now() WHERE id='main' RETURNING revision,updated_at`;
+
+      const url = process.env.ORGANIZATION_API_URL;
+      const token = process.env.ORGANIZATION_SYNC_TOKEN;
+      const email = (process.env.ORGANIZATION_SYNC_USER_EMAIL || '').trim().toLowerCase();
+      if (url && token && email) {
+        const ids = new Set((next.users || []).filter((user) => (user.email || '').trim().toLowerCase() === email).map((user) => user.id));
+        const entries = (next.timeEntries || []).filter((entry) => ids.has(entry.userId));
+        await fetch(`${url.replace(/\/$/, '')}/api/organization/ecg-sync`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+          body: JSON.stringify({ entries }),
+        }).catch((error) => console.error('organization sync error', error?.message || error));
+      }
+      return res.status(200).json({ ok: true, ...rows[0] });
+    }
+    res.setHeader('Allow', 'GET, PUT');
+    return res.status(405).json({ error: 'Methode nicht erlaubt' });
+  } catch (error) {
+    console.error('state api error', error);
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+}
