@@ -4,9 +4,24 @@ import { requireUser } from '../lib/auth.js';
 
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 
+function serviceAccountCredentials() {
+  const json = String(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || '').trim();
+  if (json) {
+    try {
+      const parsed = JSON.parse(json);
+      return { email: parsed.client_email || '', privateKey: parsed.private_key || '' };
+    } catch {
+      throw new Error('Google-Dienstkonto ist ungültig gespeichert.');
+    }
+  }
+  return {
+    email: String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '').trim(),
+    privateKey: String(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '').replace(/\\n/g, '\n').trim(),
+  };
+}
+
 async function serviceAccountAccessToken() {
-  const email = String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '').trim();
-  const privateKey = String(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '').replace(/\\n/g, '\n').trim();
+  const { email, privateKey } = serviceAccountCredentials();
   if (!email || !privateKey) return null;
 
   const now = Math.floor(Date.now() / 1000);
@@ -62,8 +77,8 @@ export default async function handler(req, res) {
   const calendarId = String(process.env.GOOGLE_CALENDAR_ID || '').trim();
   const apiKey = String(process.env.GOOGLE_CALENDAR_API_KEY || '').trim();
   const serviceAccountConfigured = Boolean(
-    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
-    && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+    process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+    || (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY)
   );
   if (!calendarId || (!apiKey && !serviceAccountConfigured)) {
     return res.status(503).json({
