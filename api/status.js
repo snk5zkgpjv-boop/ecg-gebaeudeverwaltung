@@ -18,6 +18,7 @@ export default async function handler(req, res) {
       process.env.GOOGLE_CALENDAR_ID
       && (
         process.env.GOOGLE_CALENDAR_API_KEY
+        || process.env.GOOGLE_SERVICE_ACCOUNT_JSON
         || (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY)
       )
     ),
