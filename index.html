@@ -136,6 +136,9 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 .status-overdue{background:#fef3f2;color:var(--danger)}.status-due{background:#fffaeb;color:var(--warn)}.status-ok{background:#ecfdf3;color:var(--ok)}
 .tech-badge{background:#eef4ff;color:#3538cd}
 .doc-preview{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.modal{position:relative}
+.modal-close{position:sticky;top:0;z-index:6;float:right;width:42px;height:42px;margin:-4px -4px 8px 12px;border:1px solid var(--line);border-radius:50%;background:rgba(255,255,255,.96);color:var(--ink);box-shadow:0 3px 12px rgba(16,24,40,.16);font-size:28px;line-height:1;display:grid;place-items:center}
+.modal-close:active{background:var(--accent2);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -874,7 +877,7 @@ window.importData=()=>{$('#fileImport').onchange=e=>{const f=e.target.files[0];i
 window.resetDemo=()=>{if(confirm('Alle lokalen Änderungen zurücksetzen?')){state=structuredClone(initialState);save();render()}};
 
 window.pickRoomPhoto=id=>{$('#photoInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{state.rooms.find(r=>r.id===id).photo=rd.result;save();openRoom(id)};rd.readAsDataURL(f)};$('#photoInput').click()};
-function modal(html){$('#modalRoot').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" id="modalBack"><div class="modal">${html}</div></div>`)}
+function modal(html){$('#modalRoot').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" id="modalBack"><div class="modal"><button type="button" class="modal-close no-print" onclick="closeModal()" aria-label="Fenster schließen" title="Schließen">×</button>${html}</div></div>`)}
 window.closeModal=()=>$('#modalBack')?.remove();
 window.modal=modal;
 
