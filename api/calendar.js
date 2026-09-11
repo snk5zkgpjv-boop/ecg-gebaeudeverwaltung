@@ -1,5 +1,40 @@
 import { neon } from '@neondatabase/serverless';
+import { importPKCS8, SignJWT } from 'jose';
 import { requireUser } from '../lib/auth.js';
+
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+
+async function serviceAccountAccessToken() {
+  const email = String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '').trim();
+  const privateKey = String(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '').replace(/\\n/g, '\n').trim();
+  if (!email || !privateKey) return null;
+
+  const now = Math.floor(Date.now() / 1000);
+  const key = await importPKCS8(privateKey, 'RS256');
+  const assertion = await new SignJWT({ scope: CALENDAR_SCOPE })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuer(email)
+    .setSubject(email)
+    .setAudience('https://oauth2.googleapis.com/token')
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(key);
+
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
+  });
+  const tokenBody = await tokenResponse.json();
+  if (!tokenResponse.ok || !tokenBody.access_token) {
+    console.error('google service account token error', tokenResponse.status, tokenBody?.error || 'unknown');
+    throw new Error('Google-Dienstkonto konnte nicht angemeldet werden.');
+  }
+  return tokenBody.access_token;
+}
 
 function canManageCalendar(profile) {
   return profile.role === 'admin' || (profile.permissions?.manageCalendar ?? profile.role === 'coordinator');
@@ -26,7 +61,11 @@ export default async function handler(req, res) {
 
   const calendarId = String(process.env.GOOGLE_CALENDAR_ID || '').trim();
   const apiKey = String(process.env.GOOGLE_CALENDAR_API_KEY || '').trim();
-  if (!calendarId || !apiKey) {
+  const serviceAccountConfigured = Boolean(
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
+    && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+  );
+  if (!calendarId || (!apiKey && !serviceAccountConfigured)) {
     return res.status(503).json({
       configured: false,
       error: 'Google Calendar ist noch nicht vollständig eingerichtet.',
@@ -37,7 +76,7 @@ export default async function handler(req, res) {
   const timeMin = new Date(now.getTime() - 30 * 86400000).toISOString();
   const timeMax = new Date(now.getTime() + 370 * 86400000).toISOString();
   const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`);
-  url.searchParams.set('key', apiKey);
+  if (apiKey) url.searchParams.set('key', apiKey);
   url.searchParams.set('timeMin', timeMin);
   url.searchParams.set('timeMax', timeMax);
   url.searchParams.set('singleEvents', 'true');
@@ -47,7 +86,10 @@ export default async function handler(req, res) {
   url.searchParams.set('timeZone', 'Europe/Berlin');
 
   try {
-    const response = await fetch(url, { headers: { accept: 'application/json' } });
+    const accessToken = serviceAccountConfigured ? await serviceAccountAccessToken() : null;
+    const headers = { accept: 'application/json' };
+    if (accessToken) headers.authorization = `Bearer ${accessToken}`;
+    const response = await fetch(url, { headers });
     const body = await response.json();
     if (!response.ok) {
       console.error('google calendar sync error', response.status, body?.error?.status || body?.error?.message || 'unknown');
