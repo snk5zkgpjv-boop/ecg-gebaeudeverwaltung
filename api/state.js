@@ -67,6 +67,27 @@ function mergeReportedIssues(currentIssues, incomingIssues, userId) {
   return [...created, ...(currentIssues || [])];
 }
 
+function mergeManagedUsers(currentUsers, incomingUsers, profile) {
+  if (profile.role === 'admin') return incomingUsers || currentUsers;
+
+  const current = currentUsers || [];
+  const incoming = incomingUsers || current;
+  const protectedIds = new Set(current.filter((user) => user.role === 'admin' || user.id === profile.id).map((user) => user.id));
+  const allowedPermissions = Object.keys(defaults.coordinator).filter((key) => key !== 'manageUsers' && has(profile, key));
+  const limitPermissions = (permissions = {}) => Object.fromEntries(
+    Object.keys(defaults.coordinator).map((key) => [key, allowedPermissions.includes(key) && permissions[key] === true]),
+  );
+
+  const preserved = current.filter((user) => protectedIds.has(user.id));
+  const managed = incoming
+    .filter((user) => user?.id && !protectedIds.has(user.id) && user.role !== 'admin')
+    .map((user) => ({ ...user, permissions: limitPermissions(user.permissions) }));
+
+  // Delegierte Benutzerverwalter dürfen weder Administratoren noch das eigene
+  // Konto verändern oder entfernen und keine höheren Rechte weitergeben.
+  return [...preserved, ...managed];
+}
+
 function accepted(current, incoming, profile) {
   if (profile.role === 'admin') return incoming;
   const output = clone(current);
@@ -90,7 +111,7 @@ function accepted(current, incoming, profile) {
     ? (incoming.issues || current.issues)
     : mergeReportedIssues(current.issues, incoming.issues, userId);
 
-  if (has(profile, 'manageUsers')) output.users = incoming.users || current.users;
+  if (has(profile, 'manageUsers')) output.users = mergeManagedUsers(current.users, incoming.users, profile);
 
   if (has(profile, 'manageRooms')) {
     output.rooms = has(profile, 'manageTasks')
