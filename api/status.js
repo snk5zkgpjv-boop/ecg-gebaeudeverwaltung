@@ -15,11 +15,14 @@ export default async function handler(req, res) {
     ai: Boolean(process.env.OPENAI_API_KEY),
     passwordResetEmail: Boolean(process.env.RESEND_API_KEY && process.env.AUTH_FROM_EMAIL),
     calendar: Boolean(
-      process.env.GOOGLE_CALENDAR_ID
-      && (
-        process.env.GOOGLE_CALENDAR_API_KEY
-        || process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-        || (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY)
+      process.env.GOOGLE_CALENDAR_ICAL_URL
+      || (
+        process.env.GOOGLE_CALENDAR_ID
+        && (
+          process.env.GOOGLE_CALENDAR_API_KEY
+          || process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+          || (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY)
+        )
       )
     ),
     organizationSync: Boolean(
