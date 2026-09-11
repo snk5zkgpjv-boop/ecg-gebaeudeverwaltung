@@ -173,7 +173,7 @@ export default async function handler(req, res) {
     process.env.GOOGLE_SERVICE_ACCOUNT_JSON
     || (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY)
   );
-  if (!icalUrl && !calendarId) {
+  if (!icalUrl && (!calendarId || (!apiKey && !serviceAccountConfigured))) {
     return res.status(503).json({
       configured: false,
       error: 'Google Calendar ist noch nicht vollständig eingerichtet.',
@@ -184,11 +184,8 @@ export default async function handler(req, res) {
     const now = new Date();
     const rangeStart = new Date(now.getTime() - 30 * 86400000);
     const rangeEnd = new Date(now.getTime() + 370 * 86400000);
-    const publicIcalUrl = calendarId
-      ? `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`
-      : '';
-    const result = icalUrl || (!apiKey && !serviceAccountConfigured)
-      ? await readIcalCalendar(icalUrl || publicIcalUrl, rangeStart, rangeEnd)
+    const result = icalUrl
+      ? await readIcalCalendar(icalUrl, rangeStart, rangeEnd)
       : await readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigured, rangeStart, rangeEnd);
     const { events, calendarName } = result;
 
