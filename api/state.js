@@ -34,29 +34,44 @@ function visible(state, profile) {
   return output;
 }
 
-function mergeTaskProgress(currentRooms, incomingRooms) {
+const progressFields = ['status', 'lastDone', 'lastDoneBy', 'progressUpdatedAt'];
+
+function progressTime(task) {
+  const value = task?.progressUpdatedAt || task?.lastDone;
+  const time = value ? new Date(value).getTime() : 0;
+  return Number.isFinite(time) ? time : 0;
+}
+
+function mergeNewestTaskProgress(baseTask, currentTask, incomingTask) {
+  if (!currentTask || !incomingTask) return baseTask;
+  const source = progressTime(incomingTask) >= progressTime(currentTask) ? incomingTask : currentTask;
+  const merged = { ...baseTask };
+  for (const key of progressFields) {
+    if (source[key] !== undefined) merged[key] = source[key];
+  }
+  return merged;
+}
+
+function mergeTaskProgress(currentRooms, incomingRooms, { acceptRooms = false, acceptTasks = false } = {}) {
+  const current = new Map((currentRooms || []).map((room) => [room.id, room]));
   const incoming = new Map((incomingRooms || []).map((room) => [room.id, room]));
-  return (currentRooms || []).map((room) => {
-    const nextRoom = incoming.get(room.id);
-    if (!nextRoom) return room;
+  const roomSource = acceptRooms ? (incomingRooms || []) : (currentRooms || []);
+  return roomSource.map((sourceRoom) => {
+    const currentRoom = current.get(sourceRoom.id);
+    const incomingRoom = incoming.get(sourceRoom.id);
+    if (!currentRoom || !incomingRoom) return sourceRoom;
+    const taskSource = acceptTasks ? (incomingRoom.tasks || []) : (currentRoom.tasks || []);
+    const currentTasks = new Map((currentRoom.tasks || []).map((task) => [task.id, task]));
+    const incomingTasks = new Map((incomingRoom.tasks || []).map((task) => [task.id, task]));
     return {
-      ...room,
-      tasks: (room.tasks || []).map((task) => {
-        const nextTask = (nextRoom.tasks || []).find((item) => item.id === task.id);
-        return nextTask ? { ...task, status: nextTask.status, lastDone: nextTask.lastDone, lastDoneBy: nextTask.lastDoneBy } : task;
-      }),
+      ...sourceRoom,
+      tasks: taskSource.map((task) => mergeNewestTaskProgress(
+        task,
+        currentTasks.get(task.id),
+        incomingTasks.get(task.id),
+      )),
     };
   });
-}
-
-function keepExistingTasks(incomingRooms, currentRooms) {
-  const current = new Map((currentRooms || []).map((room) => [room.id, room]));
-  return (incomingRooms || []).map((room) => ({ ...room, tasks: current.get(room.id)?.tasks || [] }));
-}
-
-function mergeTaskDefinitions(currentRooms, incomingRooms) {
-  const incoming = new Map((incomingRooms || []).map((room) => [room.id, room]));
-  return (currentRooms || []).map((room) => ({ ...room, tasks: incoming.get(room.id)?.tasks || room.tasks || [] }));
 }
 
 function mergeReportedIssues(currentIssues, incomingIssues, userId) {
@@ -89,7 +104,13 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 }
 
 function accepted(current, incoming, profile) {
-  if (profile.role === 'admin') return incoming;
+  if (profile.role === 'admin') {
+    return {
+      ...incoming,
+      rooms: mergeTaskProgress(current.rooms, incoming.rooms, { acceptRooms: true, acceptTasks: true }),
+      outdoorAreas: mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas, { acceptRooms: true, acceptTasks: true }),
+    };
+  }
   const output = clone(current);
   const userId = profile.id;
 
@@ -113,20 +134,10 @@ function accepted(current, incoming, profile) {
 
   if (has(profile, 'manageUsers')) output.users = mergeManagedUsers(current.users, incoming.users, profile);
 
-  if (has(profile, 'manageRooms')) {
-    output.rooms = has(profile, 'manageTasks')
-      ? (incoming.rooms || current.rooms)
-      : keepExistingTasks(incoming.rooms, current.rooms);
-    output.outdoorAreas = has(profile, 'manageTasks')
-      ? (incoming.outdoorAreas || current.outdoorAreas)
-      : keepExistingTasks(incoming.outdoorAreas, current.outdoorAreas);
-  } else if (has(profile, 'manageTasks')) {
-    output.rooms = mergeTaskDefinitions(current.rooms, incoming.rooms);
-    output.outdoorAreas = mergeTaskDefinitions(current.outdoorAreas, incoming.outdoorAreas);
-  } else {
-    output.rooms = mergeTaskProgress(current.rooms, incoming.rooms);
-    output.outdoorAreas = mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas);
-  }
+  const acceptRooms = has(profile, 'manageRooms');
+  const acceptTasks = has(profile, 'manageTasks');
+  output.rooms = mergeTaskProgress(current.rooms, incoming.rooms, { acceptRooms, acceptTasks });
+  output.outdoorAreas = mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas, { acceptRooms, acceptTasks });
   if (has(profile, 'manageTasks')) output.templates = incoming.templates || current.templates;
 
   if (has(profile, 'manageInventory')) {
