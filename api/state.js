@@ -105,6 +105,14 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 }
 
 function accepted(current, incoming, profile) {
+  // A tab from before task separation must not reintroduce event templates into room tasks.
+  const currentKitchen = current.eventDocumentSettings?.kitchen;
+  if (currentKitchen?.taskLayoutVersion && (incoming.eventDocumentSettings?.kitchen?.taskLayoutVersion || 0) < currentKitchen.taskLayoutVersion) {
+    incoming = clone(incoming);
+    incoming.eventDocumentSettings = { ...incoming.eventDocumentSettings, kitchen: currentKitchen };
+    const room = current.rooms?.find(r => r.id === currentKitchen.roomId);
+    if (room) incoming.rooms = [...(incoming.rooms || []).filter(r => r.id !== room.id), clone(room)];
+  }
   // Older open tabs must not remove the newly installed kitchen data.
   if (current.eventDocumentSettings?.kitchen && !incoming.eventDocumentSettings?.kitchen) {
     incoming = clone(incoming);

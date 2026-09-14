@@ -290,20 +290,21 @@ function eventDateLabel(ev){
 
 function stats(){const tasks=allTasks(),evt=generatedEventTasks();return {due:tasks.filter(x=>due(x)).length+evt.length,rooms:state.rooms.length,issues:state.issues.filter(x=>x.status!=='done').length,low:state.materials.filter(m=>m.qty<m.min).length}}
 
-function nav(){return `<nav class="tabs">${[['dashboard','⌂','Heute'],['building','▦','Gebäude'],['inventory','◇','Inventar'],['issues','!','Mängel'],['settings','•••','Mehr']].map(([id,i,l])=>`<button class="tab ${state.activeTab===id?'active':''}" onclick="go('${id}')"><span class="ico">${i}</span>${l}</button>`).join('')}</nav>`}
+function nav(){return `<nav class="tabs" style="grid-template-columns:repeat(${can('manageCalendar')?6:5},minmax(0,1fr))">${[['dashboard','⌂','Heute'],['building','▦','Gebäude'],...(can('manageCalendar')?[['kitchen','♧','Küche']]:[]),['inventory','◇','Inventar'],['issues','!','Mängel'],['settings','•••','Mehr']].map(([id,i,l])=>`<button class="tab ${state.activeTab===id?'active':''}" onclick="go('${id}')"><span class="ico">${i}</span>${l}</button>`).join('')}</nav>`}
 function currentUser(){return state.users?.find(u=>u.id===state.currentUserId)||null}
 function header(){const u=currentUser();return `<header class="topbar"><div class="brand"><div class="brandmark"><img src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"></div><div><h1>Gebäudeverwaltung</h1><small>Evangeliums-Christengemeinde Hussenhofen</small></div></div><div class="top-actions"><span class="sync">${state.settings.cloudSync?'Cloud aktiv':'Lokal gespeichert'}</span><button class="user-badge" onclick="accountDialog()"><span>👤</span><span><b>${esc(u?.name||'Nicht angemeldet')}</b><span class="email">${u?.email?` · ${esc(u.email)}`:''}</span><br><span class="meta">${esc(roleLabels[u?.role]||'')}</span></span></button></div></header>`}
 function render(){
- if(state.activeTab==='calendar'&&!can('manageCalendar'))state.activeTab='settings';
+ if(['calendar','kitchen'].includes(state.activeTab)&&!can('manageCalendar'))state.activeTab='settings';
  let body=state.activeTab==='dashboard'?dashboard():
           state.activeTab==='building'?buildingView():
           state.activeTab==='inventory'?inventoryView():
           state.activeTab==='issues'?issuesView():
           state.activeTab==='calendar'?calendarView():
+          state.activeTab==='kitchen'?kitchenView():
           settingsView();
  $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${body}</main>${nav()}</div>`
 }
-window.go=id=>{if(id==='calendar'&&!can('manageCalendar')){alert('Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.');return}state.activeTab=id;save();render()};
+window.go=id=>{if(['calendar','kitchen'].includes(id)&&!can('manageCalendar')){alert('Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.');return}state.activeTab=id;save();render()};
 
 function timeElapsed(){
   if(!state.timeRunning)return 0;
