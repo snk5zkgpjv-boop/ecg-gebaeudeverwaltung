@@ -68,3 +68,9 @@ Am 14.09.2026 wurde PR #9 nach bestandener Vorschau übernommen. Funktionsreleas
 Die oben noch als Vorschau bezeichneten Kalender- und Raumfotoänderungen sind damit jetzt im veröffentlichten Funktionsstand enthalten. PR #4 wurde inhaltlich über das integrierte index.html übernommen, nicht als eigener Merge; PR #8 ist über den Kalenderbranch enthalten. Historische PR-Status nicht mit fehlenden Live-Funktionen verwechseln.
 
 Produktions-Smoke-Test: `/` HTTP 200 mit Raumfoto-Code; `/assets/kitchen-ui.js` HTTP 200 mit Kalender-Vorschlagsfunktion; `/api/calendar` ohne Anmeldung HTTP 401 wie erwartet. Fehler-/Fatal-Logs für dieses Deployment im Abfragezeitraum ohne Treffer. Kein angemeldeter echter Kalenderimport, keine Datenänderung und keine vollständige fachliche Abnahme. Monitoring/Drains wurden nicht geprüft. Nachtrag ist eine reine Dokumentationsänderung, kein neues Funktionsrelease.
+
+## Wartung nach Geschoss und Bereich – 14.09.2026
+
+Implementiert: Die Wartungsübersicht zeigt Geschossüberschriften und darunter eigene Bereiche/Räume. Bestehende Raumzuordnungen (auch Küche) haben Vorrang; alternativ werden eindeutige Raumnamen und Geschossangaben im Standort verwendet. Nicht zuordenbare Einträge bleiben sichtbar unter „Ohne Geschoss“ beziehungsweise ihrem Standortbereich. Innerhalb jedes Bereichs stehen überfällige/bald fällige Wartungen zuerst, danach alphabetisch. Keine Änderung gespeicherter Wartungsdaten oder Schnittstellen.
+
+Prüfung: Inline-JavaScript syntaktisch geprüft; isolierte Tests für Geschossfolge UG/EG/2. OG/ohne Geschoss, gemeinsame Küchengeräte, Fälligkeitsreihenfolge, unveränderte Quelldaten, vollständige Kartenanzahl und leere Liste bestanden. Kein angemeldeter Test mit echten Wartungsdaten. Veröffentlichung dieses Nachtrags zunächst ausstehend; Produktionsprüfung folgt nach Merge.
