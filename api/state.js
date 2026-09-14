@@ -21,8 +21,9 @@ const has = (profile, key) => profile.role === 'admin' || (profile.permissions?.
 const clone = (value) => structuredClone(value || {});
 
 function visible(state, profile) {
-  if (profile.role === 'admin') return state;
   const output = clone(state);
+  delete output.kitchenPhotos;
+  if (profile.role === 'admin') return output;
   const userId = profile.id;
   if (!has(profile, 'manageUsers')) output.users = (state.users || []).filter((user) => user.id === userId);
   if (!has(profile, 'viewAllTimes')) output.timeEntries = (state.timeEntries || []).filter((entry) => entry.userId === userId);
@@ -104,9 +105,41 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 }
 
 function accepted(current, incoming, profile) {
+  // Older open tabs must not remove the newly installed kitchen data.
+  if (current.eventDocumentSettings?.kitchen && !incoming.eventDocumentSettings?.kitchen) {
+    incoming = clone(incoming);
+    incoming.eventDocumentSettings = { ...incoming.eventDocumentSettings, kitchen: current.eventDocumentSettings.kitchen };
+    for (const key of ['rooms','maintenanceAssets','inventory','storageLocations']) {
+      const items = incoming[key] || [];
+      const ids = new Set(items.map(x => x.id));
+      incoming[key] = [...items, ...(current[key] || []).filter(x => !ids.has(x.id) && (x.kitchenArea || /^(kitchen-|ecg-kitchen)/.test(x.id)))];
+    }
+    const roomId = current.eventDocumentSettings.kitchen.roomId;
+    const oldRoom = current.rooms?.find(x => x.id === roomId);
+    const newRoom = incoming.rooms?.find(x => x.id === roomId);
+    if (oldRoom && newRoom) {
+      newRoom.kitchenArea = true;
+      const ids = new Set((newRoom.tasks || []).map(x => x.id));
+      newRoom.tasks = [...(newRoom.tasks || []), ...oldRoom.tasks.filter(x => x.kitchenTask && !ids.has(x.id))];
+    }
+  }
+  if (current.eventDocumentSettings?.kitchen?.updatedAt && new Date(current.eventDocumentSettings.kitchen.updatedAt) > new Date(incoming.eventDocumentSettings?.kitchen?.updatedAt || 0)) {
+    incoming = { ...incoming, eventDocumentSettings: { ...incoming.eventDocumentSettings, kitchen: current.eventDocumentSettings.kitchen } };
+  }
+  // Keep newer event checklists (including kitchen assignments) across stale tabs.
+  if (incoming.eventChecklists && current.eventChecklists) {
+    const currentMap = new Map(current.eventChecklists.map(x => [x.id,x]));
+    incoming = { ...incoming, eventChecklists: incoming.eventChecklists.map(x => {
+      const old = currentMap.get(x.id);
+      return old && new Date(old.updatedAt) > new Date(x.updatedAt || 0) ? old : x;
+    }) };
+    const ids = new Set(incoming.eventChecklists.map(x => x.id));
+    incoming.eventChecklists.push(...current.eventChecklists.filter(x => x.kitchen && !ids.has(x.id)));
+  }
   if (profile.role === 'admin') {
     return {
       ...incoming,
+      kitchenPhotos: current.kitchenPhotos,
       rooms: mergeTaskProgress(current.rooms, incoming.rooms, { acceptRooms: true, acceptTasks: true }),
       outdoorAreas: mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas, { acceptRooms: true, acceptTasks: true }),
     };
