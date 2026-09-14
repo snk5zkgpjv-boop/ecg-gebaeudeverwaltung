@@ -390,7 +390,7 @@ function roomsView(embedded=false){
  <div id="roomList" class="room-list">${state.rooms.map(roomCard).join('')}</div>`
 }
 window.filterRooms=()=>{const q=$('#roomSearch').value.toLowerCase(),f=$('#floorFilter').value;$('#roomList').innerHTML=state.rooms.filter(r=>(f==='Alle'||r.floor===f)&&(`${r.name} ${r.type}`.toLowerCase().includes(q))).map(roomCard).join('')||'<div class="empty">Kein Raum gefunden.</div>'};
-window.openRoom=id=>{state.currentRoomId=id;const r=state.rooms.find(x=>x.id===id),admin=can('manageRooms'),tasks=can('manageTasks');modal(`<div class="row"><div><h2>${esc(r.name)}</h2><div class="meta">${esc(r.floor)} · ${esc(r.type)}</div></div><div class="spacer"></div>${admin?`<button class="btn tiny" onclick="duplicateRoom('${r.id}')">Kopieren</button><button class="btn tiny" onclick="editRoom('${r.id}')">Bearbeiten</button>`:''}</div>${r.photo?`<img class="photo" src="${r.photo}" alt="Raumfoto">`:''}${r.notes?`<div class="notice" style="margin:12px 0">${esc(r.notes)}</div>`:''}<div class="row wrap" style="margin:12px 0"><button class="btn soft" onclick="showQR('${r.id}')">QR-Code</button><button class="btn" onclick="addIssue('${r.id}')">Hinweis/Mangel</button>${tasks?`<button class="btn" onclick="addTask('${r.id}')">+ Aufgabe</button>`:''}${admin?`<button class="btn" onclick="pickRoomPhoto('${r.id}')">Foto</button>`:''}</div><div class="card" style="box-shadow:none">${r.tasks.map(t=>taskRow(r,t)).join('')}</div>`)};
+window.openRoom=id=>{state.currentRoomId=id;const r=state.rooms.find(x=>x.id===id),admin=can('manageRooms'),tasks=can('manageTasks');modal(`<div class="row"><div><h2>${esc(r.name)}</h2><div class="meta">${esc(r.floor)} · ${esc(r.type)}</div></div><div class="spacer"></div>${admin?`<button class="btn tiny" onclick="duplicateRoom('${r.id}')">Kopieren</button><button class="btn tiny" onclick="editRoom('${r.id}')">Bearbeiten</button>`:''}</div>${r.photo?`<img class="photo" src="${r.photo}" alt="Raumfoto">`:''}${r.notes?`<div class="notice" style="margin:12px 0">${esc(r.notes)}</div>`:''}<div class="row wrap" style="margin:12px 0"><button class="btn soft" onclick="showQR('${r.id}')">QR-Code</button><button class="btn" onclick="exportRoomChecklist('${r.id}')">Aufgaben als PDF / Drucken</button><button class="btn" onclick="addIssue('${r.id}')">Hinweis/Mangel</button>${tasks?`<button class="btn" onclick="addTask('${r.id}')">+ Aufgabe</button>`:''}${admin?`<button class="btn" onclick="pickRoomPhoto('${r.id}')">Foto</button>`:''}</div><div class="card" style="box-shadow:none">${r.tasks.map(t=>taskRow(r,t)).join('')}</div>`)};
 
 function editRoom(id){
  if(!can('manageRooms')){alert('Raumverwaltung ist für dieses Konto nicht freigeschaltet.');return}
@@ -755,6 +755,35 @@ window.editEventRule=id=>{const r=id?state.eventRules.find(x=>x.id===id):{label:
 window.saveEventRule=id=>{const data={label:$('#erLabel').value.trim(),keyword:$('#erKeyword').value.trim(),roomMatch:$('#erRooms').value.split(',').map(x=>x.trim()).filter(Boolean),tasks:$('#erTasks').value.split('\n').map(x=>x.trim()).filter(Boolean)};if(!data.label||!data.keyword){alert('Bitte Name und Kalendertext eintragen.');return}if(id)Object.assign(state.eventRules.find(x=>x.id===id),data);else state.eventRules.push({id:uid('erule'),...data});save();closeModal();render()};
 
 
+
+function roomChecklistDocument(rooms){
+ const sorted=[...rooms].sort((a,b)=>floorSortKey(a.floor)-floorSortKey(b.floor)||String(a.floor||'').localeCompare(String(b.floor||''),'de')||String(a.name||'').localeCompare(String(b.name||''),'de',{numeric:true}));
+ const title=sorted.length===1?'Checkliste - '+sorted[0].name:'Alle Raumaufgaben - Checklisten';
+ const logo=new URL('/assets/embedded-4-8ef55a643706.png',location.origin).href;
+ return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>
+ @page{size:A4;margin:14mm}
+ *{box-sizing:border-box}body{margin:0;color:#222;font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.4}
+ .controls{padding:16px;background:#f4f4f4;margin-bottom:20px}.controls button{padding:12px 18px;font:inherit;cursor:pointer}.controls p{margin:8px 0 0}
+ .room-sheet{break-before:page;page-break-before:always;margin:0 auto 32px;max-width:182mm}.room-sheet:first-of-type{break-before:auto;page-break-before:auto}
+ table{width:100%;border-collapse:collapse;table-layout:fixed}thead{display:table-header-group}th{text-align:left;font-weight:normal}
+ .heading{display:flex;align-items:center;gap:12px;border-bottom:2px solid #b00045;padding-bottom:10px}.heading img{width:48px;height:48px;object-fit:contain}h1{font-size:19pt;line-height:1.2;margin:0 0 4px;color:#8b0036;overflow-wrap:anywhere}.sub{font-size:10pt;color:#555}
+ .fields{padding:14px 0 16px;font-size:10pt}.task td{padding:10px 0;border-bottom:1px solid #ccc;vertical-align:top;overflow-wrap:anywhere}.task{break-inside:avoid;page-break-inside:avoid}.check-col{width:10mm}.box{display:block;width:5mm;height:5mm;border:1.2pt solid #333;margin-top:1mm}.notes{margin-top:20px;break-inside:avoid;page-break-inside:avoid}.notes div{height:10mm;border-bottom:1px solid #aaa}.empty{padding:12px 0;color:#555}
+ @media screen{body{background:#eee}.room-sheet{background:white;padding:18px}}
+ @media print{.controls{display:none}.room-sheet{margin-bottom:0;max-width:none}}
+ </style></head><body><div class="controls"><button onclick="window.print()">Drucken / als PDF sichern</button><p>Alle Aufgaben mit leeren Kästchen. Im Druckdialog als PDF sichern oder direkt ausdrucken. Jeder Raum beginnt auf einer neuen Seite.</p></div>
+ ${sorted.map(r=>`<section class="room-sheet"><table><colgroup><col class="check-col"><col></colgroup><thead><tr><th colspan="2"><div class="heading"><img src="${esc(logo)}" alt="ECG"><div><h1>${esc(r.name||'Raum')}</h1><div class="sub">${esc(r.floor||'Ohne Geschoss')} · Aufgabencheckliste</div><div class="sub">Evangeliums-Christengemeinde Hussenhofen</div></div></div><div class="fields">Datum: __________________ &nbsp; Team / Name: __________________________</div></th></tr></thead><tbody>
+ ${(r.tasks||[]).map(t=>`<tr class="task"><td><span class="box" aria-label="Zum Abhaken"></span></td><td>${esc(t.title||'Aufgabe ohne Bezeichnung')}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">Für diesen Raum sind noch keine Aufgaben hinterlegt.</td></tr>'}
+ </tbody></table><div class="notes">Bemerkungen / zusätzlich erledigte Arbeiten<div></div><div></div></div></section>`).join('')}
+ </body></html>`;
+}
+window.exportRoomChecklist=id=>{
+ const rooms=id?(state.rooms||[]).filter(r=>r.id===id):(state.rooms||[]);
+ if(!rooms.length){alert('Keine Räume für den Export vorhanden.');return}
+ const html=roomChecklistDocument(rooms),w=window.open('','_blank');
+ if(!w){alert('Bitte Pop-ups für die Checklistenansicht erlauben und erneut exportieren.');return}
+ w.opener=null;w.document.write(html);w.document.close();
+};
+
 function addMonthsISO(dateStr,months){const d=dateStr?new Date(dateStr+'T12:00:00'):new Date();if(Number.isNaN(d.getTime()))return '';d.setMonth(d.getMonth()+Number(months||0));return d.toISOString().slice(0,10)}
 function maintenanceStatus(m){if(!m.nextService)return {key:'open',label:'Termin offen',cls:'status-due'};const days=(new Date(m.nextService+'T23:59:59')-new Date())/86400000;if(days<0)return {key:'overdue',label:'überfällig',cls:'status-overdue'};if(days<=30)return {key:'due',label:'bald fällig',cls:'status-due'};return {key:'ok',label:'aktuell',cls:'status-ok'}}
 function maintenancePlacement(m){
@@ -790,7 +819,7 @@ window.saveMaintenanceCompletion=id=>{const m=state.maintenanceAssets.find(x=>x.
 
 function settingsView(){
   const admin=state.currentRole==='admin',tech=can('viewMaintenance'),calendar=can('manageCalendar'),userAdmin=can('manageUsers'),activeUsers=(state.users||[]).filter(u=>u.active!==false).length;
-  return `${admin?`<div class="section-title"><h2>Verwaltung</h2></div>
+  return `<div class="card" style="margin-bottom:14px"><h2>Aufgaben als Checklisten</h2><p class="meta">Alle Raumaufgaben, auch bereits erledigte, mit leeren Kästchen zum Abhaken. Nach Geschoss und Raum sortiert, jeder Raum auf einer neuen Seite.</p><button class="btn primary" onclick="exportRoomChecklist()">Alle Raumaufgaben als PDF / Drucken</button></div>${admin?`<div class="section-title"><h2>Verwaltung</h2></div>
   <div class="quick-admin">
     <div class="card" onclick="showMaintenance()"><div class="row"><div><b>🔧 Wartung & Prüfungen</b><div class="meta">Technische Anlagen, Termine und Wartungshistorie</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
     <div class="card" onclick="showLoans()"><div class="row"><div><b>📦 Ausleihe</b><div class="meta">Ausleihbares Inventar, Kautionen und Rückgaben</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
