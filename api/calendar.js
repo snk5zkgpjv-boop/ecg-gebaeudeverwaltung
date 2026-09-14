@@ -54,7 +54,7 @@ async function serviceAccountAccessToken() {
 }
 
 function canManageCalendar(profile) {
-  return profile.role === 'admin' || (profile.permissions?.manageCalendar ?? profile.role === 'coordinator');
+  return profile.role !== 'technician' && (profile.role === 'admin' || (profile.permissions?.manageCalendar ?? profile.role === 'coordinator'));
 }
 
 function eventTime(value, allDayEnd = false) {
@@ -213,4 +213,3 @@ export default async function handler(req, res) {
     return res.status(502).json({ configured: true, error: error?.message || 'Kalendersynchronisierung ist momentan nicht erreichbar.' });
   }
 }
-
