@@ -23,11 +23,16 @@ const clone = (value) => structuredClone(value || {});
 function visible(state, profile) {
   const output = clone(state);
   delete output.kitchenPhotos;
-  if (profile.role === 'admin') return output;
   const userId = profile.id;
-  if (!has(profile, 'manageUsers')) output.users = (state.users || []).filter((user) => user.id === userId);
-  if (!has(profile, 'viewAllTimes')) output.timeEntries = (state.timeEntries || []).filter((entry) => entry.userId === userId);
-  if (!has(profile, 'viewAllTimes') && output.timeRunning?.userId !== userId) output.timeRunning = null;
+  const sharedIds = new Set((state.users || []).filter(user => user.active !== false && state.timeSharing?.[user.id] === true).map(user => user.id));
+  output.timeEntries = (state.timeEntries || []).filter(entry => entry.userId === userId || sharedIds.has(entry.userId));
+  // Running timers belong only to their owner.
+  if (output.timeRunning?.userId !== userId) output.timeRunning = null;
+  output.myTimeSharing = state.timeSharing?.[userId] === true;
+  output.sharedTimeUsers = (state.users || []).filter(user => sharedIds.has(user.id)).map(user => ({ id: user.id, name: user.name }));
+  delete output.timeSharing;
+  if (profile.role === 'admin') return output;
+  if (!has(profile, 'manageUsers')) output.users = (state.users || []).filter(user => user.id === userId);
   if (!has(profile, 'viewMaintenance')) delete output.maintenanceAssets;
   if (!has(profile, 'manageCalendar')) {
     for (const key of ['calendarEvents', 'eventRules', 'eventChecklists', 'eventDocumentSettings']) delete output[key];
@@ -144,29 +149,32 @@ function accepted(current, incoming, profile) {
     const ids = new Set(incoming.eventChecklists.map(x => x.id));
     incoming.eventChecklists.push(...current.eventChecklists.filter(x => x.kitchen && !ids.has(x.id)));
   }
+  // A shared entry is read-only. Preserve other owners' entries even for stale/admin payloads.
+  const userId = profile.id;
+  const foreignIds = new Set((current.timeEntries || []).filter(entry => entry.userId !== userId).map(entry => entry.id));
+  const timeEntries = [
+    ...(current.timeEntries || []).filter(entry => entry.userId !== userId),
+    ...(incoming.timeEntries || current.timeEntries || []).filter(entry => entry.userId === userId && !foreignIds.has(entry.id)),
+  ];
+  const timeRunning = incoming.timeRunning?.userId === userId
+    ? incoming.timeRunning
+    : (current.timeRunning?.userId === userId ? null : current.timeRunning);
   if (profile.role === 'admin') {
     return {
       ...incoming,
+      timeEntries,
+      timeRunning,
+      timeSharing: current.timeSharing || {},
+      myTimeSharing: undefined,
+      sharedTimeUsers: undefined,
       kitchenPhotos: current.kitchenPhotos,
       rooms: mergeTaskProgress(current.rooms, incoming.rooms, { acceptRooms: true, acceptTasks: true }),
       outdoorAreas: mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas, { acceptRooms: true, acceptTasks: true }),
     };
   }
   const output = clone(current);
-  const userId = profile.id;
-
-  if (has(profile, 'viewAllTimes')) {
-    output.timeEntries = incoming.timeEntries || current.timeEntries;
-    output.timeRunning = incoming.timeRunning || null;
-  } else {
-    output.timeEntries = [
-      ...(current.timeEntries || []).filter((entry) => entry.userId !== userId),
-      ...(incoming.timeEntries || []).filter((entry) => entry.userId === userId),
-    ];
-    output.timeRunning = incoming.timeRunning?.userId === userId
-      ? incoming.timeRunning
-      : (current.timeRunning?.userId === userId ? null : current.timeRunning);
-  }
+  output.timeEntries = timeEntries;
+  output.timeRunning = timeRunning;
 
   output.eventTaskDone = { ...(current.eventTaskDone || {}), ...(incoming.eventTaskDone || {}) };
   output.issues = has(profile, 'manageIssues')
@@ -208,14 +216,23 @@ export default async function handler(req, res) {
       res.setHeader('X-Content-Type-Options', 'nosniff');
       return res.status(200).send(Buffer.from(photo, 'base64'));
     }
+    res.setHeader('Cache-Control', 'private, no-store');
     if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
+    if (req.method === 'PATCH') {
+      if (typeof req.body?.shareTimes !== 'boolean' || Object.keys(req.body).some(key => key !== 'shareTimes')) {
+        return res.status(400).json({ error: 'Bitte eine gültige Sichtbarkeit angeben.' });
+      }
+      const preference = JSON.stringify({ [auth.profile.id]: req.body.shareTimes });
+      await sql`UPDATE app_state SET data=jsonb_set(data,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb) || ${preference}::jsonb),revision=revision+1,updated_at=now() WHERE id='main'`;
+      return res.status(200).json({ ok: true, shareTimes: req.body.shareTimes });
+    }
     if (req.method === 'PUT') {
       if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
         return res.status(400).json({ error: 'Ungültige Daten' });
       }
       const next = accepted(auth.state, req.body, auth.profile);
       const payload = JSON.stringify(next);
-      const rows = await sql`UPDATE app_state SET data=${payload}::jsonb,revision=revision+1,updated_at=now() WHERE id='main' RETURNING revision,updated_at`;
+      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' RETURNING revision,updated_at`;
 
       const url = process.env.ORGANIZATION_API_URL;
       const token = process.env.ORGANIZATION_SYNC_TOKEN;
@@ -231,7 +248,7 @@ export default async function handler(req, res) {
       }
       return res.status(200).json({ ok: true, ...rows[0] });
     }
-    res.setHeader('Allow', 'GET, PUT');
+    res.setHeader('Allow', 'GET, PUT, PATCH');
     return res.status(405).json({ error: 'Methode nicht erlaubt' });
   } catch (error) {
     console.error('state api error', error);
