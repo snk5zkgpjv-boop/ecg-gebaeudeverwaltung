@@ -94,3 +94,9 @@ Implementiert: Jeder Raum bietet „Aufgaben als PDF / Drucken“. Unter Mehr st
 Geprüft: Inline-Syntax; 68 Aufgaben mit gemischten Statuswerten, HTML-Escaping, Reihenfolge und unveränderte Quelldaten. HTML-Druckvorlage mit WeasyPrint auf sechs A4-Seiten gerendert und alle Seiten visuell geprüft; Textprüfung bestätigt sämtliche Aufgaben. Chromium-Download nicht erreichbar, deshalb kein Browser-/iPhone-Druckdialogtest. Vorschau/Live-Veröffentlichung noch ausstehend.
 
 Live bestätigt: PR #12 übernommen, Funktionscommit `7a99fc06712e04a3785cfc7d713a00e2ecd83db2`. Produktionsdeployment `dpl_AXt9afZQVG14KNipdd2puidvqvJR` READY am Produktivalias. Startseite HTTP 200 mit Raumchecklisten-Exportcode. Vorschau ebenfalls READY; Veröffentlichung damit erfolgt. Dieser Nachtrag ändert nur die Dokumentation.
+
+## Startbildschirm-Icon – 14.09.2026
+
+Originale separate Weltkugel-mit-Kreuz-Datei assets/embedded-4-8ef55a643706.png als apple-touch-icon und Favicon verknüpft; vorher fehlten diese Verknüpfungen. Webmanifest mit Namen ECG Gebäudeverwaltung, Kurzname ECG Gebäude, Start-URL/Scope / und standalone ergänzt. Originalbild unverändert (150 x 167 Pixel), keine Neuzeichnung. Manifest nennt die tatsächliche Bildgröße; kein Anspruch auf vollständige Android-PWA-Installierbarkeit. Titel von „Stabiler Speicherfix“ bereinigt.
+
+Geprüft: Originalbild visuell, PNG-Abmessungen und JSON-Manifest geprüft. Keine Daten-/Berechtigungsänderung. Noch kein physischer iPhone-Installationstest; bestehende Startbildschirm-Verknüpfungen müssen gegebenenfalls entfernt und in Safari erneut hinzugefügt werden. Vorschau/Live noch ausstehend.
