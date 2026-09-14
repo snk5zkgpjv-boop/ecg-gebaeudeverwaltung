@@ -107,6 +107,7 @@ async function readIcalCalendar(icalUrl, rangeStart, rangeEnd) {
         start: start.toISOString(),
         end: end.toISOString(),
         location: textValue(original.location),
+        description: textValue(original.description),
         cancelled: textValue(original.status).toUpperCase() === 'CANCELLED',
         allDay: Boolean(instance.isFullDay),
         updated: original.lastmodified instanceof Date ? original.lastmodified.toISOString() : '',
@@ -148,6 +149,7 @@ async function readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigure
     start: eventTime(item.start),
     end: eventTime(item.end, Boolean(item.end?.date)),
     location: item.location || '',
+    description: item.description || '',
     cancelled: item.status === 'cancelled',
     allDay: Boolean(item.start?.date),
     updated: item.updated || '',
@@ -211,3 +213,4 @@ export default async function handler(req, res) {
     return res.status(502).json({ configured: true, error: error?.message || 'Kalendersynchronisierung ist momentan nicht erreichbar.' });
   }
 }
+
