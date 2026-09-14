@@ -190,6 +190,16 @@ export default async function handler(req, res) {
   if (!auth) return;
 
   try {
+    if (req.method === 'GET' && req.query?.kitchenPhoto) {
+      const name = String(req.query.kitchenPhoto);
+      const photos = auth.state.kitchenPhotos || {};
+      const photo = Object.hasOwn(photos, name) ? photos[name] : null;
+      if (typeof photo !== 'string' || !/^[a-zA-Z0-9+/=]+$/.test(photo)) return res.status(404).end();
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'private, max-age=300');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      return res.status(200).send(Buffer.from(photo, 'base64'));
+    }
     if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
     if (req.method === 'PUT') {
       if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
