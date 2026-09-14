@@ -17,7 +17,9 @@ const defaults = {
   technician: { viewMaintenance: true, manageMaintenance: true },
 };
 
-const has = (profile, key) => profile.role === 'admin' || (profile.permissions?.[key] ?? defaults[profile.role]?.[key] ?? false);
+const has = (profile, key) => profile.role === 'technician'
+  ? ['viewMaintenance', 'manageMaintenance', 'manageInventory'].includes(key)
+  : profile.role === 'admin' || (profile.permissions?.[key] ?? defaults[profile.role]?.[key] ?? false);
 const clone = (value) => structuredClone(value || {});
 
 function visible(state, profile) {
@@ -31,6 +33,12 @@ function visible(state, profile) {
   output.myTimeSharing = state.timeSharing?.[userId] === true;
   output.sharedTimeUsers = (state.users || []).filter(user => sharedIds.has(user.id)).map(user => ({ id: user.id, name: user.name }));
   delete output.timeSharing;
+  if (profile.role === 'technician') {
+    output.timeEntries = [];
+    output.timeRunning = null;
+    output.myTimeSharing = false;
+    output.sharedTimeUsers = [];
+  }
   if (profile.role === 'admin') return output;
   if (!has(profile, 'manageUsers')) output.users = (state.users || []).filter(user => user.id === userId);
   if (!has(profile, 'viewMaintenance')) delete output.maintenanceAssets;
@@ -58,7 +66,7 @@ function mergeNewestTaskProgress(baseTask, currentTask, incomingTask) {
   return merged;
 }
 
-function mergeTaskProgress(currentRooms, incomingRooms, { acceptRooms = false, acceptTasks = false } = {}) {
+function mergeTaskProgress(currentRooms, incomingRooms, { acceptRooms = false, acceptTasks = false, technicalOnly = false } = {}) {
   const current = new Map((currentRooms || []).map((room) => [room.id, room]));
   const incoming = new Map((incomingRooms || []).map((room) => [room.id, room]));
   const roomSource = acceptRooms ? (incomingRooms || []) : (currentRooms || []);
@@ -71,7 +79,7 @@ function mergeTaskProgress(currentRooms, incomingRooms, { acceptRooms = false, a
     const incomingTasks = new Map((incomingRoom.tasks || []).map((task) => [task.id, task]));
     return {
       ...sourceRoom,
-      tasks: taskSource.map((task) => mergeNewestTaskProgress(
+      tasks: taskSource.map((task) => technicalOnly && (currentTasks.get(task.id)?.taskType !== 'technical' || currentTasks.get(task.id)?.event) ? task : mergeNewestTaskProgress(
         task,
         currentTasks.get(task.id),
         incomingTasks.get(task.id),
@@ -173,10 +181,10 @@ function accepted(current, incoming, profile) {
     };
   }
   const output = clone(current);
-  output.timeEntries = timeEntries;
-  output.timeRunning = timeRunning;
+  output.timeEntries = profile.role === 'technician' ? current.timeEntries : timeEntries;
+  output.timeRunning = profile.role === 'technician' ? current.timeRunning : timeRunning;
 
-  output.eventTaskDone = { ...(current.eventTaskDone || {}), ...(incoming.eventTaskDone || {}) };
+  output.eventTaskDone = profile.role === 'technician' ? current.eventTaskDone : { ...(current.eventTaskDone || {}), ...(incoming.eventTaskDone || {}) };
   output.issues = has(profile, 'manageIssues')
     ? (incoming.issues || current.issues)
     : mergeReportedIssues(current.issues, incoming.issues, userId);
@@ -185,8 +193,8 @@ function accepted(current, incoming, profile) {
 
   const acceptRooms = has(profile, 'manageRooms');
   const acceptTasks = has(profile, 'manageTasks');
-  output.rooms = mergeTaskProgress(current.rooms, incoming.rooms, { acceptRooms, acceptTasks });
-  output.outdoorAreas = mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas, { acceptRooms, acceptTasks });
+  output.rooms = mergeTaskProgress(current.rooms, incoming.rooms, { acceptRooms, acceptTasks, technicalOnly: profile.role === 'technician' });
+  output.outdoorAreas = mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas, { acceptRooms, acceptTasks, technicalOnly: profile.role === 'technician' });
   if (has(profile, 'manageTasks')) output.templates = incoming.templates || current.templates;
 
   if (has(profile, 'manageInventory')) {
@@ -219,6 +227,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'private, no-store');
     if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
     if (req.method === 'PATCH') {
+      if (auth.profile.role === 'technician') return res.status(403).json({ error: 'Zeiterfassung ist für die Technikrolle nicht freigeschaltet.' });
       if (typeof req.body?.shareTimes !== 'boolean' || Object.keys(req.body).some(key => key !== 'shareTimes')) {
         return res.status(400).json({ error: 'Bitte eine gültige Sichtbarkeit angeben.' });
       }
