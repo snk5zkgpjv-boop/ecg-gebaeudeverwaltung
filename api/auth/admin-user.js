@@ -2,7 +2,7 @@ import { neon } from '@neondatabase/serverless';
 import { ensureAuthSchema, hashPassword, requireUser } from '../../lib/auth.js';
 
 function canManageUsers(profile) {
-  return profile.role === 'admin' || profile.permissions?.manageUsers === true;
+  return profile.role !== 'technician' && (profile.role === 'admin' || profile.permissions?.manageUsers === true);
 }
 
 export default async function handler(req, res) {
