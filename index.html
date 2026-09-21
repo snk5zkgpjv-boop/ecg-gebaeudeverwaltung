@@ -316,7 +316,7 @@ function timeElapsed(){
   if(!state.timeRunning)return 0;
   return Math.max(0,Date.now()-new Date(state.timeRunning.start).getTime())
 }
-function fmtDuration(ms){const m=Math.floor(ms/60000),h=Math.floor(m/60),mm=m%60;return `${h}:${String(mm).padStart(2,'0')} Std.`}
+function fmtDuration(ms){return timeSummaryDuration(ms)}
 function dashboard(){
   const s=stats(),eventTasks=generatedEventTasks(),dueTasks=[...allTasks().filter(x=>due(x)),...eventTasks],dueGroups=groupDueTasksByFloor(dueTasks),u=currentUser(),upcoming=upcomingEvents(5);
   const timer=state.timeRunning;
@@ -937,7 +937,7 @@ window.deleteUser=id=>{
  if(!hasHistory&&!confirm(`${u.name} wirklich löschen?`))return;
  state.users=state.users.filter(x=>x.id!==id);save();closeModal();showUserManagement()
 };
-function renderTimeReport(){modal(`<h2>Zeiterfassung</h2><div class="card" style="box-shadow:none;margin-bottom:12px"><label><input id="shareMyTimes" type="checkbox" ${state.myTimeSharing===true?'checked':''} onchange="setTimeSharing(this)" ${timeSharingBusy?'disabled':''}> Meine Zeiten für andere Benutzer sichtbar machen</label><p class="meta">Mit Haken können alle angemeldeten Benutzer deine erfassten Zeiten einschließlich Tätigkeit und Bemerkung lesen. Ohne Haken sind sie nur für dich sichtbar. Bearbeiten und Löschen bleiben dir vorbehalten. Die Freigabe gilt auch für bisherige Einträge.</p><div id="timeSharingMessage" class="meta" role="status"></div></div>${personalTimeSummaryHtml()}<h3 style="margin-top:24px">Meine und freigegebene Zeiten – Einzelbuchungen</h3><div class="card" style="box-shadow:none">${(state.timeEntries||[]).length?state.timeEntries.map(e=>{const u=(state.users||[]).find(x=>x.id===e.userId)||(state.sharedTimeUsers||[]).find(x=>x.id===e.userId);return `<div class="task"><div></div><div><div class="task-title">${esc(timeEntryLabel(e))}</div><small>${esc(u?.name||'Benutzer')}${u?.email?` · ${esc(u.email)}`:''} · ${new Date(e.start).toLocaleString('de-DE')} – ${new Date(e.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} · ${fmtDuration(new Date(e.end)-new Date(e.start))}${e.note?` · ${esc(e.note)}`:''}${e.volunteer?' · freiwilliger Dienst':''}</small>${e.userId===state.currentUserId?`<div class="row" style="margin-top:7px"><button class="btn tiny" onclick="editTimeEntry('${e.id}')">Bearbeiten</button><button class="btn tiny danger" onclick="deleteTimeEntry('${e.id}')">Löschen</button></div>`:''}</div></div>`}).join(''):'<div class="empty">Noch keine Arbeitszeiten erfasst.</div>'}</div><div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)}
+function renderTimeReport(target=null){if(target&&!target.isConnected)return;return modal(`<h2>Zeiterfassung</h2><div class="card" style="box-shadow:none;margin-bottom:12px"><label><input id="shareMyTimes" type="checkbox" ${state.myTimeSharing===true?'checked':''} onchange="setTimeSharing(this)" ${timeSharingBusy?'disabled':''}> Meine Zeiten für andere Benutzer sichtbar machen</label><p class="meta">Mit Haken können alle angemeldeten Benutzer deine erfassten Zeiten einschließlich Tätigkeit und Bemerkung lesen. Ohne Haken sind sie nur für dich sichtbar. Bearbeiten und Löschen bleiben dir vorbehalten. Die Freigabe gilt auch für bisherige Einträge.</p><div id="timeSharingMessage" class="meta" role="status"></div></div>${personalTimeSummaryHtml()}<h3 style="margin-top:24px">Meine und freigegebene Zeiten – Einzelbuchungen</h3><div class="card" style="box-shadow:none">${(state.timeEntries||[]).length?state.timeEntries.map(e=>{const u=(state.users||[]).find(x=>x.id===e.userId)||(state.sharedTimeUsers||[]).find(x=>x.id===e.userId);return `<div class="task"><div></div><div><div class="task-title">${esc(timeEntryLabel(e))}</div><small>${esc(u?.name||'Benutzer')}${u?.email?` · ${esc(u.email)}`:''} · ${new Date(e.start).toLocaleString('de-DE')} – ${new Date(e.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} · ${fmtDuration(new Date(e.end)-new Date(e.start))}${e.note?` · ${esc(e.note)}`:''}${e.volunteer?' · freiwilliger Dienst':''}</small>${e.userId===state.currentUserId?`<div class="row" style="margin-top:7px"><button class="btn tiny" onclick="editTimeEntry('${e.id}')">Bearbeiten</button><button class="btn tiny danger" onclick="deleteTimeEntry('${e.id}')">Löschen</button></div>`:''}</div></div>`}).join(''):'<div class="empty">Noch keine Arbeitszeiten erfasst.</div>'}</div><div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`,target)}
 
 let timeSharingBusy=false;
 window.setTimeSharing=async input=>{
@@ -958,20 +958,21 @@ window.setTimeSharing=async input=>{
 window.showTimeReport=async()=>{
  // Do not display cached foreign entries before the server has checked current consent.
  state.timeEntries=(state.timeEntries||[]).filter(e=>e.userId===state.currentUserId);
- renderTimeReport();
- const input=document.getElementById('shareMyTimes');if(input)input.disabled=true;
+ const userId=state.currentUserId,report=renderTimeReport();
+ const input=report.querySelector('#shareMyTimes');if(input)input.disabled=true;
  try{
   const r=await fetch('/api/state',{headers:await authHeaders(),cache:'no-store'});
   if(!r.ok)throw new Error('Zeiten und Sichtbarkeit konnten nicht geladen werden. Bitte die Übersicht erneut öffnen.');
   const remote=await r.json();
+  if(!report.isConnected||state.currentUserId!==userId)return;
   state.myTimeSharing=remote.myTimeSharing===true;state.sharedTimeUsers=remote.sharedTimeUsers||[];
   state.timeEntries=[...(state.timeEntries||[]).filter(e=>e.userId===state.currentUserId),...(remote.timeEntries||[]).filter(e=>e.userId!==state.currentUserId)];
-  if(input?.isConnected){input.closest('.modal-backdrop')?.remove();renderTimeReport();}
- }catch(error){const msg=document.getElementById('timeSharingMessage');if(msg)msg.textContent=error.message}
+  renderTimeReport(report);
+ }catch(error){if(!report.isConnected||state.currentUserId!==userId)return;const msg=report.querySelector('#timeSharingMessage');if(msg)msg.textContent=error.message;if(input)input.disabled=false}
 };
 
-window.editTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(!e||e.userId!==state.currentUserId)return;const local=v=>{const d=new Date(v);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)};modal(`<h2>Arbeitszeit bearbeiten</h2><div class="formgrid"><div class="field"><label>Beginn</label><input id="teStart" type="datetime-local" value="${local(e.start)}"></div><div class="field"><label>Ende</label><input id="teEnd" type="datetime-local" value="${local(e.end)}"></div><div class="field wide"><label>Tätigkeit / Bemerkung</label><input id="teNote" value="${esc(e.note||'')}"></div><label class="field wide"><span><input id="teVolunteer" type="checkbox" ${e.volunteer?'checked':''}> Als freiwilligen Dienst ausweisen</span></label></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveTimeEntry('${id}')">Speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>`)};
-window.saveTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(!e||e.userId!==state.currentUserId)return;const start=$('#teStart').value,end=$('#teEnd').value;if(!start||!end||new Date(end)<=new Date(start)){alert('Bitte einen gültigen Zeitraum eintragen.');return}e.start=new Date(start).toISOString();e.end=new Date(end).toISOString();e.note=$('#teNote').value.trim();e.volunteer=$('#teVolunteer').checked;save();closeModal();closeModal();showTimeReport()};
+window.editTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(!e||e.userId!==state.currentUserId)return;const local=v=>{const d=new Date(v);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,19)};modal(`<h2>Arbeitszeit bearbeiten</h2><div class="formgrid"><div class="field"><label>Beginn</label><input id="teStart" type="datetime-local" step="1" value="${local(e.start)}"></div><div class="field"><label>Ende</label><input id="teEnd" type="datetime-local" step="1" value="${local(e.end)}"></div><div class="field wide"><label>Tätigkeit / Bemerkung</label><input id="teNote" value="${esc(e.note||'')}"></div><label class="field wide"><span><input id="teVolunteer" type="checkbox" ${e.volunteer?'checked':''}> Als freiwilligen Dienst ausweisen</span></label></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveTimeEntry('${id}')">Speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>`)};
+window.saveTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(!e||e.userId!==state.currentUserId)return;const start=$('#teStart').value,end=$('#teEnd').value;if(!completedTimeBounds({start,end})){alert('Bitte einen gültigen, abgeschlossenen Zeitraum eintragen. Das Ende darf nicht in der Zukunft liegen.');return}e.start=new Date(start).toISOString();e.end=new Date(end).toISOString();e.note=$('#teNote').value.trim();e.volunteer=$('#teVolunteer').checked;save();closeModal();closeModal();showTimeReport()};
 window.deleteTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(!e||e.userId!==state.currentUserId||!confirm('Diesen Zeiteintrag wirklich löschen?'))return;state.timeEntries=state.timeEntries.filter(x=>x.id!==id);save();closeModal();showTimeReport()};
 
 window.toggleCloud=async v=>{state.settings.cloudSync=v;save();if(v)await pullCloud();render()}; window.toggleTime=v=>{state.settings.personalTimeTracking=v;save();render()};
@@ -980,8 +981,14 @@ window.importData=()=>{$('#fileImport').onchange=e=>{const f=e.target.files[0];i
 window.resetDemo=()=>{if(confirm('Alle lokalen Änderungen zurücksetzen?')){state=structuredClone(initialState);save();render()}};
 
 window.pickRoomPhoto=id=>{$('#photoInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=async()=>{state.rooms.find(r=>r.id===id).photo=await compactDataImage(rd.result);save();openRoom(id)};rd.readAsDataURL(f)};$('#photoInput').value='';$('#photoInput').click()};
-function modal(html){$('#modalRoot').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" id="modalBack"><div class="modal"><button type="button" class="modal-close no-print" onclick="closeModal()" aria-label="Fenster schließen" title="Schließen">×</button>${html}</div></div>`)}
-window.closeModal=()=>$('#modalBack')?.remove();
+function modal(html,target=null){
+ const root=$('#modalRoot'),content=`<button type="button" class="modal-close no-print" onclick="closeModal()" aria-label="Fenster schließen" title="Schließen">×</button>${html}`;
+ if(target){if(target.isConnected)target.querySelector('.modal').innerHTML=content;return target}
+ root.lastElementChild?.removeAttribute('id');
+ root.insertAdjacentHTML('beforeend',`<div class="modal-backdrop" id="modalBack"><div class="modal">${content}</div></div>`);
+ return root.lastElementChild;
+}
+window.closeModal=()=>{const root=$('#modalRoot');root.lastElementChild?.remove();if(root.lastElementChild)root.lastElementChild.id='modalBack'};
 window.modal=modal;
 
 // Kein Service Worker: Auf iPhones soll nach einer Veröffentlichung immer die
@@ -1006,7 +1013,8 @@ async function bootAuth(){render();if(new URLSearchParams(location.search).get('
 </script>
 <script src="/assets/kitchen-ui.js?v=1"></script>
 <script src="/assets/maintenance-tools.js?v=1"></script>
-<script src="/assets/time-summary.js?v=2"></script>
+<script src="/assets/time-summary.js?v=3"></script>
 <script>bootAuth();</script>
 </body>
 </html>
+
