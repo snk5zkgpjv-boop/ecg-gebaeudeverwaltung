@@ -23,3 +23,22 @@ const recent=c.recentPersonalTimeEntries(data,'me');assert.equal(recent.length,3
 c.state.timeEntries=data;const html=c.personalTimeSummaryHtml();assert.ok(html.includes('Meine Stunden je Kalenderwoche'));assert.ok(html.includes('Gesamt erfasst'));
 const index=fs.readFileSync('index.html','utf8');assert.ok(index.includes('${personalTimeSummaryHtml()}'));assert.ok(index.includes('recentPersonalTimeEntries(state.timeEntries,state.currentUserId)'));
 console.log('Wochen-, Jahreswechsel-, DST-, Datenschutz-, Dreierlimit- und HTML-Einbindungstests bestanden.');
+// Drill-down and export must agree with totals and never include another user.
+c.esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+c.timeEntryLabel=e=>e.workLabel||'Allgemein';c.currentUser=()=>({name:'Testperson'});
+c.state.timeEntries=[...data, {...entry('2026-09-20T23:30:00+02:00','2026-09-21T00:30:00+02:00'),workLabel:'<script>Angriff</script>',note:'Notiz & Prüfung'}];
+const totals=c.personalTimeWeeks(c.state.timeEntries,'me',now);
+for(const w of totals){const rows=c.personalTimeWeekEntries(c.state.timeEntries,'me',w.monday,now);assert.equal(rows.reduce((s,r)=>s+r.ms,0),w.ms);assert.ok(rows.every(r=>r.entry.userId==='me'));}
+const rows=c.personalTimeWeekEntries(c.state.timeEntries,'me',totals[0].monday,now);
+assert.equal(rows[0].ms,30*60000);assert.equal(rows[0].partial,true);
+assert.equal(c.personalTimeWeekEntries([entry('bad','bad'),entry('2026-09-21T12:00Z',null),entry('2026-09-22T12:00Z','2026-09-22T13:00Z')],'me',totals[0].monday,now).length,0);
+const one=c.personalTimeExportHtml(totals[0].monday,now),all=c.personalTimeExportHtml(null,now);
+assert.ok(one.includes('KW 39 / 2026'));assert.ok(!one.includes('KW 38 / 2026'));assert.ok(all.includes('KW 38 / 2026'));
+assert.ok(one.includes('&lt;script&gt;'));assert.ok(!one.includes('<script>Angriff'));assert.ok(one.includes('Notiz &amp; Prüfung'));
+assert.ok(one.includes('2 Std. 45 Min.'));assert.ok(one.includes('Wochenanteil'));assert.ok(all.includes('5 Std. 30 Min.'));
+assert.ok(c.timeWeekEntryTable([]).includes('Keine abgeschlossenen'));
+let opened='';c.modal=h=>{opened=h};c.openPersonalTimeWeek(totals[0].monday);assert.ok(opened.includes('Woche als PDF'));assert.ok(opened.includes('Zurück zur Übersicht'));
+let printed='';c.window={open:()=>({document:{open(){},write(h){printed=h},close(){}},focus(){}})};
+c.exportPersonalTimeWeeks(totals[0].monday);assert.ok(printed.includes('Arbeitszeitnachweis'));
+c.state.currentRole='technician';printed='';opened='';c.exportPersonalTimeWeeks();c.openPersonalTimeWeek(totals[0].monday);assert.equal(printed,'');assert.equal(opened,'');
+console.log('Wochen-Detailansicht, Exportfilter, Summengleichheit, HTML-Escaping und Technik-Sperre bestanden.');
