@@ -240,7 +240,7 @@ function load(){try{const s=JSON.parse(localStorage.getItem('cleaningAppState'))
 })();
 
 const LOCAL_ONLY_KEYS=['currentUserId','currentRole','activeTab','buildingSubTab','inventorySubTab','currentRoomId','elapsedStart','timeRunning','issueListMode'];
-function cloudPayload(){const x=structuredClone(state);for(const k of LOCAL_ONLY_KEYS)delete x[k];if(x.settings)x.settings={...x.settings,cloudSync:undefined};return x}
+function cloudPayload(){const x=structuredClone(state);for(const k of LOCAL_ONLY_KEYS)delete x[k];delete x.myIssuePlanning;if(x.settings)x.settings={...x.settings,cloudSync:undefined};return x}
 function mergeCloudState(remote){const myIssuePlanning=remote.myIssuePlanning||{};delete remote.myIssuePlanning;const local={};for(const k of LOCAL_ONLY_KEYS)local[k]=state[k];const localCloud=state.settings?.cloudSync;state={...state,...remote,...local,myIssuePlanning};state.settings={...(state.settings||{}),...(remote.settings||{}),cloudSync:localCloud};const cu=(state.users||[]).find(u=>u.id===state.currentUserId);if(cu)state.currentRole=cu.role;else if((state.users||[]).length){state.currentUserId=state.users[0].id;state.currentRole=state.users[0].role}}
 function save(){localStorage.setItem('cleaningAppState',JSON.stringify(state)); syncCloudDebounced();}
 let syncTimer; function syncCloudDebounced(){clearTimeout(syncTimer);syncTimer=setTimeout(syncCloud,700)}
