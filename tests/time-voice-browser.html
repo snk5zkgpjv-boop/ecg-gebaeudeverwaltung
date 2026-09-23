@@ -1,0 +1,14 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ECG Spracheingabe – synthetischer UI-Test</title>
+<style>body{font:16px Arial;margin:20px;color:#253333}.modal-backdrop{position:fixed;inset:0;background:#0006;display:grid;place-items:end center}.modal{background:white;padding:20px;width:min(680px,calc(100% - 40px));max-height:90vh;overflow:auto;border-radius:18px 18px 0 0}.row{display:flex;gap:10px}.wrap{flex-wrap:wrap}.btn{padding:10px;border:1px solid #ccc;border-radius:9px;background:white;font:inherit;cursor:pointer}.primary{background:#24504d;color:white}.field{display:grid;gap:6px}.field input,.field textarea{box-sizing:border-box;width:100%;padding:10px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/-1}.meta{font-size:13px;color:#555}.notice{background:#fff5d8;padding:12px}.modal-close{float:right}label{display:block}h2{font-size:22px}@media(max-width:500px){.formgrid{grid-template-columns:1fr}}</style>
+<h1>Synthetischer Test – keine echten Buchungen</h1><p>Dieser Test sendet keine Aufnahmen oder Buchungen an Server. Die API-Antworten sind simuliert; das Frontend-Skript ist das echte App-Skript.</p><button onclick="openVoiceTime()">Spracheingabe testen</button><p id="result"></p><div id="modalRoot"></div>
+<script>
+Object.defineProperty(window,'localStorage',{value:{setItem(){}}});
+const state={currentRole:'admin',currentUserId:'test',timeEntries:[]},timeEntryIdsSeen=new Set();let syncTimer;
+function syncCloud(){return Promise.resolve();}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function render(){document.getElementById('result').textContent=state.timeEntries.length+' simulierte Buchung(en)';}
+function renderTimeReport(){}
+function modal(html){const root=document.getElementById('modalRoot');root.insertAdjacentHTML('beforeend','<div class="modal-backdrop"><div class="modal"><button class="modal-close" onclick="closeModal()">Schließen</button>'+html+'</div></div>');return root.lastElementChild;}
+function closeModal(){document.getElementById('modalRoot').lastElementChild?.remove();}
+window.fetch=async(url,options)=>{if(url!=='/api/ai?timeVoice=1')throw Error('Test verhindert Netzwerkzugriff');const b=options?.body?JSON.parse(options.body):{};const draft={questions:[],entries:[{date:'2026-09-10',startTime:'08:10',endDate:'2026-09-10',endTime:'09:25',workLabel:'Synthetische Tätigkeit',note:'Nur UI-Test, keine echte Arbeitszeit',volunteer:false}]};const result=b.action==='analyze'?{draft}:b.action==='save'?{ok:true,entries:b.entries.map((e,i)=>({...e,id:'test-'+i,userId:'test',start:'2026-09-10T06:10:00Z',end:'2026-09-10T07:25:00Z'})),sync:{status:'pending'}}:b.action==='sync'?{sync:{status:'synced'}}:{ai:true};return {ok:true,json:async()=>result};};
+</script><script src="../assets/time-voice.js?v=1"></script></html>

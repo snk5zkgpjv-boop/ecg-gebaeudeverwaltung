@@ -1,6 +1,7 @@
 import {neon} from '@neondatabase/serverless';import {requireUser} from '../lib/auth.js';
+import timeVoiceHandler from '../lib/time-voice-handler.js';
 const can=p=>p.role!=='technician'&&(p.role==='admin'||(p.permissions?.useAI??p.role==='coordinator'));
-export default async function handler(req,res){if(req.method!=='POST')return res.status(405).json({error:'Methode nicht erlaubt'});
+export default async function handler(req,res){if(req.query?.timeVoice==='1')return timeVoiceHandler(req,res);if(req.method!=='POST')return res.status(405).json({error:'Methode nicht erlaubt'});
 if(!process.env.DATABASE_URL)return res.status(500).json({error:'DATABASE_URL fehlt'});
 if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:'KI ist noch nicht konfiguriert.'});
 const sql=neon(process.env.DATABASE_URL),a=await requireUser(req,res,sql);
