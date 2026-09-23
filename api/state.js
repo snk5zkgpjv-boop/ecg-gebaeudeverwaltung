@@ -269,11 +269,12 @@ export default async function handler(req, res) {
           const outdoor = (auth.state.outdoorAreas || []).find(item => item.id === issue.outdoorId);
           const asset = (auth.state.inventory || []).find(item => item.id === issue.assetId);
           const location = room ? `${room.floor || ''} – ${room.name || ''}`.replace(/^ – | – $/g,'') : outdoor?.name || (asset ? `Inventar – ${asset.name}` : 'Allgemein');
-          await fetch(`${url.replace(/\/$/, '')}/api/organization/ecg-planning-sync`, {
+          const response = await fetch(`${url.replace(/\/$/, '')}/api/organization/ecg-planning-sync`, {
             method: 'POST',
             headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
             body: JSON.stringify({ ownerEmail, plan: { issueId, title: issue.text || 'ECG Hinweis', location, issuePriority: issue.priority || 'normal', issueStatus: issue.status || 'open', ...plan } }),
-          }).catch((error) => console.error('organization planning sync error', error?.message || error));
+          }).catch((error) => { console.error('organization planning sync error', error?.message || error); return null; });
+          if (response && !response.ok) console.error('organization planning sync rejected', response.status);
         }
         return res.status(200).json({ ok: true, issueId, plan });
       }
