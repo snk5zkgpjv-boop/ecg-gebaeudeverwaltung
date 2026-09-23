@@ -1,6 +1,6 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 14.09.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 23.09.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
 ## Zuständigkeit
 
@@ -171,3 +171,11 @@ API-Referenzen: https://developers.openai.com/api/docs/guides/structured-outputs
 Live-Nachweis: PR #19 übernommen, Commit `11ec48359cbc55ad5c971857a61a833e1addb5ef`. Nach anfänglichem Funktionslimit wurde der Handler in die bestehende api/ai.js integriert; keine zusätzliche Serverless Function und kein Tarifwechsel. Vorschau READY, Produktion `dpl_79ZMH5DGFcA6bgEWCvQ1rZmEdbY2` READY am Produktivalias, Build ca. 17 Sekunden, kein Framework. assets/time-voice.js HTTP 200 mit neuer Funktion; /api/ai?timeVoice=1 ohne Anmeldung erwartungsgemäß HTTP 401. Error-/Fatal-Logscan: nur Node DEP0169-Abkündigungswarnung beim 401-Test sichtbar, kein weiterer Treffer; Monitoring/Drains nicht geprüft.
 
 Browserprüfung mit tatsächlichem Frontend auf isolierter synthetischer Testseite bestanden: Dialog öffnen, Diktattext eingeben, Auswerten, Vorschau/Pflichtbestätigung, simuliertes Speichern mit offenem Sync-Status und erneute Übertragung mit bestätigtem Status. Testseite schreibt nicht in den lokalen App-Speicher oder die Datenbank. Screenshot tests/voice-ui-verification-20260923.jpg dokumentiert ausschließlich simulierte Buchungen. Kein echter Mikrofon-/iPhone-/KI-Aufruf und kein authentifizierter Produktiv-Endtest; dieser Nachweis ersetzt keine Prüfung der produktiven Schlüssel und Empfängerzuordnung. Empfänger-Projektstand im Organisationstool ebenfalls fortgeschrieben.
+
+## Datenabgleich und fortlaufende Dokumentation – 23.09.2026
+
+Autorisierte fehlende Zeitbuchungen wurden im Organisationstool unter Erhalt der ECG-Quellkennungen nachgetragen. Empfänger-Datenbank und aktualisierte Wochenanzeige wurden geprüft. Persönliche Inhalte werden ausschließlich in den Datenbanken und deren Audit-Protokollen geführt, nicht in Git.
+
+Direkte SQL-Änderungen an app_state lösen den normalen API-Sync nicht aus; die Empfängerübertragung muss anschließend gesondert ausgeführt und geprüft werden. Der erfolgreiche manuelle Abgleich ersetzt keinen End-to-End-Nachweis der automatischen Synchronisation oder echten Sprachverarbeitung. Diese Prüfungen bleiben offen.
+
+AGENTS.md macht die Aktualisierung der technischen Projektstanddatei vor Abschluss jeder relevanten Bearbeitung verbindlich. Neue Agentensitzungen müssen den Repository-Stand zuerst lesen. Reine persönliche Zeitbuchungen erfordern keine öffentliche Markdown-Änderung. Es wurde kein Hintergrunddienst für externe Änderungen eingerichtet.
