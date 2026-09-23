@@ -41,7 +41,7 @@ const sql=async(strings,...values)=>{
  throw Error('unexpected SQL');
 };
 const c=vm.createContext({neon:()=>sql,requireUser:async(req,res)=>{if(!loggedIn){res.status(401).json({error:'login'});return null;}return {profile:{id:'me',role,email:env.ORGANIZATION_SYNC_USER_EMAIL},state:structuredClone(current)};},validateVoiceEntries:(raw,user,request)=>validateVoiceEntries(raw,user,request,now),pendingVoiceEntries,voiceSchema:{},syncOrganizationTimes:async()=>({status:failSync?'pending':'synced'}),process:{env:{DATABASE_URL:'synthetic'}},Date,Intl,JSON,AbortSignal,Buffer,Blob,FormData});
-vm.runInContext(fs.readFileSync('api/time-voice.js','utf8').replace(/^import .*;\n/gm,'').replace('export default async function handler','async function handler')+';this.handler=handler',c);
+vm.runInContext(fs.readFileSync('lib/time-voice-handler.js','utf8').replace(/^import .*;\n/gm,'').replace('export default async function handler','async function handler')+';this.handler=handler',c);
 async function call(body,method='POST'){const result={statusCode:200,setHeader(){},status(code){this.statusCode=code;return this;},json(body){this.body=body;return this;}};await c.handler({method,body},result);return result;}
 assert.equal((await call({action:'save',requestId:id,entries:[draft]})).statusCode,200);assert.equal(writes,1);
 assert.equal((await call({action:'save',requestId:id,entries:[draft]})).statusCode,200);assert.equal(writes,1);

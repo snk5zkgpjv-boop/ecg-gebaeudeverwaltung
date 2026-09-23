@@ -6,7 +6,7 @@ syncCloud=function(){cloudSaveQueue=cloudSaveQueue.then(()=>originalCloudSync())
 function voiceMessage(v,text){if(v.root.isConnected)v.root.querySelector('[data-voice-status]').textContent=text;}
 function voiceActive(v){return ecgVoice===v&&v.root.isConnected&&state.currentUserId===v.userId;}
 async function voiceRequest(body){
- const response=await fetch('/api/time-voice',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+ const response=await fetch('/api/ai?timeVoice=1',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
  const result=await response.json();if(!response.ok){const error=new Error(result.error||'Anfrage fehlgeschlagen.');error.status=response.status;throw error;}return result;
 }
 function voiceSetBusy(v,busy){v.busy=busy;v.root.querySelectorAll('[data-voice-action],#voiceTranscript').forEach(b=>b.disabled=busy);}
@@ -17,7 +17,7 @@ function openVoiceTime(){
  const root=modal(`<h2>Arbeitszeit einsprechen</h2><p>Datum, Beginn, Ende und Tätigkeiten nennen. Beispiel: „Gestern von 8 bis 10 Uhr die Außenanlagen gepflegt.“ Mehrere Einsätze sind möglich. Pausen bitte mit Uhrzeiten nennen.</p><p class="meta">Aufnahme und Text werden zur Erkennung an OpenAI gesendet. Kein Audio wird in der ECG-Datenbank gespeichert. Erst nach deiner Bestätigung werden Buchungen gespeichert. Alternativ tippen oder das Mikrofon der iPhone-Tastatur nutzen.</p><div class="row wrap"><button class="btn primary" data-voice-action data-record onclick="voiceRecord()">🎙 Aufnahme starten</button><button class="btn danger" data-stop hidden onclick="voiceStop()">Aufnahme beenden</button></div><div class="field" style="margin-top:12px"><label for="voiceTranscript">Gesprochener Text / Ergänzungen</label><textarea id="voiceTranscript" rows="5" maxlength="12000" oninput="voiceInvalidate()"></textarea></div><div class="row wrap" style="margin-top:12px"><button class="btn primary" data-voice-action onclick="voiceAnalyze()">Angaben auswerten</button><button class="btn" data-voice-action onclick="voiceManual()">Manuell eintragen</button></div><p role="status" aria-live="polite" data-voice-status>Einrichtung wird geprüft …</p><div data-voice-preview></div>`);
  const v={root,userId:state.currentUserId,requestId:crypto.randomUUID(),busy:false,recorder:null,stream:null,timer:null};ecgVoice=v;
  const observer=new MutationObserver(()=>{if(!root.isConnected){voiceCleanup(v);observer.disconnect();if(ecgVoice===v)ecgVoice=null;}});observer.observe(document.getElementById('modalRoot'),{childList:true});
- fetch('/api/time-voice',{cache:'no-store'}).then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);if(voiceActive(v))voiceMessage(v,b.ai?'Bereit. Aufnahme starten oder Text eingeben.':'KI nicht verfügbar oder nicht freigeschaltet. Du kannst die Angaben manuell eintragen.');}).catch(e=>voiceMessage(v,e.message));
+ fetch('/api/ai?timeVoice=1',{cache:'no-store'}).then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);if(voiceActive(v))voiceMessage(v,b.ai?'Bereit. Aufnahme starten oder Text eingeben.':'KI nicht verfügbar oder nicht freigeschaltet. Du kannst die Angaben manuell eintragen.');}).catch(e=>voiceMessage(v,e.message));
 }
 function voiceInvalidate(){const v=ecgVoice;if(!v||v.busy)return;v.root.querySelector('[data-voice-preview]').innerHTML='';v.frozen=null;v.requestId=crypto.randomUUID();}
 async function voiceRecord(){
