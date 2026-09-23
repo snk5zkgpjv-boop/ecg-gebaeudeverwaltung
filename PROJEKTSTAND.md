@@ -144,3 +144,12 @@ Geprüft: tests/time-summary.mjs, tests/time-integration.mjs und tests/technicia
 Browsergrenze: Die Cloud-Browserrichtlinie erlaubt das Öffnen der lokalen data:-Testseite nicht. Kein tatsächlicher Browser-/iPhone-Druckdialogtest und keine angemeldete Produktivprüfung. Vorschau und Live-Veröffentlichung dieses Korrekturstands noch ausstehend.
 
 Live bestätigt: PR #17 übernommen, Funktionscommit `b4d363f3644d8b640ab4971449159d03642d71b1`. Vorschau `dpl_4LcddgWNPJcsVpXSgxKFpDayEMHh` READY. Produktionsdeployment `dpl_HE7BgF7SR1hf94XRwWonX7ySywjQ` READY mit Produktivalias https://ecg-gebaeudeverwaltung-jn5h.vercel.app, Build ca. 18 Sekunden. Startseite und assets/time-summary.js?v=3 HTTP 200 und inhaltlich exakt mit den geprüften Dateien identisch. /api/state ohne Anmeldung HTTP 401. Auf dieses Deployment begrenzter Error-/Fatal-Logscan im 30-Minuten-Abfragefenster ohne Treffer. Kein Browser-/iPhone-Druckdialogtest, kein angemeldeter Ende-zu-Ende-Test; Monitoring/Drains nicht geprüft. Die oben ausstehende Veröffentlichung ist damit erfolgt; dieser Nachtrag ändert nur die Dokumentation.
+
+
+## Persönliche Mängelplanung – 23.09.2026
+
+Implementiert auf Feature-Branch: Hinweise/Mängel erhalten pro angemeldetem Benutzer eine private Planung mit geschätzten Minuten, persönlicher Planungspriorität, Notiz und Kennzeichen „noch nicht ausführbar“. Die Planung wird serverseitig unter der Benutzer-ID getrennt vom gemeinsamen Hinweis gespeichert; GET liefert nur `myIssuePlanning` des angemeldeten Benutzers. Der normale Cloud-Payload enthält diese privaten Angaben ausdrücklich nicht. Die Hinweise-Ansicht summiert offene geplante Zeit und markiert noch nicht geschätzte Aufgaben.
+
+Schnittstelle: Beim Speichern einer persönlichen Planung wird der Eintrag über den bestehenden Bearer-geschützten Organisationskanal an `/api/organization/ecg-planning-sync` übertragen. Das Organisationstool ordnet anhand der konfigurierten `ORGANIZATION_SYNC_USER_EMAIL` einem konkreten Konto zu; kein Fallback auf den ersten Administrator. Auch der bestehende ECG-Zeit-Sync sendet nun diese Eigentümer-E-Mail zur eindeutigen Zuordnung. Die Organisation speichert geplante Hinweise getrennt von geleisteten Zeiten; geplante Minuten werden nicht als Arbeitszeit gebucht.
+
+Prüfung/Veröffentlichung: Regressionstest für Privatsphäre-/Integrationsmarker ergänzt. Feature-Branch noch nicht als Produktion behaupten; Build/PR/Vorschau und Live-Abnahme folgen separat.
