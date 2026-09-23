@@ -31,12 +31,15 @@ function visible(state, profile) {
   // Running timers belong only to their owner.
   if (output.timeRunning?.userId !== userId) output.timeRunning = null;
   output.myTimeSharing = state.timeSharing?.[userId] === true;
+  output.myIssuePlanning = clone(state.issuePlanning?.[userId] || {});
   output.sharedTimeUsers = (state.users || []).filter(user => sharedIds.has(user.id)).map(user => ({ id: user.id, name: user.name }));
   delete output.timeSharing;
+  delete output.issuePlanning;
   if (profile.role === 'technician') {
     output.timeEntries = [];
     output.timeRunning = null;
     output.myTimeSharing = false;
+    output.myIssuePlanning = {};
     output.sharedTimeUsers = [];
   }
   if (profile.role === 'admin') return output;
@@ -173,6 +176,7 @@ function accepted(current, incoming, profile) {
       timeEntries,
       timeRunning,
       timeSharing: current.timeSharing || {},
+      issuePlanning: current.issuePlanning || {},
       myTimeSharing: undefined,
       sharedTimeUsers: undefined,
       kitchenPhotos: current.kitchenPhotos,
@@ -181,6 +185,7 @@ function accepted(current, incoming, profile) {
     };
   }
   const output = clone(current);
+  output.issuePlanning = current.issuePlanning || {};
   output.timeEntries = profile.role === 'technician' ? current.timeEntries : timeEntries;
   output.timeRunning = profile.role === 'technician' ? current.timeRunning : timeRunning;
 
@@ -227,19 +232,60 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'private, no-store');
     if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
     if (req.method === 'PATCH') {
-      if (auth.profile.role === 'technician') return res.status(403).json({ error: 'Zeiterfassung ist für die Technikrolle nicht freigeschaltet.' });
-      if (typeof req.body?.shareTimes !== 'boolean' || Object.keys(req.body).some(key => key !== 'shareTimes')) {
-        return res.status(400).json({ error: 'Bitte eine gültige Sichtbarkeit angeben.' });
+      if (auth.profile.role === 'technician') return res.status(403).json({ error: 'Persönliche Planung ist für die Technikrolle nicht freigeschaltet.' });
+      if (typeof req.body?.shareTimes === 'boolean' && Object.keys(req.body).every(key => key === 'shareTimes')) {
+        const preference = JSON.stringify({ [auth.profile.id]: req.body.shareTimes });
+        await sql`UPDATE app_state SET data=jsonb_set(data,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb) || ${preference}::jsonb),revision=revision+1,updated_at=now() WHERE id='main'`;
+        return res.status(200).json({ ok: true, shareTimes: req.body.shareTimes });
       }
-      const preference = JSON.stringify({ [auth.profile.id]: req.body.shareTimes });
-      await sql`UPDATE app_state SET data=jsonb_set(data,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb) || ${preference}::jsonb),revision=revision+1,updated_at=now() WHERE id='main'`;
-      return res.status(200).json({ ok: true, shareTimes: req.body.shareTimes });
+      if (req.body?.issuePlan && Object.keys(req.body).every(key => key === 'issuePlan')) {
+        const raw = req.body.issuePlan;
+        const issueId = String(raw.issueId || '');
+        const issue = (auth.state.issues || []).find(item => item.id === issueId);
+        if (!issue) return res.status(404).json({ error: 'Hinweis nicht gefunden.' });
+        const estimatedMinutes = raw.estimatedMinutes === null || raw.estimatedMinutes === '' ? null : Number(raw.estimatedMinutes);
+        if (estimatedMinutes !== null && (!Number.isInteger(estimatedMinutes) || estimatedMinutes < 5 || estimatedMinutes > 1440)) {
+          return res.status(400).json({ error: 'Zeitaufwand muss zwischen 5 und 1440 Minuten liegen.' });
+        }
+        const planningPriority = ['normal','diese_woche','dringend'].includes(raw.planningPriority) ? raw.planningPriority : 'normal';
+        const plan = {
+          estimatedMinutes,
+          planningPriority,
+          note: String(raw.note || '').slice(0, 1000),
+          blocked: raw.blocked === true,
+          updatedAt: new Date().toISOString(),
+        };
+        const userId = auth.profile.id;
+        const nextUserPlans = { ...(auth.state.issuePlanning?.[userId] || {}), [issueId]: plan };
+        const nextPlanning = { ...(auth.state.issuePlanning || {}), [userId]: nextUserPlans };
+        const payload = JSON.stringify(nextPlanning);
+        await sql`UPDATE app_state SET data=jsonb_set(data,'{issuePlanning}',${payload}::jsonb),revision=revision+1,updated_at=now() WHERE id='main'`;
+
+        const url = process.env.ORGANIZATION_API_URL;
+        const token = process.env.ORGANIZATION_SYNC_TOKEN;
+        const ownerEmail = (process.env.ORGANIZATION_SYNC_USER_EMAIL || '').trim().toLowerCase();
+        if (url && token && ownerEmail) {
+          const room = (auth.state.rooms || []).find(item => item.id === issue.roomId);
+          const outdoor = (auth.state.outdoorAreas || []).find(item => item.id === issue.outdoorId);
+          const asset = (auth.state.inventory || []).find(item => item.id === issue.assetId);
+          const location = room ? `${room.floor || ''} – ${room.name || ''}`.replace(/^ – | – $/g,'') : outdoor?.name || (asset ? `Inventar – ${asset.name}` : 'Allgemein');
+          const response = await fetch(`${url.replace(/\/$/, '')}/api/organization/ecg-planning-sync`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+            body: JSON.stringify({ ownerEmail, plan: { issueId, title: issue.text || 'ECG Hinweis', location, issuePriority: issue.priority || 'normal', issueStatus: issue.status || 'open', ...plan } }),
+          }).catch((error) => { console.error('organization planning sync error', error?.message || error); return null; });
+          if (response && !response.ok) console.error('organization planning sync rejected', response.status);
+        }
+        return res.status(200).json({ ok: true, issueId, plan });
+      }
+      return res.status(400).json({ error: 'Ungültige persönliche Einstellung.' });
     }
     if (req.method === 'PUT') {
       if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
         return res.status(400).json({ error: 'Ungültige Daten' });
       }
       const next = accepted(auth.state, req.body, auth.profile);
+      next.issuePlanning = auth.state.issuePlanning || {};
       const payload = JSON.stringify(next);
       const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' RETURNING revision,updated_at`;
 
@@ -252,7 +298,7 @@ export default async function handler(req, res) {
         await fetch(`${url.replace(/\/$/, '')}/api/organization/ecg-sync`, {
           method: 'POST',
           headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-          body: JSON.stringify({ entries }),
+          body: JSON.stringify({ ownerEmail: email, entries }),
         }).catch((error) => console.error('organization sync error', error?.message || error));
       }
       return res.status(200).json({ ok: true, ...rows[0] });
