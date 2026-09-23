@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { requireUser } from '../lib/auth.js';
+import { syncOrganizationTimes } from '../lib/organization-sync.js';
 
 const defaults = {
   coordinator: {
@@ -167,12 +168,17 @@ function accepted(current, incoming, profile) {
     ...(current.timeEntries || []).filter(entry => entry.userId !== userId),
     ...(incoming.timeEntries || current.timeEntries || []).filter(entry => entry.userId === userId && !foreignIds.has(entry.id)),
   ];
+  // Preserve entries added on another device after this client last saw them.
+  const seen = new Set(Array.isArray(incoming.timeEntryIdsSeen) ? incoming.timeEntryIdsSeen : []);
+  const submitted = new Set(timeEntries.map(entry => entry.id));
+  timeEntries.push(...(current.timeEntries || []).filter(entry => entry.userId === userId && !submitted.has(entry.id) && !seen.has(entry.id)));
   const timeRunning = incoming.timeRunning?.userId === userId
     ? incoming.timeRunning
     : (current.timeRunning?.userId === userId ? null : current.timeRunning);
   if (profile.role === 'admin') {
     return {
       ...incoming,
+      timeEntryIdsSeen: undefined,
       timeEntries,
       timeRunning,
       timeSharing: current.timeSharing || {},
@@ -287,21 +293,11 @@ export default async function handler(req, res) {
       const next = accepted(auth.state, req.body, auth.profile);
       next.issuePlanning = auth.state.issuePlanning || {};
       const payload = JSON.stringify(next);
-      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' RETURNING revision,updated_at`;
-
-      const url = process.env.ORGANIZATION_API_URL;
-      const token = process.env.ORGANIZATION_SYNC_TOKEN;
-      const email = (process.env.ORGANIZATION_SYNC_USER_EMAIL || '').trim().toLowerCase();
-      if (url && token && email) {
-        const ids = new Set((next.users || []).filter((user) => (user.email || '').trim().toLowerCase() === email).map((user) => user.id));
-        const entries = (next.timeEntries || []).filter((entry) => ids.has(entry.userId));
-        await fetch(`${url.replace(/\/$/, '')}/api/organization/ecg-sync`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-          body: JSON.stringify({ ownerEmail: email, entries }),
-        }).catch((error) => console.error('organization sync error', error?.message || error));
-      }
-      return res.status(200).json({ ok: true, ...rows[0] });
+      const previousTimes = JSON.stringify(auth.state.timeEntries || []);
+      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb RETURNING revision,updated_at`;
+      if(!rows.length)return res.status(409).json({error:'Zeitbuchungen wurden gleichzeitig geändert. Bitte erneut speichern.'});
+      const sync = await syncOrganizationTimes(next);
+      return res.status(200).json({ ok: true, ...rows[0], sync });
     }
     res.setHeader('Allow', 'GET, PUT, PATCH');
     return res.status(405).json({ error: 'Methode nicht erlaubt' });
