@@ -1,0 +1,356 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ECG Zeiterfassung – synthetische Prüfung</title><style>:root{--bg:#f7f7f7;--card:#fff;--ink:#202124;--muted:#777b82;--line:#e8e8e8;--accent:#b00045;--accent2:#fbf0f4;--accent3:#f1d0dc;--accent4:#f3dcc0;--danger:#b42318;--warn:#a15c13;--ok:#26735a;--shadow:0 7px 24px rgba(32,33,36,.055);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer}.shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto}.topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:10px;min-width:0}.brandmark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#111827,#1f6f5f);display:grid;place-items:center;color:white;font-weight:800}.brand h1{font-size:17px;margin:0;white-space:nowrap}.brand small{display:block;color:var(--muted);font-size:11px}.top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}.sync{font-size:11px;padding:5px 8px;border-radius:999px;background:#eef2f6;color:#475467}.main{padding:16px;max-width:1180px;width:100%;margin:0 auto 86px}.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));box-shadow:0 -8px 24px rgba(16,24,40,.06)}.tab{border:0;background:transparent;padding:7px 3px;border-radius:10px;color:#667085;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px}.tab.active{background:var(--accent2);color:var(--accent);font-weight:700}.tab .ico{font-size:19px}.grid{display:grid;gap:14px}.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.stat{padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}.section-title{display:flex;align-items:center;gap:10px;margin:22px 2px 10px}.section-title h2{font-size:18px;margin:0}.section-title .spacer{flex:1}.card{padding:14px}.row{display:flex;gap:10px;align-items:center}.wrap{flex-wrap:wrap}.spacer{flex:1}.btn{border:1px solid var(--line);background:white;color:var(--ink);border-radius:10px;padding:9px 11px;font-weight:650}.btn.primary{background:var(--accent);color:white;border-color:var(--accent)}.btn.soft{background:var(--accent2);color:var(--accent);border-color:transparent}.btn.danger{background:#fff4f2;color:var(--danger);border-color:#fecdca}.btn.tiny{padding:6px 8px;font-size:12px}.field{display:grid;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:650}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:white}.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:12px}.room-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.room{padding:14px}.room h3{margin:0 0 4px;font-size:16px}.meta{color:var(--muted);font-size:12px}.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;font-size:11px;background:#f2f4f7;color:#475467}.pill.ok{background:#ecfdf3;color:var(--ok)}.pill.warn{background:#fffaeb;color:var(--warn)}.pill.danger{background:#fef3f2;color:var(--danger)}.task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}.task:first-child{border-top:0}.task-title{font-weight:650}.task small{display:block;color:var(--muted);margin-top:3px}.check{width:24px;height:24px;border-radius:8px;border:2px solid #d0d5dd;background:white;display:grid;place-items:center}.check.done{background:var(--accent);border-color:var(--accent);color:white}.notice{padding:10px 12px;background:#fffaeb;color:#7a2e0e;border:1px solid #fedf89;border-radius:12px;font-size:13px}.issue{display:grid;gap:8px;padding:12px 0;border-top:1px solid var(--line)}.issue:first-child{border-top:0}.material-table{width:100%;border-collapse:collapse}.material-table th,.material-table td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}.material-table th{color:var(--muted);font-size:11px;text-transform:uppercase}.low{color:var(--danger);font-weight:750}.modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(16,24,40,.55);display:grid;place-items:end center}.modal{background:white;width:min(720px,100%);max-height:90vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px;box-shadow:0 -20px 50px rgba(0,0,0,.18)}.modal h2{margin:0 0 14px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.formgrid .wide{grid-column:1/-1}.qrbox{display:grid;place-items:center;padding:18px;background:#fff;border:1px dashed #d0d5dd;border-radius:14px}.qrbox img{width:220px;height:220px;object-fit:contain}.hero{background:linear-gradient(135deg,#111827,#1f6f5f);color:white;border-radius:18px;padding:18px}.hero h2{margin:0 0 6px}.hero p{margin:0;color:rgba(255,255,255,.8);font-size:13px}.photo{width:100%;max-height:240px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}.empty{padding:30px 10px;text-align:center;color:var(--muted)}.template-card{display:grid;gap:8px}.danger-text{color:var(--danger)}
+
+.floorplan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.floorplan-card img{width:100%;height:220px;object-fit:contain;background:#f8fafc;border:1px solid var(--line);border-radius:12px}
+.user-badge{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:white;border-radius:10px;padding:7px 9px;font-size:12px}
+.timer-card{display:grid;gap:12px}.timer-time{font-size:30px;font-weight:800;letter-spacing:.02em}.user-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.user-row:first-child{border-top:0}
+@media(max-width:760px){.floorplan-grid{grid-template-columns:1fr}.floorplan-card img{height:260px}.user-badge .email{display:none}}
+
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}.room-list{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.brand small{display:none}.topbar{padding:10px}.main{padding:12px}.sync{display:none}}
+
+body{background:linear-gradient(180deg,#fff 0,#f8f8f8 180px,#f7f7f7 100%)} 
+.topbar{background:rgba(255,255,255,.97);padding:14px 18px}
+.brandmark{width:58px;height:58px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden}.brandmark img{width:58px;height:58px;object-fit:contain;display:block}
+.brand h1{font-size:18px;font-weight:760;letter-spacing:-.2px}
+.brand small{font-size:10.5px;letter-spacing:.02em}
+.hero{background:linear-gradient(135deg,#fff 0%,#fbf0f4 62%,#f6e5d1 100%);
+color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;flex-direction:column;justify-content:end;padding:24px}
+.hero h2{font-size:28px;letter-spacing:-.7px}
+.hero p{color:rgba(32,33,36,.72);max-width:730px}
+.btn.primary{background:#202124;border-color:#202124}
+.btn.soft{background:var(--accent2);color:#8f0038}
+.check.done{background:#202124;border-color:#202124}
+.tab.active{background:var(--accent2);color:#8f0038}
+.stat b{font-weight:800}
+.section-title h2{letter-spacing:-.25px}
+.area-card{position:relative;overflow:hidden}.area-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+.asset-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;background:#f2f4f7;border-radius:7px;padding:3px 6px}
+.segmented{display:flex;gap:6px;background:#efefef;padding:4px;border-radius:13px;width:max-content;max-width:100%;overflow:auto}
+.segmented button{border:0;background:transparent;border-radius:10px;padding:8px 12px;font-weight:700;color:#696d73;white-space:nowrap}
+.segmented button.active{background:white;color:#202124;box-shadow:0 1px 5px rgba(0,0,0,.06)}
+.inventory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.asset-photo{height:130px;background:#f2f4f7;border-radius:12px;display:grid;place-items:center;overflow:hidden;color:#9aa0a6;font-size:32px}.asset-photo img{width:100%;height:100%;object-fit:cover}
+@media(max-width:760px){.inventory-grid{grid-template-columns:1fr}.hero{min-height:138px;padding:18px}.hero h2{font-size:24px}}
+
+
+
+.room-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.room-actions .btn{flex:1;min-width:88px}
+.qr-sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.qr-label{border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;break-inside:avoid;background:#fff}
+.qr-label img{width:170px;height:170px;object-fit:contain}
+.qr-label b{display:block;margin-top:8px;font-size:14px}.qr-label small{display:block;color:var(--muted);margin-top:3px}
+.room-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+@media(max-width:760px){.qr-sheet{grid-template-columns:1fr}.room-actions .btn{min-width:0}.brandmark,.brandmark img{width:52px;height:52px}}
+@media print{
+  body.qr-print-mode #app{display:none!important}
+  body.qr-print-mode #modalRoot{display:block!important}
+  body.qr-print-mode .modal-backdrop{position:static!important;background:white!important;display:block!important}
+  body.qr-print-mode .modal{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;border-radius:0!important;box-shadow:none!important}
+  body.qr-print-mode .print-hide{display:none!important}
+  body.qr-print-mode .qr-sheet{grid-template-columns:repeat(3,1fr)!important;gap:8mm!important}
+  body.qr-print-mode .qr-label{border:1px solid #ccc!important;padding:6mm!important}
+  body.qr-print-mode .qr-label img{width:42mm!important;height:42mm!important}
+}
+
+
+.calendar-card{display:grid;gap:8px}
+.event-row{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.event-row:first-child{border-top:0}
+.event-date{font-weight:800;color:var(--accent);text-align:center}
+.event-date span{display:block;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase}
+.event-title{font-weight:750}.event-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.event-rule{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:#fff}
+.event-task-source{font-size:11px;color:var(--accent);font-weight:700;margin-top:3px}
+.calendar-sync{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--accent2);color:#5f1b36}
+@media(max-width:760px){.event-row{grid-template-columns:58px 1fr}.event-row>.pill{grid-column:2}.calendar-sync{align-items:flex-start}}
+
+
+.task-admin-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.stat.clickable{cursor:pointer;transition:.15s}.stat.clickable:active{transform:scale(.98)}
+.issue{cursor:pointer}.issue .btn,.issue select{cursor:pointer}
+.edit-task-row{padding:11px 0;border-top:1px solid var(--line)}.edit-task-row:first-child{border-top:0}
+
+/* ECG website-inspired branding */
+.topbar{border-bottom:1px solid #d9d9d9}
+.brand h1{color:#4a4a4a;font-weight:600}
+.brand small{color:#777}
+.tab.active{background:transparent;color:var(--accent);position:relative}
+.tab.active:after{content:"";position:absolute;left:22%;right:22%;bottom:2px;height:3px;background:var(--accent);border-radius:3px}
+.btn.primary{background:var(--accent);border-color:var(--accent)}
+.hero h2{color:var(--accent);font-weight:650}
+.stat b,.section-title h2{color:#2d2d2d}
+
+@media print{.topbar,.tabs,.btn,.toolbar{display:none!important}.main{margin:0;padding:0}.card{box-shadow:none;border:0}.modal-backdrop{position:static;background:white}.modal{max-height:none;width:100%;border-radius:0}.qrbox{border:0}}
+
+.user-admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.user-admin-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.user-admin-card.inactive{opacity:.6;background:#fafafa}
+.user-admin-card .role{margin-top:6px}
+.quick-admin{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.quick-admin .card{cursor:pointer}
+
+
+.asset-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.asset-room-note{font-size:12px;color:var(--muted);margin-top:4px}
+.qr-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+@media print{
+  body *{visibility:hidden!important}
+  .modal,.modal *{visibility:visible!important}
+  .modal{position:absolute!important;left:0!important;top:0!important;width:100%!important;max-width:none!important;box-shadow:none!important}
+  .no-print{display:none!important}
+}
+
+/* Veranstaltungs-/Abnahmelisten */
+.event-row{align-items:flex-start}
+.event-main{min-width:0;flex:1}
+.event-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.checklist-room-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;max-height:48vh;overflow:auto;padding:2px}
+.checklist-room{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.checklist-room input{margin-top:3px}
+.check-section{margin-top:16px}
+.check-section h3{margin:0 0 8px;font-size:16px;color:#333}
+.check-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;margin:7px 0;background:#fff}
+.check-item.done{background:#f7fbf8;opacity:.82}
+.check-item input[type=checkbox]{width:20px;height:20px;margin-top:2px}
+.check-item .roomtag{font-size:11px;color:var(--muted);margin-top:3px}
+.check-item textarea{width:100%;margin-top:7px;min-height:52px}
+.checklist-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0}
+.checklist-summary .mini{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafafa}
+
+
+.auth-gate{position:fixed;inset:0;z-index:1000;background:linear-gradient(180deg,#fff,#fbf0f4);display:flex;align-items:center;justify-content:center;padding:20px}.auth-card{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 60px rgba(32,33,36,.12);padding:24px}.auth-card h2{margin:10px 0 6px;color:var(--accent)}.auth-card p{color:var(--muted);font-size:13px}.auth-logo{width:78px;height:78px;object-fit:contain}.auth-hidden{display:none!important}.auth-code{font-size:22px;letter-spacing:.25em;text-align:center}.auth-status{margin-top:10px;font-size:12px;color:var(--muted)}
+
+.maintenance-grid,.loan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.maintenance-card,.loan-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.status-overdue{background:#fef3f2;color:var(--danger)}.status-due{background:#fffaeb;color:var(--warn)}.status-ok{background:#ecfdf3;color:var(--ok)}
+.tech-badge{background:#eef4ff;color:#3538cd}
+.doc-preview{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.modal{position:relative}
+.modal-close{position:sticky;top:0;z-index:6;float:right;width:42px;height:42px;margin:-4px -4px 8px 12px;border:1px solid var(--line);border-radius:50%;background:rgba(255,255,255,.96);color:var(--ink);box-shadow:0 3px 12px rgba(16,24,40,.16);font-size:28px;line-height:1;display:grid;place-items:center}
+.modal-close:active{background:var(--accent2);color:var(--accent)}
+</style><body><h1>Zeiterfassung – Test mit synthetischen Daten</h1><label><input type="checkbox" id="offline" checked> Offline simulieren</label><button onclick="showTimeReport()">Zeiterfassung öffnen</button><div id="modalRoot"></div><script>const state={currentUserId:'test',currentRole:'coordinator',users:[{id:'test',name:'Testperson',role:'coordinator'}],rooms:[],timeEntries:[]};let serverEntries=[];let authSession={user:{appUserId:'test'}};const $=s=>document.querySelector(s);const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const uid=()=>crypto.randomUUID();const currentUser=()=>state.users[0];const timeEntryLabel=e=>e.workLabel;const fmtDuration=ms=>timeSummaryDuration(ms);const authHeaders=async x=>x;const render=()=>{};const memory=new Map();const localStorage={get length(){return memory.size},key:i=>[...memory.keys()][i],getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)};const fetch=async(url,options={})=>{if(document.getElementById('offline').checked)throw Error('Test: Offline');if(options.method==='PATCH'){const op=JSON.parse(options.body).timeChange;serverEntries=serverEntries.filter(e=>e.id!==op.entryId);if(op.entry)serverEntries.unshift({...op.entry,timeRevision:op.id});return {ok:true,json:async()=>({ok:true,operationId:op.id,entries:serverEntries})}}return {ok:true,json:async()=>({timeEntries:serverEntries,myTimeSharing:false,sharedTimeUsers:[]})}};
+// Read-only personal totals, ISO weeks in Europe/Berlin regardless of device timezone.
+const timeSummaryDay=86400000;
+function timeSummaryMonday(value){
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(value));
+ const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+ const d=new Date(Date.UTC(+p.year,+p.month-1,+p.day));
+ d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.getTime();
+}
+function timeSummaryMidnight(day){
+ const zone=new Intl.DateTimeFormat('en',{timeZone:'Europe/Berlin',timeZoneName:'shortOffset'}).formatToParts(new Date(day)).find(p=>p.type==='timeZoneName').value;
+ const m=zone.match(/GMT([+-])(\d+)(?::(\d+))?/);
+ const offset=m?(m[1]==='-'?-1:1)*(+m[2]*60+(+m[3]||0)):0;
+ return day-offset*60000;
+}
+function timeSummaryWeekLabel(monday){
+ const thursday=new Date(monday+3*timeSummaryDay),year=thursday.getUTCFullYear();
+ const week=Math.ceil(((thursday-Date.UTC(year,0,1))/timeSummaryDay+1)/7);
+ return `KW ${week} / ${year}`;
+}
+function completedTimeBounds(entry,now=Date.now()){
+ if(!entry?.start||!entry.end)return null;
+ const start=Date.parse(entry.start),end=Date.parse(entry.end);
+ return Number.isFinite(start)&&Number.isFinite(end)&&end>start&&end<=now?{start,end}:null;
+}
+function personalTimeWeeks(entries,userId,now=Date.now()){
+ const current=timeSummaryMonday(now),weeks=new Map([[current,0],[current-7*timeSummaryDay,0]]);
+ for(const e of entries||[]){
+  if(e.userId!==userId)continue;
+  const bounds=completedTimeBounds(e,now);if(!bounds)continue;
+  const {start,end}=bounds;
+  let cursor=start,monday=timeSummaryMonday(start);
+  while(cursor<end){const boundary=timeSummaryMidnight(monday+7*timeSummaryDay),stop=Math.min(end,boundary);weeks.set(monday,(weeks.get(monday)||0)+stop-cursor);cursor=stop;monday+=7*timeSummaryDay;}
+ }
+ return [...weeks].sort(([a],[b])=>b-a).map(([monday,ms])=>({monday,ms,label:timeSummaryWeekLabel(monday),relative:monday===current?'Diese Woche':monday===current-7*timeSummaryDay?'Letzte Woche':''}));
+}
+function timeSummaryDuration(ms){
+ if(!Number.isFinite(ms)||ms<0)return 'Ungültige Dauer';
+ const seconds=Math.round(ms/1000),minutes=Math.floor(seconds/60),rest=seconds%60;
+ return `${Math.floor(minutes/60)} Std. ${String(minutes%60).padStart(2,'0')} Min.${rest?` ${String(rest).padStart(2,'0')} Sek.`:''}`;
+}
+function recentPersonalTimeEntries(entries,userId,now=Date.now()){return (entries||[]).filter(e=>e.userId===userId&&completedTimeBounds(e,now)).slice().sort((a,b)=>Date.parse(b.start)-Date.parse(a.start)).slice(0,3);}
+function personalTimeWeekEntries(entries,userId,monday,now=Date.now()){
+ const from=timeSummaryMidnight(monday),until=timeSummaryMidnight(monday+7*timeSummaryDay);
+ return (entries||[]).filter(e=>e.userId===userId).map(entry=>{
+  const bounds=completedTimeBounds(entry,now);if(!bounds)return null;
+  const {start,end}=bounds;
+  if(end<=from||start>=until)return null;
+  const clippedStart=Math.max(start,from),clippedEnd=Math.min(end,until);
+  return {entry,start:clippedStart,end:clippedEnd,ms:clippedEnd-clippedStart,partial:start<from||end>until};
+ }).filter(Boolean).sort((a,b)=>a.start-b.start);
+}
+function timeWeekDate(value){return new Date(value).toLocaleDateString('de-DE',{timeZone:'UTC',day:'2-digit',month:'2-digit',year:'numeric'});}
+function timeWeekRange(monday){return `${timeWeekDate(monday)} - ${timeWeekDate(monday+6*timeSummaryDay)}`;}
+function timeWeekEntryTable(rows,editable=false){
+ const stamp=value=>new Date(value).toLocaleString('de-DE',{timeZone:'Europe/Berlin',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ return `<table class="time-week-table" style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th scope="col">Datum / Uhrzeit</th><th scope="col">Tätigkeit / Bemerkung</th><th scope="col">Dauer</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td style="vertical-align:top;padding:10px 8px 10px 0;border-bottom:1px solid #ddd">${stamp(r.start)}<br>bis ${stamp(r.end)}${r.partial?'<br><small>Wochenanteil</small>':''}</td><td style="vertical-align:top;padding:10px 8px;border-bottom:1px solid #ddd;white-space:pre-wrap;overflow-wrap:anywhere"><b>${esc(timeEntryLabel(r.entry))}</b>${r.entry.note?`<br>${esc(r.entry.note)}`:''}${r.entry.volunteer?'<br><small>Freiwilliger Dienst</small>':''}${editable&&r.entry.userId===state.currentUserId&&state.currentRole!=='technician'?`<div class="row wrap no-print" style="margin-top:8px"><button class="btn tiny" onclick="closeModal();editTimeEntry(${esc(JSON.stringify(r.entry.id))})">Bearbeiten</button><button class="btn tiny danger" onclick="closeModal();deleteTimeEntry(${esc(JSON.stringify(r.entry.id))})">Löschen</button></div>`:''}</td><td style="vertical-align:top;padding:10px 0 10px 8px;border-bottom:1px solid #ddd">${timeSummaryDuration(r.ms)}</td></tr>`).join(''):'<tr><td colspan="3" style="padding:16px 0">Keine abgeschlossenen eigenen Buchungen in dieser Woche.</td></tr>'}</tbody></table><p><b>Wochensumme: ${timeSummaryDuration(rows.reduce((sum,r)=>sum+r.ms,0))}</b></p>`;
+}
+function openPersonalTimeWeek(monday){
+ if(state.currentRole==='technician'||!Number.isFinite(monday))return;
+ const rows=personalTimeWeekEntries(state.timeEntries,state.currentUserId,monday);
+ modal(`<h2>${timeSummaryWeekLabel(monday)}</h2><p>${timeWeekRange(monday)}</p><div class="row wrap"><button class="btn primary" onclick="exportPersonalTimeWeeks(${monday})">Woche als PDF / Drucken</button></div><div style="overflow-x:auto;margin-top:16px">${timeWeekEntryTable(rows,true)}</div><p class="meta">Eigene abgeschlossene Zeiten · Deutschland. Bei wochenübergreifenden Buchungen wird nur der Anteil dieser Woche angezeigt. Bearbeiten und Löschen betreffen die gesamte Buchung. Einzelzeiten und Summen sind auf Sekunden gerundet; kleine Rundungsabweichungen sind möglich.</p><button class="btn" onclick="closeModal()">Zurück zur Übersicht</button>`);
+}
+function personalTimeExportHtml(monday=null,now=Date.now()){
+ const weeks=personalTimeWeeks(state.timeEntries,state.currentUserId,now).filter(w=>monday===null||w.monday===monday);
+ const name=currentUser()?.name||'Eigene Arbeitszeiten';
+ return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ECG Zeiterfassung - ${monday===null?'Alle Kalenderwochen':timeSummaryWeekLabel(monday)}</title><style>@page{size:A4;margin:16mm;@bottom-center{content:"Seite " counter(page);font-size:9pt;color:#666}}*{box-sizing:border-box}body{font:11pt Arial,sans-serif;color:#1c2833;max-width:1000px;margin:24px auto;padding:0 16px}h1{font-size:20pt;margin-bottom:8px}h2{font-size:16pt;color:#24504d}p{line-height:1.5}.week{break-before:page}.week:first-of-type{break-before:auto}table{table-layout:fixed;font-size:10pt}th{padding:10px 4px;background:#edf3f2;border-bottom:2px solid #24504d}th:first-child{width:29%}th:last-child{width:20%}td{overflow-wrap:anywhere}thead{display:table-header-group}tr{break-inside:avoid}small,.meta{color:#59656c}.controls{padding:16px;background:#edf3f2;margin-bottom:24px}button{font:inherit;padding:12px;cursor:pointer}@media print{body{max-width:none;margin:0;padding:0}.controls{display:none}}@media screen and (max-width:600px){table{font-size:9pt}}</style></head><body><div class="controls"><button onclick="window.print()">Drucken / als PDF sichern</button><p>Im Druckdialog als PDF sichern oder ausdrucken. Auf dem iPhone die Druckvorschau öffnen und über Teilen in Dateien sichern.</p></div><h1>ECG - Arbeitszeitnachweis</h1><p><b>${esc(name)}</b><br>Eigene abgeschlossene Buchungen, einschließlich freiwilliger Dienste.<br>Zeitzone: Deutschland. Wochenübergreifende Buchungen sind anteilig zugeordnet.<br>Einzelzeiten und Summen sind auf Sekunden gerundet; kleine Rundungsabweichungen sind möglich.</p>${weeks.map(w=>`<section class="week"><h2>${w.label}</h2><p>${timeWeekRange(w.monday)}</p>${timeWeekEntryTable(personalTimeWeekEntries(state.timeEntries,state.currentUserId,w.monday,now))}</section>`).join('')}<p><b>Gesamtsumme dieses Exports: ${timeSummaryDuration(weeks.reduce((sum,w)=>sum+w.ms,0))}</b></p></body></html>`;
+}
+function exportPersonalTimeWeeks(monday=null){
+ if(state.currentRole==='technician')return;
+ const html=personalTimeExportHtml(monday),w=window.open('','_blank');
+ if(!w){alert('Bitte Pop-ups für den PDF-/Druckexport erlauben.');return;}
+ w.document.open();w.document.write(html);w.document.close();w.focus();
+}
+function personalTimeSummaryHtml(){
+ const weeks=personalTimeWeeks(state.timeEntries,state.currentUserId);
+ const date=value=>new Date(value).toLocaleDateString('de-DE',{timeZone:'UTC',day:'2-digit',month:'2-digit'});
+ return `<section aria-label="Meine Wochenstunden"><h3>Meine Stunden je Kalenderwoche</h3><p class="meta">Kalenderwoche antippen, um die zugehörigen Einträge zu sehen.</p><button class="btn" onclick="exportPersonalTimeWeeks()">Alle Wochen als PDF / Drucken</button><p class="meta">Montag bis Sonntag · abgeschlossene eigene Zeitbuchungen, einschließlich freiwilliger Dienste. Laufende Timer zählen nach dem Beenden. Zeitzone: Deutschland. Einzelzeiten und Summen sind auf Sekunden gerundet; kleine Rundungsabweichungen sind möglich.</p><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th scope="col" style="text-align:left">Kalenderwoche</th><th scope="col" style="text-align:right">Geleistet</th></tr></thead><tbody>${weeks.map(w=>`<tr><td style="padding:10px 0;border-bottom:1px solid var(--line)"><button class="btn soft" onclick="openPersonalTimeWeek(${w.monday})" aria-label="${w.label}: Einträge anzeigen"><b>${w.relative?`${w.relative} · `:''}${w.label}</b></button><div class="meta">${date(w.monday)}–${date(w.monday+6*timeSummaryDay)}</div></td><td style="text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)">${timeSummaryDuration(w.ms)}</td></tr>`).join('')}</tbody><tfoot><tr><th scope="row" style="text-align:left;padding-top:12px">Gesamt erfasst</th><td style="text-align:right;white-space:nowrap;padding-top:12px"><b>${timeSummaryDuration(weeks.reduce((sum,w)=>sum+w.ms,0))}</b></td></tr></tfoot></table></div></section>`;
+}
+
+// Each operation has its own durable key: other tabs cannot erase an in-flight change.
+const timeOutboxPrefix='ecgTimeChange:v1:';
+let manualTimeUserId=null;
+let timeChangeEpoch=0,timeFlushPromise=null,timeLastMessage='',timeLastUser='',timeRetryTimer=null;
+function pendingTimeChanges(userId=state.currentUserId){
+ const result=[];
+ for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key?.startsWith(timeOutboxPrefix))continue;const op=JSON.parse(localStorage.getItem(key));if(op.userId===userId)result.push(op);}
+ return result.sort((a,b)=>a.queuedAt-b.queuedAt||a.id.localeCompare(b.id));
+}
+function timeBase(entry){const fields=['id','userId','start','end','roomId','workLabel','note','volunteer','timeRevision'];return entry?Object.fromEntries(fields.map(k=>[k,entry[k]??(k==='volunteer'?false:'')])):null;}
+function mergePendingTimes(entries){
+ let result=[...(entries||[])];
+ for(const op of pendingTimeChanges()){result=result.filter(e=>e.id!==op.entryId);if(op.entry)result.unshift({...op.entry,timeRevision:op.id});}
+ return result;
+}
+function timeSaveStatusHtml(){
+ let count;try{count=pendingTimeChanges().length;}catch{return '<div data-time-save-status role="status">Gerätespeicher nicht lesbar. Bitte Daten nicht löschen.</div>';}
+ const message=count?`${count} Zeitänderung(en) auf diesem Gerät gesichert – noch nicht auf dem Server bestätigt. ${timeLastUser===state.currentUserId?timeLastMessage:''}`:(timeLastUser===state.currentUserId?timeLastMessage:'');
+ return `<div data-time-save-status role="status" aria-live="polite" class="meta" style="margin:10px 0">${esc(message)}${count?'<div class="row wrap"><button class="btn tiny" onclick="flushTimeChanges()">Übertragung erneut versuchen</button><button class="btn tiny" onclick="showPendingTimeChanges()">Offene Änderungen ansehen</button></div>':''}</div>`;
+}
+function updateTimeSaveStatus(message){if(message!==undefined){timeLastMessage=message;timeLastUser=state.currentUserId;}document.querySelectorAll('[data-time-save-status]').forEach(el=>{el.outerHTML=timeSaveStatusHtml();});}
+function queueTimeChange(action,before,entry){
+ if(state.currentRole==='technician'||!state.currentUserId||before&&before.userId!==state.currentUserId||entry&&entry.userId!==state.currentUserId)return false;
+ let previous;try{previous=pendingTimeChanges();}catch{alert('Gerätespeicher nicht verfügbar. Die Änderung wurde nicht abgeschlossen.');return false;}
+ const id=crypto.randomUUID(),op={id,userId:state.currentUserId,entryId:(entry||before).id,action,before:timeBase(before),entry:entry?{...entry}:null,queuedAt:Math.max(Date.now(),...previous.map(o=>o.queuedAt+1))};
+ try{localStorage.setItem(timeOutboxPrefix+id,JSON.stringify(op));}catch{alert('Der Gerätespeicher ist voll oder gesperrt. Die Arbeitszeit wurde nicht abgeschlossen. Bitte die Angaben sichern und erneut versuchen.');return false;}
+ timeChangeEpoch++;state.timeEntries=mergePendingTimes(state.timeEntries);
+ try{localStorage.setItem('cleaningAppState',JSON.stringify(state));}catch{/* The separate operation is already durably stored. */}
+ updateTimeSaveStatus('Übertragung wird versucht …');void flushTimeChanges();return true;
+}
+function flushTimeChanges(){
+ if(timeFlushPromise)return timeFlushPromise;
+ timeFlushPromise=sendTimeChanges().catch(()=>updateTimeSaveStatus('Übertragung nicht bestätigt. Bitte Gerätespeicher prüfen; gespeicherte Entwürfe bleiben erhalten.')).finally(()=>{timeFlushPromise=null;clearTimeout(timeRetryTimer);try{if(pendingTimeChanges().length)timeRetryTimer=setTimeout(flushTimeChanges,30000);}catch{}});
+ return timeFlushPromise;
+}
+async function sendTimeChanges(){
+ const userId=state.currentUserId;
+ if(!authSession||state.currentRole==='technician')return;
+ for(const op of pendingTimeChanges(userId)){
+  if(state.currentUserId!==userId||!authSession)return;
+  try{
+   const response=await fetch('/api/state',{method:'PATCH',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({timeChange:op}),signal:AbortSignal.timeout(20000)});
+   const result=await response.json();
+   if(state.currentUserId!==userId)return;
+   if(!response.ok)throw new Error(result.error||'Server nicht erreichbar.');
+   if(result.ok!==true||result.operationId!==op.id||!Array.isArray(result.entries))throw new Error('Serverbestätigung unvollständig.');
+   // Apply the confirmed snapshot before removing its receipt from this device.
+   const remaining=pendingTimeChanges(userId).filter(x=>x.id!==op.id);
+   let own=result.entries;
+   for(const next of remaining){own=own.filter(e=>e.id!==next.entryId);if(next.entry)own.unshift({...next.entry,timeRevision:next.id});}
+   state.timeEntries=[...own,...state.timeEntries.filter(e=>e.userId!==userId)];
+   try{localStorage.setItem('cleaningAppState',JSON.stringify(state));}catch{/* Receipt remains retryable until the next statement. */}
+   localStorage.removeItem(timeOutboxPrefix+op.id);timeChangeEpoch++;
+   updateTimeSaveStatus('Auf dem Server gespeichert.');render();refreshOpenTimeReport();
+  }catch(error){if(state.currentUserId===userId)updateTimeSaveStatus(error.message+' Die Änderung bleibt auf diesem Gerät erhalten.');return;}
+ }
+}
+function refreshOpenTimeReport(){const report=document.getElementById('shareMyTimes')?.closest('.modal-backdrop');if(report)renderTimeReport(report);}
+function showPendingTimeChanges(){modal(`<h2>Noch nicht bestätigte Zeitänderungen</h2><p>Diese Angaben sind auf diesem Gerät gesichert. Bei einem Konflikt bleiben sie hier zur Prüfung erhalten. Bitte die App-Daten nicht löschen.</p>${pendingTimeChanges().map(op=>{const e=op.entry||op.before;return `<div class="card"><b>${esc(({create:'Nachtrag / beendeter Timer',update:'Bearbeitung',delete:'Löschung'})[op.action])}: ${esc(e.workLabel||'Arbeitszeit')}</b><p>${esc(new Date(e.start).toLocaleString('de-DE'))} – ${esc(new Date(e.end).toLocaleString('de-DE'))}</p><p>${esc(e.note||'')}</p><button class="btn tiny" onclick="discardPendingTimeEntry(${esc(JSON.stringify(op.entryId))})">Lokale Änderungen verwerfen</button></div>`}).join('')}${timeSaveStatusHtml()}<button class="btn" onclick="closeModal()">Schließen</button>`);}
+function openManualTimeEntry(){
+ if(state.currentRole==='technician')return;
+ manualTimeUserId=state.currentUserId;
+ modal(`<h2>Arbeitszeit nachtragen</h2><p>Eigene Arbeitszeit manuell erfassen. Uhrzeiten in der Gerätezeitzone (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}). Pausen bitte als getrennte Einsätze erfassen.</p><form onsubmit="event.preventDefault();saveManualTimeEntry()"><div class="formgrid"><div class="field"><label>Beginn<input id="manualTimeStart" type="datetime-local" required></label></div><div class="field"><label>Ende<input id="manualTimeEnd" type="datetime-local" required></label></div><div class="field wide"><label>Tätigkeit<input id="manualTimeLabel" maxlength="200" value="Arbeitszeit allgemein" required></label></div><div class="field wide"><label>Bemerkung<textarea id="manualTimeNote" maxlength="4000" rows="3"></textarea></label></div><label class="wide"><input id="manualTimeVolunteer" type="checkbox"> Freiwilliger Dienst</label></div><button type="submit" class="btn primary" style="margin-top:12px">Arbeitszeit speichern</button></form>`);
+}
+function validTimeChange(entry){
+ const bounds=completedTimeBounds(entry);if(!bounds||bounds.end-bounds.start>86400000){alert('Bitte einen abgeschlossenen Zeitraum von höchstens 24 Stunden angeben.');return false;}
+ if(!entry.workLabel.trim()){alert('Bitte eine Tätigkeit angeben.');return false;}
+ if(state.timeEntries.some(e=>e.id!==entry.id&&e.userId===entry.userId&&Date.parse(e.start)<bounds.end&&Date.parse(e.end)>bounds.start)){alert('Der Zeitraum überschneidet sich mit einer vorhandenen eigenen Buchung.');return false;}
+ return true;
+}
+function saveManualTimeEntry(){
+ if(state.currentRole==='technician'||state.currentUserId!==manualTimeUserId)return;
+ const raw={id:uid('time'),userId:state.currentUserId,start:$('#manualTimeStart').value,end:$('#manualTimeEnd').value,workLabel:$('#manualTimeLabel').value.trim(),note:$('#manualTimeNote').value.trim(),volunteer:$('#manualTimeVolunteer').checked,roomId:''};
+ if(!validTimeChange(raw))return;
+ raw.start=new Date(raw.start).toISOString();raw.end=new Date(raw.end).toISOString();
+ if(!queueTimeChange('create',null,raw))return;closeModal();render();refreshOpenTimeReport();
+}
+window.addEventListener('online',()=>flushTimeChanges());
+window.addEventListener('storage',event=>{if(event.key?.startsWith(timeOutboxPrefix)){timeChangeEpoch++;updateTimeSaveStatus();void flushTimeChanges();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void flushTimeChanges();});
+
+async function discardPendingTimeEntry(entryId){
+ const userId=state.currentUserId;
+ if(!confirm('Alle noch nicht bestätigten lokalen Änderungen zu dieser Buchung verwerfen? Bereits auf dem Server gespeicherte Zeiten bleiben bestehen. Danach kannst du den aktuellen Eintrag bearbeiten oder neu nachtragen.'))return;
+ await flushTimeChanges();
+ try{
+  const epoch=timeChangeEpoch,response=await fetch('/api/state',{headers:await authHeaders(),cache:'no-store'});
+  if(!response.ok)throw Error('Serverstand konnte nicht geladen werden. Die lokalen Änderungen bleiben erhalten.');
+  const remote=await response.json();
+  if(state.currentUserId!==userId||epoch!==timeChangeEpoch)throw Error('Inzwischen geändert. Bitte erneut prüfen.');
+  for(const op of pendingTimeChanges(userId).filter(x=>x.entryId===entryId))localStorage.removeItem(timeOutboxPrefix+op.id);
+  state.timeEntries=mergePendingTimes(remote.timeEntries||[]);timeChangeEpoch++;
+  try{localStorage.setItem('cleaningAppState',JSON.stringify(state));}catch{}
+  closeModal();render();refreshOpenTimeReport();updateTimeSaveStatus('Aktuellen Serverstand geladen.');void flushTimeChanges();
+ }catch(error){alert(error.message);}
+}
+
+function modal(html,target=null){
+ const root=$('#modalRoot'),content=`<button type="button" class="modal-close no-print" onclick="closeModal()" aria-label="Fenster schließen" title="Schließen">×</button>${html}`;
+ if(target){if(target.isConnected)target.querySelector('.modal').innerHTML=content;return target}
+ root.lastElementChild?.removeAttribute('id');
+ root.insertAdjacentHTML('beforeend',`<div class="modal-backdrop" id="modalBack"><div class="modal">${content}</div></div>`);
+ return root.lastElementChild;
+}
+window.closeModal=()=>{const root=$('#modalRoot');root.lastElementChild?.remove();if(root.lastElementChild)root.lastElementChild.id='modalBack'};
+
+function renderTimeReport(target=null){if(target&&!target.isConnected)return;return modal(`<h2>Zeiterfassung</h2>${timeSaveStatusHtml()}<button class="btn primary" style="margin-bottom:12px" onclick="openManualTimeEntry()">Arbeitszeit nachtragen</button><button class="btn primary" style="margin-bottom:12px" onclick="openVoiceTime()">🎙 Arbeitszeit einsprechen / nachtragen</button><div class="card" style="box-shadow:none;margin-bottom:12px"><label><input id="shareMyTimes" type="checkbox" ${state.myTimeSharing===true?'checked':''} onchange="setTimeSharing(this)" ${timeSharingBusy?'disabled':''}> Meine Zeiten für andere Benutzer sichtbar machen</label><p class="meta">Mit Haken können alle angemeldeten Benutzer deine erfassten Zeiten einschließlich Tätigkeit und Bemerkung lesen. Ohne Haken sind sie nur für dich sichtbar. Bearbeiten und Löschen bleiben dir vorbehalten. Die Freigabe gilt auch für bisherige Einträge.</p><div id="timeSharingMessage" class="meta" role="status"></div></div>${personalTimeSummaryHtml()}<h3 style="margin-top:24px">Meine und freigegebene Zeiten – Einzelbuchungen</h3><div class="card" style="box-shadow:none">${(state.timeEntries||[]).length?state.timeEntries.map(e=>{const u=(state.users||[]).find(x=>x.id===e.userId)||(state.sharedTimeUsers||[]).find(x=>x.id===e.userId);return `<div class="task"><div></div><div><div class="task-title">${esc(timeEntryLabel(e))}</div><small>${esc(u?.name||'Benutzer')}${u?.email?` · ${esc(u.email)}`:''} · ${new Date(e.start).toLocaleString('de-DE')} – ${new Date(e.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} · ${fmtDuration(new Date(e.end)-new Date(e.start))}${e.note?` · ${esc(e.note)}`:''}${e.volunteer?' · freiwilliger Dienst':''}</small>${e.userId===state.currentUserId?`<div class="row" style="margin-top:7px"><button class="btn tiny" onclick="editTimeEntry('${e.id}')">Bearbeiten</button><button class="btn tiny danger" onclick="deleteTimeEntry('${e.id}')">Löschen</button></div>`:''}</div></div>`}).join(''):'<div class="empty">Noch keine Arbeitszeiten erfasst.</div>'}</div><div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`,target)}
+
+let timeSharingBusy=false;
+window.setTimeSharing=async input=>{
+ const previous=state.myTimeSharing===true,wanted=input.checked;
+ if(timeSharingBusy){input.checked=previous;return}
+ timeSharingBusy=true;input.disabled=true;
+ const message=document.getElementById('timeSharingMessage');
+ if(message)message.textContent='Wird gespeichert …';
+ try{
+  const r=await fetch('/api/state',{method:'PATCH',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({shareTimes:wanted})});
+  if(!r.ok)throw new Error('Die Sichtbarkeit konnte nicht gespeichert werden. Bitte erneut versuchen.');
+  const result=await r.json();state.myTimeSharing=result.shareTimes===true;
+  input.checked=state.myTimeSharing;
+  if(message)message.textContent=state.myTimeSharing?'Gespeichert: Deine Zeiten sind freigegeben.':'Gespeichert: Deine Zeiten sind nur für dich sichtbar.';
+ }catch(error){input.checked=previous;if(message)message.textContent=error.message}
+ finally{timeSharingBusy=false;input.disabled=false}
+};
+window.showTimeReport=async()=>{
+ // Do not display cached foreign entries before the server has checked current consent.
+ state.timeEntries=(state.timeEntries||[]).filter(e=>e.userId===state.currentUserId);
+ const userId=state.currentUserId,epoch=timeChangeEpoch,report=renderTimeReport();
+ const input=report.querySelector('#shareMyTimes');if(input)input.disabled=true;
+ try{
+  const r=await fetch('/api/state',{headers:await authHeaders(),cache:'no-store'});
+  if(!r.ok)throw new Error('Zeiten und Sichtbarkeit konnten nicht geladen werden. Bitte die Übersicht erneut öffnen.');
+  const remote=await r.json();
+  if(!report.isConnected||state.currentUserId!==userId)return;
+  state.myTimeSharing=remote.myTimeSharing===true;state.sharedTimeUsers=remote.sharedTimeUsers||[];
+  if(epoch===timeChangeEpoch)state.timeEntries=mergePendingTimes(remote.timeEntries||[]);
+  renderTimeReport(report);
+ }catch(error){if(!report.isConnected||state.currentUserId!==userId)return;const msg=report.querySelector('#timeSharingMessage');if(msg)msg.textContent=error.message;if(input)input.disabled=false}
+};
+
+
+window.editTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(state.currentRole==='technician'||!e||e.userId!==state.currentUserId)return;const local=v=>{const d=new Date(v);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,19)};modal(`<h2>Arbeitszeit bearbeiten</h2><div class="formgrid"><div class="field"><label>Beginn</label><input id="teStart" type="datetime-local" step="1" value="${local(e.start)}"></div><div class="field"><label>Ende</label><input id="teEnd" type="datetime-local" step="1" value="${local(e.end)}"></div><div class="field wide"><label>Tätigkeit</label><input id="teLabel" maxlength="200" value="${esc(timeEntryLabel(e))}"></div><div class="field wide"><label>Bemerkung</label><input id="teNote" value="${esc(e.note||'')}"></div><label class="field wide"><span><input id="teVolunteer" type="checkbox" ${e.volunteer?'checked':''}> Als freiwilligen Dienst ausweisen</span></label></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveTimeEntry('${id}')">Speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>`)};
+window.saveTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(state.currentRole==='technician'||!e||e.userId!==state.currentUserId)return;const next={...e,start:$('#teStart').value,end:$('#teEnd').value,workLabel:$('#teLabel').value.trim(),note:$('#teNote').value.trim(),volunteer:$('#teVolunteer').checked};if(!validTimeChange(next))return;next.start=new Date(next.start).toISOString();next.end=new Date(next.end).toISOString();if(!queueTimeChange('update',e,next))return;closeModal();closeModal();render();showTimeReport()};
+window.deleteTimeEntry=id=>{const e=(state.timeEntries||[]).find(x=>x.id===id);if(state.currentRole==='technician'||!e||e.userId!==state.currentUserId||!confirm('Diesen Zeiteintrag wirklich löschen?'))return;if(!queueTimeChange('delete',e,null))return;closeModal();render();showTimeReport()};</script></body></html>

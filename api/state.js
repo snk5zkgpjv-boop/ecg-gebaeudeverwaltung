@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { requireUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
+import { handleTimeChange } from '../lib/time-change.js';
 
 const defaults = {
   coordinator: {
@@ -26,6 +27,8 @@ const clone = (value) => structuredClone(value || {});
 function visible(state, profile) {
   const output = clone(state);
   delete output.kitchenPhotos;
+  delete output.timeWriteReceipts;
+  delete output.timeWriteVersions;
   const userId = profile.id;
   const sharedIds = new Set((state.users || []).filter(user => user.active !== false && state.timeSharing?.[user.id] === true).map(user => user.id));
   output.timeEntries = (state.timeEntries || []).filter(entry => entry.userId === userId || sharedIds.has(entry.userId));
@@ -164,7 +167,7 @@ function accepted(current, incoming, profile) {
   // A shared entry is read-only. Preserve other owners' entries even for stale/admin payloads.
   const userId = profile.id;
   const foreignIds = new Set((current.timeEntries || []).filter(entry => entry.userId !== userId).map(entry => entry.id));
-  const timeEntries = [
+  let timeEntries = [
     ...(current.timeEntries || []).filter(entry => entry.userId !== userId),
     ...(incoming.timeEntries || current.timeEntries || []).filter(entry => entry.userId === userId && !foreignIds.has(entry.id)),
   ];
@@ -172,6 +175,9 @@ function accepted(current, incoming, profile) {
   const seen = new Set(Array.isArray(incoming.timeEntryIdsSeen) ? incoming.timeEntryIdsSeen : []);
   const submitted = new Set(timeEntries.map(entry => entry.id));
   timeEntries.push(...(current.timeEntries || []).filter(entry => entry.userId === userId && !submitted.has(entry.id) && !seen.has(entry.id)));
+  // Legacy full-state clients cannot overwrite or resurrect individually managed entries.
+  const managed = current.timeWriteVersions || {};
+  timeEntries = incoming.timeEntriesReadOnly === true ? (current.timeEntries || []) : [...timeEntries.filter(e => !managed[e.id]), ...(current.timeEntries || []).filter(e => managed[e.id])];
   const timeRunning = incoming.timeRunning?.userId === userId
     ? incoming.timeRunning
     : (current.timeRunning?.userId === userId ? null : current.timeRunning);
@@ -179,6 +185,9 @@ function accepted(current, incoming, profile) {
     return {
       ...incoming,
       timeEntryIdsSeen: undefined,
+      timeEntriesReadOnly: undefined,
+      timeWriteVersions: current.timeWriteVersions || {},
+      timeWriteReceipts: current.timeWriteReceipts || {},
       timeEntries,
       timeRunning,
       timeSharing: current.timeSharing || {},
@@ -238,6 +247,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'private, no-store');
     if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
     if (req.method === 'PATCH') {
+      if (req.body?.timeChange && Object.keys(req.body).length === 1) return handleTimeChange(sql, auth, req.body.timeChange, res, syncOrganizationTimes);
       if (auth.profile.role === 'technician') return res.status(403).json({ error: 'Persönliche Planung ist für die Technikrolle nicht freigeschaltet.' });
       if (typeof req.body?.shareTimes === 'boolean' && Object.keys(req.body).every(key => key === 'shareTimes')) {
         const preference = JSON.stringify({ [auth.profile.id]: req.body.shareTimes });
