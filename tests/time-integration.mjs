@@ -25,7 +25,7 @@ const root={get lastElementChild(){return nodes.at(-1)},insertAdjacentHTML(_,htm
 let resolveFetch,fetchError=false,saved=0,alerts=[];
 const context={Date:Clock,structuredClone,esc,state:{currentUserId:'me',currentRole:'admin',users:[{id:'me',name:'Testperson'}],timeEntries:[own]},currentUser:()=>({name:'Testperson'}),timeEntryLabel:e=>e.workLabel,
  $:selector=>selector==='#modalRoot'?root:selector==='#modalBack'?nodes.find(n=>n.id==='modalBack'):fields[selector.slice(1)],
- authHeaders:async()=>({}),fetch:()=>fetchError?Promise.reject(new Error('Offline')):new Promise(resolve=>{resolveFetch=resolve}),alert:message=>alerts.push(message),save:()=>saved++};
+ authHeaders:async()=>({}),fetch:()=>fetchError?Promise.reject(new Error('Offline')):new Promise(resolve=>{resolveFetch=resolve}),alert:message=>alerts.push(message),render:()=>{},save:()=>saved++};
 context.window=context;
 const c=vm.createContext(context);
 vm.runInContext(summary+'\n'+durationCode+'\n'+modalCode+'\n'+reportCode+'\n'+editCode+'\n'+saveCode,c);
@@ -73,7 +73,7 @@ for(const [start,end] of [['bad','bad'],['2026-09-22T08:00Z','2026-09-22T09:00Z'
 }
 assert.equal(alerts.length,3);
 c.editTimeEntry('entry');assert.ok(nodes[0].querySelector('.modal').innerHTML.includes('step="1"'));assert.ok(nodes[0].querySelector('.modal').innerHTML.includes(':31"'));c.closeModal();
-fields.teStart={value:own.start};fields.teEnd={value:own.end};fields.teNote={value:'Testnotiz'};fields.teVolunteer={checked:true};
+fields.teStart={value:own.start};fields.teEnd={value:own.end};fields.teLabel={value:'Geänderte Tätigkeit'};fields.teNote={value:'Testnotiz'};fields.teVolunteer={checked:true};
 const realReport=c.showTimeReport;c.showTimeReport=()=>{};c.saveTimeEntry('entry');c.showTimeReport=realReport;
 assert.equal(saved,1);assert.equal(c.state.timeEntries[0].note,'Testnotiz');assert.equal(c.state.timeEntries[0].volunteer,true);
 console.log('PASS: future/invalid edits rejected without mutation; valid second-precision edit saved.');
@@ -96,3 +96,21 @@ if(process.argv[2]){
  const setup=`const $=s=>document.querySelector(s);const esc=${esc.toString()};const state=${JSON.stringify({currentUserId:'me',currentRole:'admin',users:[{id:'me',name:'Testperson'}],timeEntries:[own,entry('2026-09-21T09:00:00Z','2026-09-21T09:00:31Z',{id:'second'})]})};const currentUser=()=>state.users[0];const timeEntryLabel=e=>e.workLabel;const authHeaders=async()=>({});let finishFetch;const fetch=()=>new Promise(r=>finishFetch=r);const save=()=>{};`;
  fs.writeFileSync(process.argv[2],`<!doctype html><html lang="de"><meta charset="utf-8"><title>ECG Regressionstest</title><style>${css}</style><body><h1>ECG – synthetischer Funktionstest</h1><button onclick="showTimeReport()">Zeiterfassung öffnen</button><button style="position:fixed;top:0;right:0;z-index:100" onclick="finishFetch({ok:true,json:async()=>({timeEntries:[],myTimeSharing:false})})">Serverantwort auslösen</button><div id="modalRoot"></div><script>${setup}\n${summary}\n${durationCode}\n${modalCode}\n${reportCode}\n${editCode}\n${saveCode}</script></body></html>`);
 }
+
+// Same own-entry controls for coordinator and admin; no foreign/technician actions or PDF buttons.
+vm.runInContext(index.match(/^window.deleteTimeEntry=.*$/m)[0],c);
+c.timeEntryIdsSeen=new Set();c.confirm=()=>true;c.showTimeReport=()=>{};
+for(const role of ['admin','coordinator']){
+ c.state.currentRole=role;c.state.timeEntries=[structuredClone(own),{...own,id:'foreign',userId:'other'}];
+ const rows=c.personalTimeWeekEntries(c.state.timeEntries,'me',monday,now);
+ assert.match(c.timeWeekEntryTable(rows,true),/Bearbeiten/);assert.match(c.timeWeekEntryTable(rows,true),/Löschen/);
+ assert.doesNotMatch(c.personalTimeExportHtml(monday,now),/editTimeEntry|deleteTimeEntry/);
+ c.editTimeEntry('foreign');assert.equal(nodes.length,0);
+ c.deleteTimeEntry('foreign');assert.equal(c.state.timeEntries.length,2);
+ c.editTimeEntry('entry');assert.match(nodes.at(-1).querySelector('.modal').innerHTML,/id="teLabel"/);
+ c.saveTimeEntry('entry');assert.equal(c.state.timeEntries[0].workLabel,'Geänderte Tätigkeit');
+ c.deleteTimeEntry('entry');assert.equal(c.state.timeEntries.length,1);assert.ok(c.timeEntryIdsSeen.has('entry'));
+}
+c.state.currentRole='technician';c.state.timeEntries=[own];
+c.editTimeEntry('entry');assert.equal(nodes.length,0);c.deleteTimeEntry('entry');assert.equal(c.state.timeEntries.length,1);
+console.log('PASS: admin/coordinator edit/delete parity, fresh-entry deletion marker, foreign and technician protection, print without controls.');

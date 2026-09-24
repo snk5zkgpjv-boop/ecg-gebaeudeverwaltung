@@ -7,40 +7,42 @@ function voiceMessage(v,text){if(v.root.isConnected)v.root.querySelector('[data-
 function voiceActive(v){return ecgVoice===v&&v.root.isConnected&&state.currentUserId===v.userId;}
 async function voiceRequest(body){
  const response=await fetch('/api/ai?timeVoice=1',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
- const result=await response.json();if(!response.ok){const error=new Error(result.error||'Anfrage fehlgeschlagen.');error.status=response.status;throw error;}return result;
+ const result=await response.json().catch(()=>({error:'Serverantwort nicht lesbar. Bitte erneut versuchen; eine Aufnahme gegebenenfalls kürzer halten.'}));if(!response.ok){const error=new Error(result.error||'Anfrage fehlgeschlagen.');error.status=response.status;throw error;}return result;
 }
-function voiceSetBusy(v,busy){v.busy=busy;v.root.querySelectorAll('[data-voice-action],#voiceTranscript').forEach(b=>b.disabled=busy);}
+function voiceSetBusy(v,busy){v.busy=busy;v.root.querySelectorAll('[data-voice-action],#voiceTranscript').forEach(b=>b.disabled=busy||((b.matches('[data-record],[data-analyze]'))&&v.aiReady!==true));}
 function voiceCleanup(v){clearTimeout(v.timer);if(v.recorder?.state==='recording')v.recorder.stop();v.stream?.getTracks().forEach(t=>t.stop());}
 function openVoiceTime(){
  if(state.currentRole==='technician')return;
  if(ecgVoice&&voiceActive(ecgVoice))return;
- const root=modal(`<h2>Arbeitszeit einsprechen</h2><p>Datum, Beginn, Ende und Tätigkeiten nennen. Beispiel: „Gestern von 8 bis 10 Uhr die Außenanlagen gepflegt.“ Mehrere Einsätze sind möglich. Pausen bitte mit Uhrzeiten nennen.</p><p class="meta">Aufnahme und Text werden zur Erkennung an OpenAI gesendet. Kein Audio wird in der ECG-Datenbank gespeichert. Erst nach deiner Bestätigung werden Buchungen gespeichert. Alternativ tippen oder das Mikrofon der iPhone-Tastatur nutzen.</p><div class="row wrap"><button class="btn primary" data-voice-action data-record onclick="voiceRecord()">🎙 Aufnahme starten</button><button class="btn danger" data-stop hidden onclick="voiceStop()">Aufnahme beenden</button></div><div class="field" style="margin-top:12px"><label for="voiceTranscript">Gesprochener Text / Ergänzungen</label><textarea id="voiceTranscript" rows="5" maxlength="12000" oninput="voiceInvalidate()"></textarea></div><div class="row wrap" style="margin-top:12px"><button class="btn primary" data-voice-action onclick="voiceAnalyze()">Angaben auswerten</button><button class="btn" data-voice-action onclick="voiceManual()">Manuell eintragen</button></div><p role="status" aria-live="polite" data-voice-status>Einrichtung wird geprüft …</p><div data-voice-preview></div>`);
- const v={root,userId:state.currentUserId,requestId:crypto.randomUUID(),busy:false,recorder:null,stream:null,timer:null};ecgVoice=v;
+ const root=modal(`<h2>Arbeitszeit einsprechen</h2><p>Datum, Beginn, Ende und Tätigkeiten nennen. Beispiel: „Gestern von 8 bis 10 Uhr die Außenanlagen gepflegt.“ Mehrere Einsätze sind möglich. Pausen bitte mit Uhrzeiten nennen.</p><p class="meta">Aufnahme und Text werden zur Erkennung an OpenAI gesendet. Kein Audio wird in der ECG-Datenbank gespeichert. Erst nach deiner Bestätigung werden Buchungen gespeichert. Alternativ tippen oder das Mikrofon der iPhone-Tastatur nutzen.</p><div class="row wrap"><button class="btn primary" data-voice-action data-record disabled onclick="voiceRecord()">🎙 Aufnahme starten</button><button class="btn danger" data-stop hidden onclick="voiceStop()">Aufnahme beenden</button></div><div class="field" style="margin-top:12px"><label for="voiceTranscript">Gesprochener Text / Ergänzungen</label><textarea id="voiceTranscript" rows="5" maxlength="12000" oninput="voiceInvalidate()"></textarea></div><div class="row wrap" style="margin-top:12px"><button class="btn primary" data-voice-action data-analyze disabled onclick="voiceAnalyze()">Angaben auswerten</button><button class="btn" data-voice-action onclick="voiceManual()">Manuell eintragen</button></div><p role="status" aria-live="polite" data-voice-status>Einrichtung wird geprüft …</p><div data-voice-preview></div>`);
+ const v={root,userId:state.currentUserId,requestId:crypto.randomUUID(),busy:false,aiReady:false,recorder:null,stream:null,timer:null};ecgVoice=v;
  const observer=new MutationObserver(()=>{if(!root.isConnected){voiceCleanup(v);observer.disconnect();if(ecgVoice===v)ecgVoice=null;}});observer.observe(document.getElementById('modalRoot'),{childList:true});
- fetch('/api/ai?timeVoice=1',{cache:'no-store'}).then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);if(voiceActive(v))voiceMessage(v,b.ai?'Bereit. Aufnahme starten oder Text eingeben.':'KI nicht verfügbar oder nicht freigeschaltet. Du kannst die Angaben manuell eintragen.');}).catch(e=>voiceMessage(v,e.message));
+ fetch('/api/ai?timeVoice=1',{cache:'no-store'}).then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);if(voiceActive(v)){v.aiReady=b.ai===true;voiceSetBusy(v,v.busy);if(!v.busy)voiceMessage(v,b.ai?'Bereit. Aufnahme starten oder Text eingeben.':(b.unavailableReason||'KI nicht verfügbar oder nicht freigeschaltet.')+' Alternativ über die Tastatur diktieren und „Manuell eintragen“ wählen.');}}).catch(e=>{if(voiceActive(v))voiceMessage(v,e.message+' Bitte Dialog erneut öffnen oder manuell eintragen.');});
 }
 function voiceInvalidate(){const v=ecgVoice;if(!v||v.busy)return;v.root.querySelector('[data-voice-preview]').innerHTML='';v.frozen=null;v.requestId=crypto.randomUUID();}
 async function voiceRecord(){
- const v=ecgVoice;if(!v||v.busy)return;
+ const v=ecgVoice;if(!v||v.busy||!v.aiReady)return;
  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){voiceMessage(v,'Dieser Browser unterstützt keine Aufnahme. Bitte das Mikrofon der Tastatur verwenden.');return;}
  voiceInvalidate();voiceSetBusy(v,true);voiceMessage(v,'Mikrofonzugriff wird angefragt …');
  try{
   const stream=await navigator.mediaDevices.getUserMedia({audio:true});if(!voiceActive(v)){stream.getTracks().forEach(t=>t.stop());return;}v.stream=stream;
-  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(m=>MediaRecorder.isTypeSupported(m));if(!mime)throw new Error('Aufnahmeformat nicht unterstützt. Bitte das Mikrofon der Tastatur nutzen.');
-  const recorder=new MediaRecorder(stream,{mimeType:mime,audioBitsPerSecond:64000}),chunks=[];v.recorder=recorder;
+  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(m=>MediaRecorder.isTypeSupported?.(m));
+  let recorder;try{recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);}catch{recorder=new MediaRecorder(stream);}
+  const chunks=[];v.recorder=recorder;v.recordingFailed=false;
   recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
-  recorder.onerror=()=>{voiceCleanup(v);voiceMessage(v,'Aufnahme fehlgeschlagen. Bitte erneut versuchen.');voiceSetBusy(v,false);};
+  recorder.onerror=()=>{v.recordingFailed=true;v.root.querySelector('[data-stop]').hidden=true;voiceCleanup(v);voiceMessage(v,'Aufnahme fehlgeschlagen. Bitte erneut versuchen.');voiceSetBusy(v,false);};
   recorder.onstop=async()=>{
-   clearTimeout(v.timer);stream.getTracks().forEach(t=>t.stop());if(!voiceActive(v))return;
+   clearTimeout(v.timer);stream.getTracks().forEach(t=>t.stop());if(!voiceActive(v)||v.recordingFailed)return;
    v.root.querySelector('[data-stop]').hidden=true;voiceMessage(v,'Aufnahme wird in Text umgewandelt …');
    try{
-    const blob=new Blob(chunks,{type:recorder.mimeType});if(blob.size>2500000||!blob.size)throw new Error('Aufnahme leer oder zu groß. Bitte kürzer aufnehmen.');
+    const audioMime=recorder.mimeType||chunks.find(chunk=>chunk.type)?.type||mime;
+    const blob=new Blob(chunks,{type:audioMime});if(blob.size>2500000||!blob.size)throw new Error('Aufnahme leer oder zu groß. Bitte kürzer aufnehmen.');
     const audio=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(blob);});
-    const result=await voiceRequest({action:'transcribe',audio,mime:recorder.mimeType});if(!voiceActive(v))return;
+    const result=await voiceRequest({action:'transcribe',audio,mime:audioMime});if(!voiceActive(v))return;
     const field=v.root.querySelector('#voiceTranscript');field.value=[field.value,result.text].filter(Boolean).join('\n');voiceMessage(v,'Text erkannt. Bitte prüfen und „Angaben auswerten“ wählen.');
    }catch(e){voiceMessage(v,e.message);}finally{if(voiceActive(v))voiceSetBusy(v,false);}
   };
-  recorder.start();v.root.querySelector('[data-stop]').hidden=false;voiceMessage(v,'Aufnahme läuft – maximal 90 Sekunden. Zum Abschluss „Aufnahme beenden“ antippen.');v.timer=setTimeout(()=>voiceStop(),90000);
+  recorder.start(1000);v.root.querySelector('[data-stop]').hidden=false;voiceMessage(v,'Aufnahme läuft – maximal 90 Sekunden. Zum Abschluss „Aufnahme beenden“ antippen.');v.timer=setTimeout(()=>voiceStop(),90000);
  }catch(e){voiceCleanup(v);if(voiceActive(v)){voiceSetBusy(v,false);voiceMessage(v,e.name==='NotAllowedError'?'Mikrofon nicht freigegeben. Bitte Browserberechtigung erlauben oder über die Tastatur diktieren.':e.message);}}
 }
 function voiceStop(){const v=ecgVoice;if(v?.recorder?.state==='recording')v.recorder.stop();}
