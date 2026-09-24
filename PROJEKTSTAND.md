@@ -1,6 +1,6 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 23.09.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 24.09.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
 ## Zuständigkeit
 
@@ -179,3 +179,11 @@ Autorisierte fehlende Zeitbuchungen wurden im Organisationstool unter Erhalt der
 Direkte SQL-Änderungen an app_state lösen den normalen API-Sync nicht aus; die Empfängerübertragung muss anschließend gesondert ausgeführt und geprüft werden. Der erfolgreiche manuelle Abgleich ersetzt keinen End-to-End-Nachweis der automatischen Synchronisation oder echten Sprachverarbeitung. Diese Prüfungen bleiben offen.
 
 AGENTS.md macht die Aktualisierung der technischen Projektstanddatei vor Abschluss jeder relevanten Bearbeitung verbindlich. Neue Agentensitzungen müssen den Repository-Stand zuerst lesen. Reine persönliche Zeitbuchungen erfordern keine öffentliche Markdown-Änderung. Es wurde kein Hintergrunddienst für externe Änderungen eingerichtet.
+
+## Wöchentliche Raumreinigung gesammelt abschließen – 24.09.2026
+
+Heute gruppiert fällige Aufgaben innerhalb der Geschosse nach Raum. „Wochenreinigung fertig“ bietet ausschließlich fällige wöchentliche Reinigungsaufgaben zur gemeinsamen Bestätigung an. Die Wochenaufgaben bleiben aufklappbar und einzeln bedienbar. Alle anderen Intervalle (einschließlich 14-tägig), Veranstaltungsaufgaben, Technikaufgaben sowie Material-/Hinweisfälle bleiben einzeln sichtbar und werden nicht mit abgeschlossen. Keine Änderung der Wiederholungsintervalle oder Kalenderregeln.
+
+Die Bestätigung zeigt die konkrete Aufgabenliste und schreibt Status, Erledigungszeit, Benutzer und progressUpdatedAt über den vorhandenen Speicherweg. Neu hinzugekommene Aufgaben werden nicht ungeprüft mit bestätigt; vor dem Speichern werden Fälligkeit, Aufgabenart und Benutzer erneut geprüft. Technik bleibt ausgeschlossen. Sind alle Wochenaufgaben aktuell erledigt/nicht nötig und wurde mindestens eine heute erledigt, erscheint eine ausdrücklich auf die Wochenreinigung begrenzte Erledigt-Anzeige; andere offene Aufgaben bleiben sichtbar. Keine neue API oder Datenbankmigration.
+
+Prüfung: tests/room-weekly.mjs bestanden (nur weekly, andere Räume/Intervalle unverändert, Material/Hinweise/Technik ausgeschlossen, Vorschau-Snapshot, Rollen-/Benutzerwechsel, Doppelklick, erneute Fälligkeit, andere Intervalle außerhalb aufklappbarer Wochenliste). Bestehende Tests technician-maintenance, time-summary, time-integration, time-voice und issue-planning einschließlich Inline-Syntax bestanden. Ausschließlich synthetische Daten; kein angemeldeter Produktiv-Reinigungsabschluss oder iPhone-Test. Veröffentlichung zunächst ausstehend.

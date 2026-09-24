@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const html=fs.readFileSync('index.html','utf8');
+const task=(id,interval='weekly',extra={})=>({id,title:id,interval,status:'open',...extra});
+const original={currentRole:'cleaner',currentUserId:'u',rooms:[{id:'r',name:'WC',floor:'EG',tasks:[task('week'),task('fortnight','biweekly'),task('month','monthly'),task('tech','weekly',{taskType:'technical'}),task('blocked','weekly',{status:'material'}),task('note','weekly',{status:'note'}),task('later','weekly',{status:'done',lastDone:new Date().toISOString()})]},{id:'other',tasks:[task('other')]}],eventTaskDone:{}};
+let saves=0,preview='';
+const ctx=vm.createContext({state:structuredClone(original),window:{},Date,Set,Map,canCompleteRoomTask:()=>true,nowISO:()=>new Date().toISOString(),save:()=>saves++,render(){},closeModal(){},modal:s=>preview=s,esc:s=>String(s).replaceAll('<','&lt;'),taskRow:(r,t)=>`ROW:${t.id}`,generatedEventTasks:()=>[]});
+vm.runInContext(html.slice(html.indexOf('const taskIntervalDays='),html.indexOf('function allTasks()')),ctx);
+vm.runInContext(html.slice(html.indexOf('function roomCleaningTasks('),html.indexOf('function eventRuleFor(')),ctx);
+assert.equal(vm.runInContext("roomCleaningTasks('r').map(t=>t.id).join(',')",ctx),'week');
+ctx.window.confirmRoomCleaning('r');assert.match(preview,/Wochenreinigung bestätigen/);assert.doesNotMatch(preview,/<li>fortnight/);
+// Preview is a snapshot: new weekly tasks are not silently included.
+ctx.state.rooms[0].tasks.push(task('new'));
+ctx.window.completeRoomCleaning();assert.equal(saves,1);
+assert.equal(ctx.state.rooms[0].tasks[0].status,'done');
+assert.equal(ctx.state.rooms[0].tasks[0].lastDoneBy,'u');
+assert.ok(ctx.state.rooms[0].tasks[0].progressUpdatedAt);
+for(const id of ['fortnight','month','tech','new'])assert.equal(ctx.state.rooms[0].tasks.find(t=>t.id===id).status,'open');
+assert.equal(ctx.state.rooms[0].tasks.find(t=>t.id==='blocked').status,'material');
+assert.equal(ctx.state.rooms[1].tasks[0].status,'open');
+assert.equal(JSON.stringify(ctx.state.eventTaskDone),'{}');
+ctx.window.completeRoomCleaning();assert.equal(saves,1);
+ctx.window.confirmRoomCleaning('r');ctx.state.currentRole='technician';ctx.window.completeRoomCleaning();assert.equal(saves,1);
+assert.equal(vm.runInContext("roomCleaningTasks('r').length",ctx),0);
+ctx.state.currentRole='cleaner';ctx.window.confirmRoomCleaning('r');ctx.state.currentUserId='other';ctx.window.completeRoomCleaning();assert.equal(saves,1);
+ctx.state=structuredClone(original);
+const rendered=vm.runInContext("todayRoomGroups(state.rooms[0].tasks.map(t=>({...t,room:state.rooms[0]})))",ctx);
+assert.match(rendered,/Wochenreinigung fertig/);
+assert.match(rendered,/<\/details>ROW:fortnightROW:monthROW:techROW:blockedROW:note/);
+ctx.state.rooms[0].tasks=ctx.state.rooms[0].tasks.filter(t=>!['blocked','note'].includes(t.id));
+ctx.window.confirmRoomCleaning('r');ctx.window.completeRoomCleaning();
+assert.match(vm.runInContext('completedRoomsToday()',ctx),/Wochenreinigung erledigt/);
+// Recurrence stays intact: completion ages out after the existing seven days.
+ctx.state.rooms[0].tasks[0].lastDone='2020-01-01T00:00:00Z';
+assert.equal(vm.runInContext("roomCleaningTasks('r').length",ctx),1);
+assert.equal(vm.runInContext('completedRoomsToday()',ctx),'');
+console.log('Weekly room completion: scope, exclusions, preview, rights, repeat clicks, recurrence and individual visibility passed.');
