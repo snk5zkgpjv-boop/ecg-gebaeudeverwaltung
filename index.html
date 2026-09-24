@@ -260,6 +260,47 @@ function floorSortKey(floor){const s=(floor||'').toLowerCase().replace(/\s/g,'')
 function groupDueTasksByFloor(tasks){const groups={};tasks.forEach(x=>{const f=x.room.floor||'Ohne Geschoss';(groups[f]??=[]).push(x)});return Object.entries(groups).sort((a,b)=>floorSortKey(a[0])-floorSortKey(b[0])||a[0].localeCompare(b[0],'de')).map(([floor,items])=>[floor,items.sort((a,b)=>a.room.name.localeCompare(b.room.name,'de')||a.title.localeCompare(b.title,'de'))])}
 function timeEntryLabel(e){if(e.workLabel)return e.workLabel;const r=state.rooms.find(x=>x.id===e.roomId);return r?`${r.floor} – ${r.name}`:'Allgemein / kein Raum'}
 
+// Only weekly cleaning belongs to the room shortcut. Other intervals and
+// event tasks remain individually visible and must be completed separately.
+function roomCleaningTasks(rid){
+ const r=state.rooms.find(r=>r.id===rid);
+ if(!r||state.currentRole==='technician')return [];
+ return r.tasks.filter(t=>t.interval==='weekly'&&!t.event&&due(t)&&t.taskType!=='technical'&&!['material','note'].includes(t.status)&&canCompleteRoomTask(t));
+}
+function todayRoomGroups(items){
+ const groups=new Map();
+ for(const t of items){if(!groups.has(t.room.id))groups.set(t.room.id,{room:t.room,tasks:[]});groups.get(t.room.id).tasks.push(t)}
+ return [...groups.values()].map(({room:r,tasks})=>{
+  const n=roomCleaningTasks(r.id).length;
+  const weekly=tasks.filter(t=>t.interval==='weekly'&&!t.event&&t.taskType!=='technical'&&!['material','note'].includes(t.status));
+  const separate=tasks.filter(t=>!weekly.includes(t));
+  return `<section style="padding:12px 0;border-bottom:1px solid var(--line)"><div class="row wrap"><h4 style="margin:0">${esc(r.name)}</h4><span class="pill warn">${tasks.length} fällig</span><div class="spacer"></div>${n?`<button class="btn primary" onclick="confirmRoomCleaning(${esc(JSON.stringify(r.id))})">✓ Wochenreinigung fertig (${n})</button>`:''}</div>${weekly.length?`<details style="margin-top:8px"><summary>Wöchentliche Aufgaben anzeigen (${weekly.length})</summary>${weekly.map(t=>taskRow(r,t)).join('')}</details>`:''}${separate.map(t=>taskRow(r,t)).join('')}</section>`;
+ }).join('');
+}
+let roomCleaningConfirmation=null;
+window.confirmRoomCleaning=rid=>{
+ const r=state.rooms.find(r=>r.id===rid),tasks=roomCleaningTasks(rid);
+ if(!r||!tasks.length)return;
+ // Capture the preview: newly arriving tasks must not be completed unseen.
+ roomCleaningConfirmation={rid,userId:state.currentUserId,keys:new Set(tasks.map(t=>(t.event?'event:':'task:')+t.id))};
+ modal(`<h2>${esc(r.name)}: Wochenreinigung fertig?</h2><p>Diese ${tasks.length} fälligen wöchentlichen Aufgaben gemeinsam als erledigt markieren:</p><ul>${tasks.map(t=>`<li>${esc(t.title)}</li>`).join('')}</ul><p class="meta">Andere Intervalle, Veranstaltungs- und Technikaufgaben, „Material fehlt“ sowie Hinweise bleiben unverändert und einzeln sichtbar. Die Wochenaufgaben werden nach ihrem bisherigen Intervall erneut fällig.</p><div class="row wrap"><button class="btn primary" onclick="completeRoomCleaning()">Wochenreinigung bestätigen</button><button class="btn" onclick="roomCleaningConfirmation=null;closeModal()">Abbrechen</button></div>`);
+};
+window.completeRoomCleaning=()=>{
+ const pending=roomCleaningConfirmation;roomCleaningConfirmation=null;
+ if(!pending||pending.userId!==state.currentUserId||state.currentRole==='technician')return;
+ const tasks=roomCleaningTasks(pending.rid).filter(t=>pending.keys.has((t.event?'event:':'task:')+t.id)),stamp=nowISO();
+ if(!tasks.length){closeModal();return}
+ for(const t of tasks)Object.assign(t,{status:'done',lastDone:stamp,lastDoneBy:state.currentUserId||null,progressUpdatedAt:stamp});
+ save();closeModal();render();
+};
+function completedRoomsToday(){
+ const day=d=>new Date(d).toLocaleDateString('de-DE',{timeZone:'Europe/Berlin'}),today=day(Date.now());
+ return state.rooms.filter(r=>{
+  const weekly=r.tasks.filter(t=>t.interval==='weekly'&&!t.event&&t.taskType!=='technical');
+  return weekly.length&&weekly.every(taskSatisfied)&&weekly.some(t=>t.status==='done'&&t.lastDone&&day(t.lastDone)===today);
+ }).map(r=>`<div class="row wrap"><span class="pill ok">✓ Wochenreinigung erledigt</span><span>${esc(r.floor)} – ${esc(r.name)}</span></div>`).join('');
+}
+
 function eventRuleFor(ev){return (state.eventRules||[]).find(r=>(ev.title||'').toLowerCase().includes((r.keyword||'').toLowerCase()))}
 function eventRoomsFor(rule){
  if(!rule)return[];
@@ -333,7 +374,8 @@ function dashboard(){
     ${recent.length?`<div><div class="meta" style="margin-bottom:6px">Letzte Einträge</div>${recent.map(e=>{const eu=state.users.find(x=>x.id===e.userId);return `<div class="task"><div></div><div><div class="task-title">${esc(timeEntryLabel(e))}</div><small>${esc(eu?.name||'Benutzer')} · ${new Date(e.start).toLocaleString('de-DE')} · ${fmtDuration(new Date(e.end)-new Date(e.start))}${e.note?` · ${esc(e.note)}`:''}</small></div></div>`}).join('')}</div>`:''}
   </div>
   `:''}
-  <div class="section-title"><h2>Heute fällig</h2></div>${dueGroups.length?dueGroups.map(([floor,items])=>`<div class="card" style="margin-bottom:12px"><div class="row" style="padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:4px"><h3 style="margin:0">${esc(floor)}</h3><div class="spacer"></div><span class="pill warn">${items.length} fällig</span></div>${items.map(x=>taskRow(x.room,x)).join('')}</div>`).join(''):'<div class="card"><div class="empty">Aktuell nichts fällig.</div></div>'}
+  <div class="section-title"><h2>Heute fällig</h2></div>${dueGroups.length?dueGroups.map(([floor,items])=>`<div class="card" style="margin-bottom:12px"><div class="row" style="padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:4px"><h3 style="margin:0">${esc(floor)}</h3><div class="spacer"></div><span class="pill warn">${items.length} fällig</span></div>${todayRoomGroups(items)}</div>`).join(''):'<div class="card"><div class="empty">Aktuell nichts fällig.</div></div>'}
+  ${completedRoomsToday()?`<div class="card"><h3>Heute erledigte Wochenreinigungen</h3>${completedRoomsToday()}</div>`:''}
   ${can('manageCalendar')?`<div class="section-title"><h2>Kommende Veranstaltungen</h2><div class="spacer"></div><button class="btn tiny" onclick="go('calendar')">Kalender öffnen</button></div>
   <div class="card calendar-card">${upcoming.length?upcoming.map(ev=>{const d=eventDateLabel(ev),rule=eventRuleFor(ev);return `<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${d.time}${ev.location?` · ${esc(ev.location)}`:''}</div></div><span class="pill ${ev.cancelled?'warn':rule?'ok':''}">${ev.cancelled?'fällt aus':rule?'Aufgabenregel':'Kalender'}</span></div>`}).join(''):'<div class="empty">Keine kommenden Veranstaltungen.</div>'}</div>`:''}
   ${can('viewMaintenance')?`<div class="section-title"><h2>Technik & Wartung</h2><div class="spacer"></div><button class="btn tiny" onclick="showMaintenance()">Öffnen</button></div><div class="card"><div class="row"><div><b>${(state.maintenanceAssets||[]).filter(m=>['overdue','due'].includes(maintenanceStatus(m).key)).length}</b><div class="meta">Wartungen fällig / bald fällig</div></div><div class="spacer"></div><span class="pill">🔧</span></div></div>`:''}<div class="section-title"><h2>Schnellzugriff</h2></div><div class="grid room-list">${can('manageCalendar')?`<div class="card room" onclick="go('calendar')"><h3>Kalender & Veranstaltungen</h3><div class="meta">Google-Kalender und Folgeaufgaben</div></div>`:''}${state.rooms.slice(0,3).map(roomCard).join('')}</div>`
