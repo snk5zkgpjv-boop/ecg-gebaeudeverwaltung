@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless';
 import { requireUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
 import { handleTimeChange } from '../lib/time-change.js';
+import { deleteIssue } from '../lib/issue-delete.js';
 
 const defaults = {
   coordinator: {
@@ -29,6 +30,7 @@ function visible(state, profile) {
   delete output.kitchenPhotos;
   delete output.timeWriteReceipts;
   delete output.timeWriteVersions;
+  delete output.deletedIssues;
   const userId = profile.id;
   const sharedIds = new Set((state.users || []).filter(user => user.active !== false && state.timeSharing?.[user.id] === true).map(user => user.id));
   output.timeEntries = (state.timeEntries || []).filter(entry => entry.userId === userId || sharedIds.has(entry.userId));
@@ -125,6 +127,7 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 }
 
 function accepted(current, incoming, profile) {
+  incoming = {...incoming, deletedIssues: current.deletedIssues || {}, issues: (incoming.issues || current.issues || []).filter(issue => !Object.hasOwn(current.deletedIssues || {}, issue.id))};
   // A tab from before task separation must not reintroduce event templates into room tasks.
   const currentKitchen = current.eventDocumentSettings?.kitchen;
   if (currentKitchen?.taskLayoutVersion && (incoming.eventDocumentSettings?.kitchen?.taskLayoutVersion || 0) < currentKitchen.taskLayoutVersion) {
@@ -247,6 +250,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'private, no-store');
     if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
     if (req.method === 'PATCH') {
+      if (typeof req.body?.deleteIssueId === 'string' && Object.keys(req.body).length === 1) return await deleteIssue(sql, auth, req.body.deleteIssueId, res);
       if (req.body?.timeChange && Object.keys(req.body).length === 1) return handleTimeChange(sql, auth, req.body.timeChange, res, syncOrganizationTimes);
       if (auth.profile.role === 'technician') return res.status(403).json({ error: 'Persönliche Planung ist für die Technikrolle nicht freigeschaltet.' });
       if (typeof req.body?.shareTimes === 'boolean' && Object.keys(req.body).every(key => key === 'shareTimes')) {
@@ -272,10 +276,8 @@ export default async function handler(req, res) {
           updatedAt: new Date().toISOString(),
         };
         const userId = auth.profile.id;
-        const nextUserPlans = { ...(auth.state.issuePlanning?.[userId] || {}), [issueId]: plan };
-        const nextPlanning = { ...(auth.state.issuePlanning || {}), [userId]: nextUserPlans };
-        const payload = JSON.stringify(nextPlanning);
-        await sql`UPDATE app_state SET data=jsonb_set(data,'{issuePlanning}',${payload}::jsonb),revision=revision+1,updated_at=now() WHERE id='main'`;
+        const saved = await sql`UPDATE app_state SET data=jsonb_set(data,'{issuePlanning}',COALESCE(data->'issuePlanning','{}'::jsonb) || jsonb_build_object(${userId}::text,COALESCE(data->'issuePlanning'->${userId}::text,'{}'::jsonb) || jsonb_build_object(${issueId}::text,${JSON.stringify(plan)}::jsonb))),revision=revision+1,updated_at=now() WHERE id='main' AND data->'issues' @> jsonb_build_array(jsonb_build_object('id',${issueId}::text)) RETURNING id`;
+        if (!saved.length) return res.status(404).json({error:'Mangel wurde inzwischen gelöscht.'});
 
         const url = process.env.ORGANIZATION_API_URL;
         const token = process.env.ORGANIZATION_SYNC_TOKEN;
@@ -301,11 +303,14 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Ungültige Daten' });
       }
       const next = accepted(auth.state, req.body, auth.profile);
+      next.deletedIssues = auth.state.deletedIssues || {};
+      next.issues = (next.issues || []).filter(issue => !Object.hasOwn(next.deletedIssues, issue.id));
       next.issuePlanning = auth.state.issuePlanning || {};
       const payload = JSON.stringify(next);
       const previousTimes = JSON.stringify(auth.state.timeEntries || []);
-      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb RETURNING revision,updated_at`;
-      if(!rows.length)return res.status(409).json({error:'Zeitbuchungen wurden gleichzeitig geändert. Bitte erneut speichern.'});
+      const previousIssues = JSON.stringify(auth.state.issues || []);
+      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb AND COALESCE(data->'issues','[]'::jsonb)=${previousIssues}::jsonb RETURNING revision,updated_at`;
+      if(!rows.length)return res.status(409).json({error:'Zeiten oder Mängel wurden gleichzeitig geändert. Bitte erneut speichern.'});
       const sync = await syncOrganizationTimes(next);
       return res.status(200).json({ ok: true, ...rows[0], sync });
     }
