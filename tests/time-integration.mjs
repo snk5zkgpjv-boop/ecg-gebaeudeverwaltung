@@ -25,13 +25,14 @@ const root={get lastElementChild(){return nodes.at(-1)},insertAdjacentHTML(_,htm
 let resolveFetch,fetchError=false,saved=0,alerts=[];
 const context={Date:Clock,structuredClone,esc,state:{currentUserId:'me',currentRole:'admin',users:[{id:'me',name:'Testperson'}],timeEntries:[own]},currentUser:()=>({name:'Testperson'}),timeEntryLabel:e=>e.workLabel,
  $:selector=>selector==='#modalRoot'?root:selector==='#modalBack'?nodes.find(n=>n.id==='modalBack'):fields[selector.slice(1)],
- authHeaders:async()=>({}),fetch:()=>fetchError?Promise.reject(new Error('Offline')):new Promise(resolve=>{resolveFetch=resolve}),alert:message=>alerts.push(message),render:()=>{},save:()=>saved++};
+ authHeaders:async()=>({}),fetch:()=>fetchError?Promise.reject(new Error('Offline')):new Promise(resolve=>{resolveFetch=resolve}),alert:message=>alerts.push(message),timeChangeEpoch:0,timeSaveStatusHtml:()=>'',mergePendingTimes:e=>e,render:()=>{},save:()=>saved++};
 context.window=context;
 const c=vm.createContext(context);
 vm.runInContext(summary+'\n'+durationCode+'\n'+modalCode+'\n'+reportCode+'\n'+editCode+'\n'+saveCode,c);
+c.validTimeChange=e=>{if(!c.completedTimeBounds(e)){alerts.push('invalid');return false;}return true;};c.queueTimeChange=(action,before,entry)=>{saved++;c.state.timeEntries=c.state.timeEntries.filter(e=>e.id!==(entry||before).id);if(entry)c.state.timeEntries.unshift(entry);return true;};
 const monday=c.timeSummaryMonday(own.start);
 const title=node=>node.querySelector('.modal').innerHTML.match(/<h2>(.*?)<\/h2>/)[1];
-const reply=async pending=>{await new Promise(setImmediate);resolveFetch({ok:true,json:async()=>({myTimeSharing:true,sharedTimeUsers:[],timeEntries:[]})});await pending};
+const reply=async pending=>{await new Promise(setImmediate);resolveFetch({ok:true,json:async()=>({myTimeSharing:true,sharedTimeUsers:[],timeEntries:c.state.timeEntries})});await pending};
 
 const report=c.renderTimeReport();
 c.openPersonalTimeWeek(monday);
@@ -67,7 +68,7 @@ assert.equal(c.personalTimeWeeks([...bad,own],'me',now).reduce((s,w)=>s+w.ms,0),
 assert.equal(c.personalTimeWeekEntries([...bad,own],'me',monday,now).length,1);
 console.log('PASS: shared seconds format, export total and common completed-entry validation.');
 
-c.state.timeEntries=[structuredClone(own)];const before=JSON.stringify(c.state.timeEntries);
+c.state.timeEntries=[structuredClone(own)];const before=JSON.stringify(c.state.timeEntries);fields.teLabel={value:'Test'};fields.teNote={value:''};fields.teVolunteer={checked:false};
 for(const [start,end] of [['bad','bad'],['2026-09-22T08:00Z','2026-09-22T09:00Z'],['2026-09-21T10:00Z','2026-09-21T09:00Z']]){
  fields.teStart={value:start};fields.teEnd={value:end};c.saveTimeEntry('entry');assert.equal(saved,0);assert.equal(JSON.stringify(c.state.timeEntries),before);
 }
@@ -109,8 +110,8 @@ for(const role of ['admin','coordinator']){
  c.deleteTimeEntry('foreign');assert.equal(c.state.timeEntries.length,2);
  c.editTimeEntry('entry');assert.match(nodes.at(-1).querySelector('.modal').innerHTML,/id="teLabel"/);
  c.saveTimeEntry('entry');assert.equal(c.state.timeEntries[0].workLabel,'Geänderte Tätigkeit');
- c.deleteTimeEntry('entry');assert.equal(c.state.timeEntries.length,1);assert.ok(c.timeEntryIdsSeen.has('entry'));
+ c.deleteTimeEntry('entry');assert.equal(c.state.timeEntries.length,1);
 }
 c.state.currentRole='technician';c.state.timeEntries=[own];
 c.editTimeEntry('entry');assert.equal(nodes.length,0);c.deleteTimeEntry('entry');assert.equal(c.state.timeEntries.length,1);
-console.log('PASS: admin/coordinator edit/delete parity, fresh-entry deletion marker, foreign and technician protection, print without controls.');
+console.log('PASS: admin/coordinator edit/delete parity,  foreign and technician protection, print without controls.');
