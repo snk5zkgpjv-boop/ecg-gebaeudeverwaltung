@@ -59,3 +59,23 @@ const base={users:[{id:'me'}],rooms:[],outdoorAreas:[],timeEntries:entries};
 assert.equal(sc.accepted(base,{...base,timeEntries:[],timeEntryIdsSeen:[]},{id:'me',role:'admin'}).timeEntries.length,1);
 assert.equal(sc.accepted(base,{...base,timeEntries:[],timeEntryIdsSeen:[entries[0].id]},{id:'me',role:'admin'}).timeEntries.length,0);
 console.log('PASS: Berlin/DST, validation, owner binding, overlaps, idempotent API save, auth/role protection, missing AI, sync failure/chunking and stale-tab retention.');
+
+// Coordinator API parity, without calling a real provider or writing real data.
+role='coordinator';
+assert.equal((await call({action:'save',requestId:id,entries:[draft]})).statusCode,200);
+assert.match((await call({},'GET')).body.unavailableReason,/serverseitig/);
+c.process.env.OPENAI_API_KEY='synthetic';
+c.fetch=async()=>({ok:true,json:async()=>({text:'Synthetischer Test'})});
+assert.equal((await call({},'GET')).body.ai,true);
+assert.equal((await call({action:'transcribe',audio:'dGVzdA==',mime:'audio/mp4;codecs=mp4a.40.2'})).body.text,'Synthetischer Test');
+const edited={...entries[0],note:'geändert'};
+const foreign={...entries[0],id:'foreign',userId:'other'};
+for(const role of ['admin','coordinator']){
+ const current={...base,timeEntries:[...entries,foreign]};
+ const updated=sc.accepted(current,{...base,timeEntries:[edited],timeEntryIdsSeen:[entries[0].id]},{id:'me',role});
+ assert.equal(updated.timeEntries.find(e=>e.userId==='me').note,'geändert');
+ assert.equal(updated.timeEntries.find(e=>e.id==='foreign').userId,'other');
+ const deleted=sc.accepted(current,{...base,timeEntries:[],timeEntryIdsSeen:[entries[0].id]},{id:'me',role});
+ assert.deepEqual(Array.from(deleted.timeEntries,e=>e.id),['foreign']);
+}
+console.log('PASS: coordinator transcription/save and admin/coordinator state edit/delete parity.');
