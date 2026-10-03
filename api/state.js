@@ -3,6 +3,7 @@ import { requireUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
 import { handleTimeChange } from '../lib/time-change.js';
 import { deleteIssue } from '../lib/issue-delete.js';
+import { createIssue } from '../lib/issue-create.js';
 
 const defaults = {
   coordinator: {
@@ -127,6 +128,12 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 }
 
 function accepted(current, incoming, profile) {
+  // Deletion has its own authenticated endpoint. Stale full-state clients must
+  // not remove reports that were just created on this or another device.
+  if (Array.isArray(incoming.issues)) {
+    const ids = new Set(incoming.issues.map(issue => issue.id));
+    incoming = {...incoming, issues: [...incoming.issues, ...(current.issues || []).filter(issue => !ids.has(issue.id))]};
+  }
   incoming = {...incoming, deletedIssues: current.deletedIssues || {}, issues: (incoming.issues || current.issues || []).filter(issue => !Object.hasOwn(current.deletedIssues || {}, issue.id))};
   // A tab from before task separation must not reintroduce event templates into room tasks.
   const currentKitchen = current.eventDocumentSettings?.kitchen;
@@ -250,6 +257,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'private, no-store');
     if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
     if (req.method === 'PATCH') {
+      if (req.body?.createIssue && Object.keys(req.body).length === 1) return await createIssue(sql, auth, req.body.createIssue, res);
       if (typeof req.body?.deleteIssueId === 'string' && Object.keys(req.body).length === 1) return await deleteIssue(sql, auth, req.body.deleteIssueId, res);
       if (req.body?.timeChange && Object.keys(req.body).length === 1) return handleTimeChange(sql, auth, req.body.timeChange, res, syncOrganizationTimes);
       if (auth.profile.role === 'technician') return res.status(403).json({ error: 'Persönliche Planung ist für die Technikrolle nicht freigeschaltet.' });

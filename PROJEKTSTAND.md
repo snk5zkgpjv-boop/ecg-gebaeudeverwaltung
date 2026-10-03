@@ -1,8 +1,20 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 24.09.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 03.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
 ## Zuständigkeit
+
+## Mängelanlage bei vollem Gerätespeicher – 03.10.2026
+
+Implementiert: Mängel werden per authentifiziertem PATCH /api/state mit createIssue als Einzelmutation gespeichert. Der Server ergänzt ausschließlich issues, bindet createdBy an das angemeldete Konto, prüft Beschreibung/Zuordnungen/Bildformat und Bildgröße und verwendet Revisionsvergleich mit begrenztem Retry. Gleichbleibende Meldungs-ID macht Wiederholungen nach verlorener Antwort idempotent; abweichende Wiederholung oder gelöschte ID liefert Konflikt. Melderecht für angemeldete Benutzer bleibt unverändert; keine neue Serverless Function, kein neuer Zugang und keine Änderung der Organisationsschnittstellen.
+
+UI bestätigt Erfolg erst nach Serverantwort. Voller oder gesperrter localStorage verhindert weder die bestätigte Neuanlage noch das Anzeigen frisch geladener Cloud-Daten. Doppelklickschutz; bei Netz-/Serverfehler bleibt der offene Dialog samt Beschreibung und Foto erhalten. Veraltete vollständige Clients können neue, ihnen noch unbekannte Mängel nicht mehr durch Weglassen löschen; expliziter Löschweg mit Löschvermerken bleibt bestehen. Fotos und Betriebsdaten werden nicht entfernt. Allgemeine Cloud-Synchronisation anderer Funktionen bleibt grundsätzlich unverändert.
+
+Diagnose: Die gemeldete Fehlermeldung stammt aus dem synchronen localStorage-Schreibpfad vor dem bisherigen Cloud-Sync. Datenumfang samt Fotos unterstützt die Speicherlimit-Hypothese; kein iPhone-Console-Nachweis der konkreten Exception. Produktionslogs im dreistündigen Diagnosefenster enthalten keinen passenden Server-Schreibfehler, nur eine bekannte Node-Abkündigungswarnung bei erfolgreichem GET.
+
+Geprüft: tests/issue-create.mjs mit synthetischem Speicher und echten UI-/Handlerfunktionen bestanden: voller Cache, Netzfehler, HTTP-Fehler, Doppelklick, Benutzerwechsel, idempotente Wiederholung, Kollision, Revision-Retry, Text-/Foto-/Zuordnungsprüfung, Löschvermerke, Erhalt neuer Meldungen bei alten Clients. Bestehende issue-delete, issue-planning, room-weekly und technician-maintenance bestanden; Inline- und geänderte Modulsyntax geprüft. Keine privaten Testmeldungen in Produktion angelegt.
+
+Grenzen: Bei Netzfehler ist ein noch nicht bestätigter Entwurf nur im geöffneten Dialog, nicht dauerhaft offline gespeichert; nicht schließen oder neu laden. Bei vollem Cache steht nach Neuladen der aktuelle Stand erst nach erfolgreicher Cloud-Abfrage bereit. Kein tatsächlicher iPhone-/authentifizierter Ende-zu-Ende-Test. Veröffentlichung zunächst ausstehend, nächster Schritt: Produktionsbuild und ausgelieferten Code prüfen.
 
 Dieses Repository verwaltet Gemeindegebäude, Räume, Reinigungsaufgaben, Wartung, Inventar, Mängel, Benutzerrechte, persönliche Arbeitszeiten, Kalender und Veranstaltungs-Küchenabläufe. Organisationstool und Schadensmanagement sind separate fachliche Bereiche im [anderen Repository](https://github.com/snk5zkgpjv-boop/erhard-dryland-schadenmanagement/blob/main/PROJEKTSTAND.md).
 
