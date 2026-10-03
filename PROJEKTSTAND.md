@@ -270,3 +270,6 @@ Live bestätigt: PR #24 übernommen, Funktionscommit c191c409ff7e9f333524cc3fc85
 Implementiert: Die chronologische Veranstaltungsliste behält vergangene und zukünftige Termine, enthält aber einen Heute-Anker nach Europe/Berlin. Beim Öffnen des Kalendertabs wird dieser unter der festen Kopfzeile positioniert. Der Heute-Knopf springt erneut dorthin; Aktualisieren derselben Ansicht hält den Abstand zum Anker und damit die gewählte Scrollposition. Auch ohne heutigen Termin bzw. bei leerer Liste existiert der Anker. Ganztagstermine verwenden ihr Kalenderdatum. Google-Import, Daten und Abnahmelisten unverändert.
 
 Prüfung: tests/calendar-today.mjs bestanden: Berlin-Tageswechsel, Winterzeit, vergangene/aktuelle/zukünftige/leere Listen, erstmaliges Öffnen, manuelles Scrollen über erneutes Rendern, Heute-Knopf sowie Inline-Syntax. Synthetische DOM-Prüfung, kein tatsächlicher iPhone-Test. Veröffentlichung zunächst ausstehend; Live-Nachweis folgt.
+
+
+Live bestätigt: Funktionscommit 04bb0c36b34d96e00dd770e5a9e4b83b66c1e119, Produktion READY mit Produktivalias, Build etwa 19 Sekunden (statisches HTML/JavaScript, kein Framework). Live-Startseite HTTP 200 und Heute-Anker ausgeliefert. Deployment-begrenzter Error-/Fatal-Logscan ohne Treffer. Monitoring/Drains und echter iPhone-Test nicht geprüft. Die oben ausstehende Veröffentlichung ist erfolgt.
