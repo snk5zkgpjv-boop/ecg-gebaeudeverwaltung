@@ -2,6 +2,14 @@
 
 Stand: 03.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Schutz neuer Räume und Abnahmelisten – 03.10.2026
+
+Implementiert: Alte vollständige App-Uploads erhalten ihnen unbekannte Räume und sämtliche fehlenden Veranstaltungs-Abnahmelisten (zuvor nur Küchenlisten). Das bloße Fehlen eines Raums ist keine Löschanweisung mehr. Die aktuelle Oberfläche sendet beim bestätigten Raumlöschen roomDeleteIds; der Server prüft manageRooms und hält interne deletedRooms-Löschvermerke vor, damit alte Tabs gelöschte Räume nicht wieder einfügen. Diese Vermerke werden nicht im GET ausgegeben. Bestehende neuere Abnahmelisten behalten ihren Zeitstempelschutz. Der atomare PUT-Vergleich prüft zusätzlich Räume und Abnahmelisten auf Änderungen zwischen Lesen und Schreiben und liefert bei Konflikt 409. Keine neue API-Funktion, keine Änderung der Organisationsschnittstellen.
+
+Prüfung: room-sync und issue-create bestanden: unbekannte Räume samt Aufgaben und allgemeine Abnahmelisten bleiben bei alten Admin-/Objektleitungs-/Technik-/Reinigungsdaten erhalten; berechtigtes explizites Löschen, Schutz vor Wiederauftauchen, Rechteprüfung und UI-Löschabsicht getestet. Inline-Syntax geprüft. Weitere Regressionen und Produktionsnachweis folgen vor Abschluss. Ausschließlich synthetische Testdaten. Private verlorene Einträge werden getrennt in der Betriebsdatenbank wiederhergestellt.
+
+Grenzen: Bereits geöffnete alte Oberflächen müssen zum Anzeigen neuer Daten neu geladen werden; Raumlöschen mit alten Clients wird sicherheitshalber nicht übernommen. Kein vollständiges Versionsmanagement für parallele Änderungen einzelner Raumfelder. Kein echter iPhone-Endtest. Veröffentlichung dieses Korrekturstands zunächst ausstehend.
+
 ## Mängelanlage bei vollem Gerätespeicher – 03.10.2026
 
 Implementiert: Mängel werden per authentifiziertem PATCH /api/state mit createIssue als Einzelmutation gespeichert. Der Server ergänzt ausschließlich issues, bindet createdBy an das angemeldete Konto, prüft Beschreibung/Zuordnungen/Bildformat und Bildgröße und verwendet Revisionsvergleich mit begrenztem Retry. Gleichbleibende Meldungs-ID macht Wiederholungen nach verlorener Antwort idempotent; abweichende Wiederholung oder gelöschte ID liefert Konflikt. Melderecht für angemeldete Benutzer bleibt unverändert; keine neue Serverless Function, kein neuer Zugang und keine Änderung der Organisationsschnittstellen.

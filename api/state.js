@@ -32,6 +32,8 @@ function visible(state, profile) {
   delete output.timeWriteReceipts;
   delete output.timeWriteVersions;
   delete output.deletedIssues;
+  delete output.deletedRooms;
+  delete output.roomDeleteIds;
   const userId = profile.id;
   const sharedIds = new Set((state.users || []).filter(user => user.active !== false && state.timeSharing?.[user.id] === true).map(user => user.id));
   output.timeEntries = (state.timeEntries || []).filter(entry => entry.userId === userId || sharedIds.has(entry.userId));
@@ -128,6 +130,21 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 }
 
 function accepted(current, incoming, profile) {
+  // Omission in a stale full-state upload is not a room deletion. Only an
+  // explicit, authorized intent can remove a room; retain a tombstone so an
+  // older tab cannot resurrect it afterwards.
+  const deletedRooms = { ...(current.deletedRooms || {}) };
+  if (has(profile, 'manageRooms') && Array.isArray(incoming.roomDeleteIds)) {
+    for (const id of incoming.roomDeleteIds) {
+      if (typeof id === 'string' && (current.rooms || []).some(room => room.id === id)) deletedRooms[id] = true;
+    }
+  }
+  const incomingRooms = Array.isArray(incoming.rooms) ? incoming.rooms : [];
+  const roomIds = new Set(incomingRooms.map(room => room.id));
+  incoming = { ...incoming, deletedRooms, roomDeleteIds: undefined,
+    rooms: [...incomingRooms, ...(current.rooms || []).filter(room => !roomIds.has(room.id))]
+      .filter(room => !Object.hasOwn(deletedRooms, room.id)),
+  };
   // Deletion has its own authenticated endpoint. Stale full-state clients must
   // not remove reports that were just created on this or another device.
   if (Array.isArray(incoming.issues)) {
@@ -172,8 +189,9 @@ function accepted(current, incoming, profile) {
       return old && new Date(old.updatedAt) > new Date(x.updatedAt || 0) ? old : x;
     }) };
     const ids = new Set(incoming.eventChecklists.map(x => x.id));
-    incoming.eventChecklists.push(...current.eventChecklists.filter(x => x.kitchen && !ids.has(x.id)));
+    incoming.eventChecklists.push(...current.eventChecklists.filter(x => !ids.has(x.id)));
   }
+  if (!incoming.eventChecklists) incoming = { ...incoming, eventChecklists: current.eventChecklists || [] };
   // A shared entry is read-only. Preserve other owners' entries even for stale/admin payloads.
   const userId = profile.id;
   const foreignIds = new Set((current.timeEntries || []).filter(entry => entry.userId !== userId).map(entry => entry.id));
@@ -210,6 +228,7 @@ function accepted(current, incoming, profile) {
     };
   }
   const output = clone(current);
+  output.deletedRooms = deletedRooms;
   output.issuePlanning = current.issuePlanning || {};
   output.timeEntries = profile.role === 'technician' ? current.timeEntries : timeEntries;
   output.timeRunning = profile.role === 'technician' ? current.timeRunning : timeRunning;
@@ -317,8 +336,10 @@ export default async function handler(req, res) {
       const payload = JSON.stringify(next);
       const previousTimes = JSON.stringify(auth.state.timeEntries || []);
       const previousIssues = JSON.stringify(auth.state.issues || []);
-      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb AND COALESCE(data->'issues','[]'::jsonb)=${previousIssues}::jsonb RETURNING revision,updated_at`;
-      if(!rows.length)return res.status(409).json({error:'Zeiten oder Mängel wurden gleichzeitig geändert. Bitte erneut speichern.'});
+      const previousRooms = JSON.stringify(auth.state.rooms || []);
+      const previousChecklists = JSON.stringify(auth.state.eventChecklists || []);
+      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb AND COALESCE(data->'issues','[]'::jsonb)=${previousIssues}::jsonb AND COALESCE(data->'rooms','[]'::jsonb)=${previousRooms}::jsonb AND COALESCE(data->'eventChecklists','[]'::jsonb)=${previousChecklists}::jsonb RETURNING revision,updated_at`;
+      if(!rows.length)return res.status(409).json({error:'Daten wurden gleichzeitig geändert. Bitte erneut speichern.'});
       const sync = await syncOrganizationTimes(next);
       return res.status(200).json({ ok: true, ...rows[0], sync });
     }
