@@ -2,8 +2,6 @@
 
 Stand: 03.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
-## Zuständigkeit
-
 ## Mängelanlage bei vollem Gerätespeicher – 03.10.2026
 
 Implementiert: Mängel werden per authentifiziertem PATCH /api/state mit createIssue als Einzelmutation gespeichert. Der Server ergänzt ausschließlich issues, bindet createdBy an das angemeldete Konto, prüft Beschreibung/Zuordnungen/Bildformat und Bildgröße und verwendet Revisionsvergleich mit begrenztem Retry. Gleichbleibende Meldungs-ID macht Wiederholungen nach verlorener Antwort idempotent; abweichende Wiederholung oder gelöschte ID liefert Konflikt. Melderecht für angemeldete Benutzer bleibt unverändert; keine neue Serverless Function, kein neuer Zugang und keine Änderung der Organisationsschnittstellen.
@@ -15,6 +13,10 @@ Diagnose: Die gemeldete Fehlermeldung stammt aus dem synchronen localStorage-Sch
 Geprüft: tests/issue-create.mjs mit synthetischem Speicher und echten UI-/Handlerfunktionen bestanden: voller Cache, Netzfehler, HTTP-Fehler, Doppelklick, Benutzerwechsel, idempotente Wiederholung, Kollision, Revision-Retry, Text-/Foto-/Zuordnungsprüfung, Löschvermerke, Erhalt neuer Meldungen bei alten Clients. Bestehende issue-delete, issue-planning, room-weekly und technician-maintenance bestanden; Inline- und geänderte Modulsyntax geprüft. Keine privaten Testmeldungen in Produktion angelegt.
 
 Grenzen: Bei Netzfehler ist ein noch nicht bestätigter Entwurf nur im geöffneten Dialog, nicht dauerhaft offline gespeichert; nicht schließen oder neu laden. Bei vollem Cache steht nach Neuladen der aktuelle Stand erst nach erfolgreicher Cloud-Abfrage bereit. Kein tatsächlicher iPhone-/authentifizierter Ende-zu-Ende-Test. Veröffentlichung zunächst ausstehend, nächster Schritt: Produktionsbuild und ausgelieferten Code prüfen.
+
+## Zuständigkeit
+Live bestätigt: Funktionscommit 9371815e0cb49536ab2de8d7400cf86afc9d3c73 auf main; Produktionsdeployment READY mit Produktivalias, Build ca. 15 Sekunden, statisches Frontend ohne Framework. Startseite HTTP 200 mit neuer asynchroner Mängelanlage und Einzelmutation. Deployment-begrenzter Error-/Fatal-Logscan im 30-Minuten-Fenster ohne Treffer. API-Smoke-Test über den Deployment-Abruf durch Authentifizierung blockiert; kein authentifizierter Produktiv-Schreibtest und kein tatsächlicher iPhone-Test. Monitoring/Drains nicht geprüft. Die Veröffentlichung des Funktionsstands ist erfolgt; dieser Nachtrag ändert nur Dokumentation.
+
 
 Dieses Repository verwaltet Gemeindegebäude, Räume, Reinigungsaufgaben, Wartung, Inventar, Mängel, Benutzerrechte, persönliche Arbeitszeiten, Kalender und Veranstaltungs-Küchenabläufe. Organisationstool und Schadensmanagement sind separate fachliche Bereiche im [anderen Repository](https://github.com/snk5zkgpjv-boop/erhard-dryland-schadenmanagement/blob/main/PROJEKTSTAND.md).
 
