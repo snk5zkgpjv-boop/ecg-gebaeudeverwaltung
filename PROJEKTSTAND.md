@@ -263,3 +263,10 @@ Prüfung: tests/issue-delete.mjs mit tatsächlichem Handler/UI und synthetischem
 
 
 Live bestätigt: PR #24 übernommen, Funktionscommit c191c409ff7e9f333524cc3fc856fe80ed144b6a. Vorschau und Produktion READY, Produktivalias zugeordnet, Build etwa 18 Sekunden, statisches Frontend ohne Framework. Live-HTML enthält Löschschaltflächen und Handler. Deployment-begrenzter Error-/Fatal-Logscan ohne Treffer; Monitoring/Drains nicht geprüft. Kein echter Mangel zu Testzwecken gelöscht und kein authentifizierter Produktiv-Löschtest durchgeführt. Die oben ausstehende Veröffentlichung ist damit erfolgt.
+
+
+## Kalender öffnet bei Heute – 03.10.2026
+
+Implementiert: Die chronologische Veranstaltungsliste behält vergangene und zukünftige Termine, enthält aber einen Heute-Anker nach Europe/Berlin. Beim Öffnen des Kalendertabs wird dieser unter der festen Kopfzeile positioniert. Der Heute-Knopf springt erneut dorthin; Aktualisieren derselben Ansicht hält den Abstand zum Anker und damit die gewählte Scrollposition. Auch ohne heutigen Termin bzw. bei leerer Liste existiert der Anker. Ganztagstermine verwenden ihr Kalenderdatum. Google-Import, Daten und Abnahmelisten unverändert.
+
+Prüfung: tests/calendar-today.mjs bestanden: Berlin-Tageswechsel, Winterzeit, vergangene/aktuelle/zukünftige/leere Listen, erstmaliges Öffnen, manuelles Scrollen über erneutes Rendern, Heute-Knopf sowie Inline-Syntax. Synthetische DOM-Prüfung, kein tatsächlicher iPhone-Test. Veröffentlichung zunächst ausstehend; Live-Nachweis folgt.

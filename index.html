@@ -345,7 +345,9 @@ function stats(){const tasks=allTasks(),evt=generatedEventTasks();return {due:ta
 function nav(){return `<nav class="tabs" style="grid-template-columns:repeat(${can('manageCalendar')?6:5},minmax(0,1fr))">${[['dashboard','⌂','Heute'],['building','▦','Gebäude'],...(can('manageCalendar')?[['kitchen','♧','Küche']]:[]),['inventory','◇','Inventar'],['issues','!','Mängel'],['settings','•••','Mehr']].map(([id,i,l])=>`<button class="tab ${state.activeTab===id?'active':''}" onclick="go('${id}')"><span class="ico">${i}</span>${l}</button>`).join('')}</nav>`}
 function currentUser(){return state.users?.find(u=>u.id===state.currentUserId)||null}
 function header(){const u=currentUser();return `<header class="topbar"><div class="brand"><div class="brandmark"><img src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"></div><div><h1>Gebäudeverwaltung</h1><small>Evangeliums-Christengemeinde Hussenhofen</small></div></div><div class="top-actions"><span class="sync">${state.settings.cloudSync?'Cloud aktiv':'Lokal gespeichert'}</span><button class="user-badge" onclick="accountDialog()"><span>👤</span><span><b>${esc(u?.name||'Nicht angemeldet')}</b><span class="email">${u?.email?` · ${esc(u.email)}`:''}</span><br><span class="meta">${esc(roleLabels[u?.role]||'')}</span></span></button></div></header>`}
-function render(){
+function render({calendarToday=false}={}){
+ const previousToday=$('#calendarToday');
+ const calendarOffset=previousToday?.getBoundingClientRect().top;
  if(['calendar','kitchen'].includes(state.activeTab)&&!can('manageCalendar'))state.activeTab='settings';
  let body=state.activeTab==='dashboard'?dashboard():
           state.activeTab==='building'?buildingView():
@@ -354,9 +356,13 @@ function render(){
           state.activeTab==='calendar'?calendarView():
           state.activeTab==='kitchen'?kitchenView():
           settingsView();
- $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${body}</main>${nav()}</div>`
+ $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${body}</main>${nav()}</div>`;
+ if(state.activeTab==='calendar'){
+  const marker=$('#calendarToday');
+  if(marker){const target=calendarToday||calendarOffset===undefined?($('.topbar')?.getBoundingClientRect().height||0)+12:calendarOffset;window.scrollBy(0,marker.getBoundingClientRect().top-target);}
+ }
 }
-window.go=id=>{if(['calendar','kitchen'].includes(id)&&!can('manageCalendar')){alert('Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.');return}state.activeTab=id;save();render()};
+window.go=id=>{if(['calendar','kitchen'].includes(id)&&!can('manageCalendar')){alert('Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.');return}state.activeTab=id;save();render({calendarToday:id==='calendar'})};
 
 function timeElapsed(){
   if(!state.timeRunning)return 0;
@@ -835,16 +841,20 @@ window.printEventChecklist=cid=>{
  const w=window.open('','_blank');if(!w){alert('Bitte Pop-ups für den PDF-/Druckexport erlauben.');return}w.document.open();w.document.write(html);w.document.close();setTimeout(()=>w.focus(),200)
 }
 
+function calendarDayKey(value){const date=new Date(value);if(!Number.isFinite(date.getTime()))return '';return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(date)}
 function calendarView(){
  const events=(state.calendarEvents||[]).slice().sort((a,b)=>new Date(a.start)-new Date(b.start));
+ const today=calendarDayKey(new Date());
+ const todayMarker=`<div id="calendarToday" class="section-title"><h2>Heute · ${new Date().toLocaleDateString('de-DE',{timeZone:'Europe/Berlin'})}</h2></div>`;
+ let todayInserted=false;
  const admin=can('manageCalendar');
  const lastSync=state.settings?.calendarLastSync,calendarName=state.settings?.calendarName||ECG_CALENDAR_NAME;
  return `<div class="section-title"><h2>Kalender & Veranstaltungen</h2></div>
  <div class="calendar-sync"><b>Google Kalender:</b><span>${esc(calendarName)}</span><div class="spacer"></div><span class="pill ${lastSync?'ok':'warn'}">${lastSync?'synchronisiert':'Einrichtung erforderlich'}</span></div>
  <div class="notice" style="margin-top:10px"><b>${lastSync?`Letzte Aktualisierung: ${new Date(lastSync).toLocaleString('de-DE')}`:'Noch keine erfolgreiche Aktualisierung'}</b><br>Termine werden beim Öffnen automatisch und über die Schaltfläche sofort aktualisiert.</div>
  <div class="row wrap" style="margin-top:10px"><button id="calendarSyncButton" class="btn primary" onclick="syncGoogleCalendar()">Jetzt synchronisieren</button></div>
- <div class="section-title"><h2>Kommende Termine</h2><div class="spacer"></div>${admin?'<button class="btn" onclick="showEventRules()">Aufgabenregeln</button>':''}</div>
- <div class="card calendar-card">${events.length?events.map(ev=>{const d=eventDateLabel(ev),rule=eventRuleFor(ev),check=eventChecklistFor(ev.id),p=check?checklistProgress(check):null;return `<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div class="event-main"><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${new Date(ev.start).toLocaleString('de-DE',{weekday:'short',hour:'2-digit',minute:'2-digit'})} – ${new Date(ev.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}${ev.location?` · ${esc(ev.location)}`:''}</div>${ev.description?`<details><summary>Zusatzinformationen</summary><p style="white-space:pre-wrap">${esc(calendarPlainDescription(ev.description))}</p></details>`:''}${rule?`<div class="event-task-source">Folgeaufgaben: ${esc(rule.label)}</div>`:''}${!ev.cancelled?`<div class="event-actions">${check?`<button class="btn tiny primary" onclick="openEventChecklist('${check.id}')">Abnahmeliste ${p.done}/${p.total}</button><button class="btn tiny" onclick="printEventChecklist('${check.id}')">PDF / Drucken</button><button class="btn tiny soft" onclick="createEventAgreement('${ev.id}')">Nutzungsvereinbarung</button>`:`<button class="btn tiny" onclick="createEventChecklist('${ev.id}')">+ Aufgaben-/Abnahmeliste</button>`}</div>`:''}</div><span class="pill ${ev.cancelled?'warn':check?'ok':rule?'ok':''}">${ev.cancelled?'fällt aus':check?'Liste angelegt':rule?'automatisch':'ohne Regel'}</span></div>`}).join(''):'<div class="empty">Noch keine Kalendertermine synchronisiert.</div>'}</div>`
+ <div class="section-title"><h2>Veranstaltungen</h2><button class="btn tiny" onclick="render({calendarToday:true})">Heute</button><div class="spacer"></div>${admin?'<button class="btn" onclick="showEventRules()">Aufgabenregeln</button>':''}</div>
+ <div class="card calendar-card">${events.length?events.map(ev=>{const day=ev.allDay?String(ev.start).slice(0,10):calendarDayKey(ev.start);const marker=!todayInserted&&day>=today?todayMarker:'';if(marker)todayInserted=true;const d=eventDateLabel(ev),rule=eventRuleFor(ev),check=eventChecklistFor(ev.id),p=check?checklistProgress(check):null;return `${marker}<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div class="event-main"><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${new Date(ev.start).toLocaleString('de-DE',{weekday:'short',hour:'2-digit',minute:'2-digit'})} – ${new Date(ev.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}${ev.location?` · ${esc(ev.location)}`:''}</div>${ev.description?`<details><summary>Zusatzinformationen</summary><p style="white-space:pre-wrap">${esc(calendarPlainDescription(ev.description))}</p></details>`:''}${rule?`<div class="event-task-source">Folgeaufgaben: ${esc(rule.label)}</div>`:''}${!ev.cancelled?`<div class="event-actions">${check?`<button class="btn tiny primary" onclick="openEventChecklist('${check.id}')">Abnahmeliste ${p.done}/${p.total}</button><button class="btn tiny" onclick="printEventChecklist('${check.id}')">PDF / Drucken</button><button class="btn tiny soft" onclick="createEventAgreement('${ev.id}')">Nutzungsvereinbarung</button>`:`<button class="btn tiny" onclick="createEventChecklist('${ev.id}')">+ Aufgaben-/Abnahmeliste</button>`}</div>`:''}</div><span class="pill ${ev.cancelled?'warn':check?'ok':rule?'ok':''}">${ev.cancelled?'fällt aus':check?'Liste angelegt':rule?'automatisch':'ohne Regel'}</span></div>`}).join(''):'<div class="empty">Noch keine Kalendertermine synchronisiert.</div>'}${todayInserted?'':todayMarker}</div>`
 }
 window.syncGoogleCalendar=async(silent=false)=>{if(!can('manageCalendar'))return;const button=$('#calendarSyncButton');if(button){button.disabled=true;button.textContent='Synchronisiere …'}try{const r=await fetch('/api/calendar'),b=await r.json();if(!r.ok)throw new Error(b.error||'Kalender konnte nicht synchronisiert werden.');state.calendarEvents=b.events||[];state.settings={...(state.settings||{}),calendarLastSync:b.syncedAt,calendarName:b.calendarName||ECG_CALENDAR_NAME};localStorage.setItem('cleaningAppState',JSON.stringify(state));render();if(!silent)alert(`${state.calendarEvents.length} Kalendertermine wurden aktualisiert.`)}catch(e){if(!silent)alert(e.message||'Kalender konnte nicht synchronisiert werden.');if(button){button.disabled=false;button.textContent='Jetzt synchronisieren'}}};
 window.maybeSyncGoogleCalendar=async()=>{if(!can('manageCalendar'))return;const last=state.settings?.calendarLastSync?new Date(state.settings.calendarLastSync).getTime():0;if(Date.now()-last>15*60*1000)await syncGoogleCalendar(true)};
