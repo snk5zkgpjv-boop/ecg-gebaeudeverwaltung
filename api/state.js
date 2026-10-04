@@ -266,7 +266,7 @@ export default async function handler(req, res) {
     const gate=organizationExport({},req.headers.authorization);
     if(gate.status===401)return res.status(401).json(gate.body);
     try{
-      const rows=await sql`SELECT data FROM app_state WHERE id='main' LIMIT 1`;
+      const rows=await sql`SELECT jsonb_build_object('users',COALESCE(data->'users','[]'::jsonb),'timeEntries',COALESCE(data->'timeEntries','[]'::jsonb)) AS data FROM app_state WHERE id='main' LIMIT 1`;
       const result=organizationExport(rows[0]?.data||{},req.headers.authorization);
       return res.status(result.status).json(result.body);
     }catch{return res.status(500).json({error:'ECG-Zeiten konnten nicht gelesen werden.'});}
