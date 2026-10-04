@@ -1,3 +1,4 @@
+import { organizationExport } from '../lib/organization-export.js';
 import { neon } from '@neondatabase/serverless';
 import { requireUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
@@ -259,6 +260,17 @@ function accepted(current, incoming, profile) {
 export default async function handler(req, res) {
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
   const sql = neon(process.env.DATABASE_URL);
+  if(req.method==='GET' && req.query?.organizationExport==='1'){
+    res.setHeader('Cache-Control','private, no-store');
+    // Authenticate before reading private application state.
+    const gate=organizationExport({},req.headers.authorization);
+    if(gate.status===401)return res.status(401).json(gate.body);
+    try{
+      const rows=await sql`SELECT data FROM app_state WHERE id='main' LIMIT 1`;
+      const result=organizationExport(rows[0]?.data||{},req.headers.authorization);
+      return res.status(result.status).json(result.body);
+    }catch{return res.status(500).json({error:'ECG-Zeiten konnten nicht gelesen werden.'});}
+  }
   const auth = await requireUser(req, res, sql);
   if (!auth) return;
 
