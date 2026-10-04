@@ -67,11 +67,11 @@ Raumfoto-Vorschau: Foto, erkannte Raumdaten und Aufgabenvorschläge werden gemei
 | Richtung | Daten und Auslöser | Maßgebliche Quelle / Stand |
 |---|---|---|
 | Google Kalender → ECG | Termin, Zeit, Ort, Beschreibung beim Kalenderimport | Kalender; Importcode vorhanden, Live-Import mit angemeldetem Benutzer noch prüfen |
-| ECG → Organisationstool | ausgewählte persönliche Zeitbuchungen nach erfolgreichem `PUT /api/state` | ECG; Filter über konfigurierte Benutzer-E-Mail |
+| ECG → Organisationstool | ausgewählte persönliche Zeitbuchungen nach API-Speicherung sowie auf Abruf durch die Organisation | ECG; Filter über konfigurierte Benutzer-E-Mail |
 | Organisationstool → ECG | kein Rückschreiben in geprüfter Sync-Strecke | nicht implementiert in dieser Strecke |
 | ECG → Schadensmanagement | keine direkte geprüfte Übergabe | nicht als vorhanden annehmen |
 
-Zeit-Sync sendet `{entries}` per Bearer-geschütztem POST an `/api/organization/ecg-sync`. Konfigurationsnamen: `ORGANIZATION_API_URL`, `ORGANIZATION_SYNC_TOKEN`, `ORGANIZATION_SYNC_USER_EMAIL`. Keine Werte dokumentieren. Empfänger legt `source=ecg` an und aktualisiert über externe ID; entfernt auf Quellseite fehlende Buchungen nicht automatisch. Bekannte Grenze: Sender prüft HTTP-Fehlerantworten derzeit nicht ausdrücklich. End-to-End-Sync und Produktionskonfiguration nicht geprüft.
+Zeit-Sync sendet `{entries}` per Bearer-geschütztem POST an `/api/organization/ecg-sync`. Konfigurationsnamen: `ORGANIZATION_API_URL`, `ORGANIZATION_SYNC_TOKEN`, `ORGANIZATION_SYNC_USER_EMAIL`. Keine Werte dokumentieren. Empfänger legt `source=ecg` an und aktualisiert über externe ID; entfernt auf Quellseite fehlende Buchungen nicht automatisch. Aktualisierung 04.10.2026: Sender prüft HTTP-Status und bestätigte Anzahl; produktiver Export, Empfang, Übernahme und Rücklesen erfolgreich geprüft. Abruf beim Öffnen implementiert. Angemeldeter Browser-/iPhone-Test offen.
 
 ## Prüfungen und offene Punkte
 
@@ -295,3 +295,10 @@ Kontozuordnung: exakter aktiver E-Mail-Treffer oder eindeutiger aktiver Eigentü
 Tatsächlich geprüft: synthetische Node-Prüfungen für Schlüssel, Quellfilter/Datenschutz, aktiven/eindeutigen Eigentümer, historische Zuordnung, widersprüchliche Eigentümer sowie ungültige/doppelte Zeiträume bestanden; ECG-State-Syntax bestanden. Veröffentlichung und Produktionsnachtrag werden anschließend separat verifiziert. Keine privaten Betriebsdaten oder Zugangsdaten dokumentiert.
 
 Produktionsnachweis: Beide Funktionsstände am Produktivalias READY. Organisation-Build einschließlich TypeScript-Prüfung bestanden. Produktiver Instanzstart meldete erfolgreichen ECG-Abgleich; fehlende bzw. geänderte Buchungen wurden übernommen. Node-Integrationstest des tatsächlichen Synchronisationsmoduls mit synthetischer Datenbank bestätigt historische Verknüpfung, Import/Rücklesen, unveränderte Wiederholung ohne doppeltes Audit, Ausschluss fremder Eigentümer und Datenerhalt bei HTTP-Fehler. Der Import liest zur Bestätigung die betroffenen Quellkennungen und Inhalte aus der Empfängerdatenbank zurück. Persönliche Mengen/Zeitinhalte bleiben außerhalb dieser öffentlichen Dokumentation.
+
+
+## Abschließender Produktionsnachweis – 04.10.2026
+
+Die Funktionsstände mit präziser Zeitstempelprüfung und minimaler ECG-JSONB-Abfrage sind live READY. Produktiver erneuter Abgleich meldet synced und vollständige Rücklese-Verifikation der übertragenen Quellkennungen und Inhalte; unveränderte Wiederholung ohne Änderungen. Regulärer POST /api/organization/ecg-sync ebenfalls HTTP 200 bestätigt. Die zuvor protokollierten Zeitüberschreitungen und die fehlerhafte Date-Objekt-Prüfung wurden korrigiert; der nachfolgende reale Export-/Empfänger-/Datenbanklauf war erfolgreich.
+
+Beim Öffnen/Wechseln/Aktualisieren der Organisationsoberfläche läuft der Abgleich vor dem Laden der Zeitliste; Wochenübersicht berechnet sich danach. Bei Fehler bleibt der bisherige Datenstand erhalten und die Oberfläche zeigt den Fehler. Quellfilter, Bearer-Grenze, Kontozuordnung, Idempotenz und Fehlerverhalten synthetisch geprüft. Kein angemeldeter Browser-/iPhone-Test dieser Oberfläche durchgeführt. Keine privaten Einträge in Git dokumentiert. Dieser letzte Nachtrag ändert ausschließlich Dokumentation.
