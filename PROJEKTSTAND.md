@@ -1,6 +1,6 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 03.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 04.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
 ## Schutz neuer Räume und Abnahmelisten – 03.10.2026
 
@@ -273,3 +273,12 @@ Prüfung: tests/calendar-today.mjs bestanden: Berlin-Tageswechsel, Winterzeit, v
 
 
 Live bestätigt: Funktionscommit 04bb0c36b34d96e00dd770e5a9e4b83b66c1e119, Produktion READY mit Produktivalias, Build etwa 19 Sekunden (statisches HTML/JavaScript, kein Framework). Live-Startseite HTTP 200 und Heute-Anker ausgeliefert. Deployment-begrenzter Error-/Fatal-Logscan ohne Treffer. Monitoring/Drains und echter iPhone-Test nicht geprüft. Die oben ausstehende Veröffentlichung ist erfolgt.
+
+
+## Diagnose ECG-Zeitübertragung – 04.10.2026
+
+Produktionslogs des Organisationsempfängers zeigen wiederholte POST /api/organization/ecg-sync mit HTTP 503. Der zugehörige veröffentlichte Empfängercode und die Middleware wurden anhand des Produktionscommits gelesen: Die Route ist von der normalen Sitzungsprüfung ausgenommen; ihr expliziter 503-Pfad bedeutet, dass kein aktives app_users-Konto zur übermittelten ownerEmail gefunden wurde. Dies grenzt den Fehler auf die Eigentümerzuordnung ein; ob die E-Mail fehlt, abweicht oder das Konto inaktiv ist, wurde nicht durch Datenbankabgleich bestätigt. Andere Route-Fehler liefern 401 oder 500.
+
+Sendercode auf main geprüft: Synchronisation erfolgt nach API-Speicherungen, direkte SQL-Zeitnachträge lösen sie nicht aus. Kein dauerhafter Hintergrundabgleich oder Löschabgleich vorhanden. Die benötigten Produktions-Konfigurationsnamen sind in Vercel vorhanden; geschützte Werte wurden vom Connector nicht ausgegeben. Der verfügbare Neon-Connector verlangt eine konkrete Projekt-ID und bietet keine Projektauflistung; kein authentifizierter Neon-CLI-Zugang vorhanden. Deshalb keine Prüfung der konkreten Zeitlisten, kein Kontofix und keine Nachübertragung ausgeführt. Kein neuer Funktionsstand veröffentlicht; dies ist ausschließlich ein Diagnose-/Dokumentationsnachtrag.
+
+Nächster Schritt: Projektzuordnung der Produktionsdatenbanken herstellen, konfigurierte Eigentümer-E-Mail mit aktivem Organisationskonto abgleichen, fehlende Quellkennungen idempotent nachübertragen und automatische API-Übertragung Ende-zu-Ende prüfen. Für direkte Datenbanknachträge bleibt zusätzlich ein verlässlicher Abgleich erforderlich. Keine privaten Betriebsdaten oder Zugangsdaten in dieser Dokumentation.
