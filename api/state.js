@@ -5,6 +5,7 @@ import { syncOrganizationTimes } from '../lib/organization-sync.js';
 import { handleTimeChange } from '../lib/time-change.js';
 import { deleteIssue } from '../lib/issue-delete.js';
 import { createIssue } from '../lib/issue-create.js';
+import { maintenanceDocuments } from '../lib/maintenance-documents.js';
 
 const defaults = {
   coordinator: {
@@ -275,6 +276,7 @@ export default async function handler(req, res) {
   if (!auth) return;
 
   try {
+    if (req.query?.maintenanceDocuments === '1') return await maintenanceDocuments(req, res, sql, auth, has);
     if (req.method === 'GET' && req.query?.kitchenPhoto) {
       const name = String(req.query.kitchenPhoto);
       const photos = auth.state.kitchenPhotos || {};
