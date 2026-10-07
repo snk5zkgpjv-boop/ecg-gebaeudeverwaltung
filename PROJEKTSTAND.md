@@ -1,6 +1,14 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 04.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 07.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Gerätebezogene PDF-Anleitungen – 07.10.2026
+
+Implementiert auf Feature-Branch: Alle Wartungsanlagen/Geräte erhalten im Öffnen-Dialog einen Bereich Anleitungen. PDF-Upload mit Titel bis 3 MB; Öffnen in separatem Tab und bestätigtes Entfernen aus der Liste. Entfernte Bytes bleiben zur Wiederherstellung erhalten; erneutes Hochladen derselben Datei stellt den Eintrag wieder her. Keine Änderung an Wartungsintervallen oder anderen Betriebsdaten.
+
+Schnittstelle: Bestehendes /api/state?maintenanceDocuments=1 mit assetId; GET listet Metadaten oder liefert documentId als privates PDF, POST speichert, PATCH entfernt aus der Liste. Bestehende ECG-Sitzung erforderlich; viewMaintenance für Lesen und zusätzlich manageMaintenance für Schreiben. Gesonderte Neon-Tabelle ecg_maintenance_documents, keine PDF-Bytes in app_state, allgemeinen Cloud-PUTs oder localStorage. Geräteexistenz, Format/Größe und Titel geprüft; Hash pro Gerät verhindert doppelte Anlage bei Wiederholung. PDF-Auslieferung mit no-store, nosniff und isolierender Content-Security-Policy. Keine neue Serverless Function oder externe Dokumentfreigabe. Zeit-/Organisationsschnittstelle unverändert.
+
+Prüfung: maintenance-documents bestanden: PDF-Validierung/Größe, Rechte, gerätegebundener Zugriff, Idempotenz, Metadaten ohne Bytes, private PDF-Ausgabe, Entfernen/Wiederherstellung und UI-Schutzmarker. technician-maintenance, issue-create und room-sync einschließlich Inline-Syntax ebenfalls bestanden; neue Module syntaktisch geprüft. Ausschließlich synthetische Testdaten. Veröffentlichung und Hinterlegen der angeforderten PDFs zunächst ausstehend; kein iPhone-Endtest behauptet.
 
 ## Schutz neuer Räume und Abnahmelisten – 03.10.2026
 
