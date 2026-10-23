@@ -6,6 +6,7 @@ import { handleTimeChange } from '../lib/time-change.js';
 import { deleteIssue } from '../lib/issue-delete.js';
 import { createIssue } from '../lib/issue-create.js';
 import { maintenanceDocuments } from '../lib/maintenance-documents.js';
+import { eventUsage } from '../lib/event-usage.js';
 
 const defaults = {
   coordinator: {
@@ -31,6 +32,8 @@ const clone = (value) => structuredClone(value || {});
 function visible(state, profile) {
   const output = clone(state);
   delete output.kitchenPhotos;
+  // Private agreement snapshots are fetched only through their authorized event route.
+  delete output.eventUsageAgreements;
   delete output.timeWriteReceipts;
   delete output.timeWriteVersions;
   delete output.deletedIssues;
@@ -225,6 +228,7 @@ function accepted(current, incoming, profile) {
       myTimeSharing: undefined,
       sharedTimeUsers: undefined,
       kitchenPhotos: current.kitchenPhotos,
+      eventUsageAgreements: current.eventUsageAgreements || [],
       rooms: mergeTaskProgress(current.rooms, incoming.rooms, { acceptRooms: true, acceptTasks: true }),
       outdoorAreas: mergeTaskProgress(current.outdoorAreas, incoming.outdoorAreas, { acceptRooms: true, acceptTasks: true }),
     };
@@ -276,6 +280,7 @@ export default async function handler(req, res) {
   if (!auth) return;
 
   try {
+    if (req.query?.eventUsage === '1') return await eventUsage(req, res, sql, auth, has);
     if (req.query?.maintenanceDocuments === '1') return await maintenanceDocuments(req, res, sql, auth, has);
     if (req.method === 'GET' && req.query?.kitchenPhoto) {
       const name = String(req.query.kitchenPhoto);
@@ -352,7 +357,7 @@ export default async function handler(req, res) {
       const previousIssues = JSON.stringify(auth.state.issues || []);
       const previousRooms = JSON.stringify(auth.state.rooms || []);
       const previousChecklists = JSON.stringify(auth.state.eventChecklists || []);
-      const rows = await sql`UPDATE app_state SET data=jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb AND COALESCE(data->'issues','[]'::jsonb)=${previousIssues}::jsonb AND COALESCE(data->'rooms','[]'::jsonb)=${previousRooms}::jsonb AND COALESCE(data->'eventChecklists','[]'::jsonb)=${previousChecklists}::jsonb RETURNING revision,updated_at`;
+      const rows = await sql`UPDATE app_state SET data=jsonb_set(jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),'{eventUsageAgreements}',COALESCE(data->'eventUsageAgreements','[]'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb AND COALESCE(data->'issues','[]'::jsonb)=${previousIssues}::jsonb AND COALESCE(data->'rooms','[]'::jsonb)=${previousRooms}::jsonb AND COALESCE(data->'eventChecklists','[]'::jsonb)=${previousChecklists}::jsonb RETURNING revision,updated_at`;
       if(!rows.length)return res.status(409).json({error:'Daten wurden gleichzeitig geändert. Bitte erneut speichern.'});
       const sync = await syncOrganizationTimes(next);
       return res.status(200).json({ ok: true, ...rows[0], sync });
