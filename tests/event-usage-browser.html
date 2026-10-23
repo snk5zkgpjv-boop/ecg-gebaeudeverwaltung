@@ -7,17 +7,19 @@
 <script type="module">
 import {buildUsageDocument} from '../assets/event-usage-model.js';
 import {usagePrintHtml} from '../assets/event-usage-print.js';
-const rooms=[{id:'f',name:'Freizeitraum',floor:'DG'},{id:'u',name:'Speisesaal',floor:'UG'},{id:'e',name:'Gemeindesaal',floor:'EG'}];
-const state={rooms,calendarEvents:[{id:'test',title:'Synthetische Testveranstaltung',start:'2026-11-08T12:00:00+01:00',end:'2026-11-08T20:00:00+01:00'}],eventDocumentSettings:{contactLines:['Test-Hausmeister · Kontakt nach Vereinbarung','Test-Verwaltung · Kontakt nach Vereinbarung']}};
+const rooms=[{id:'f',name:'Freizeitraum',floor:'DG',tasks:['Mobiliar an den vorgesehenen Platz zurückstellen','Sichtbare Flecken und Verschmutzungen beseitigen','Küche: Arbeitsflächen, Spüle und Kochfeld reinigen','Küche: Geschirr reinigen und wegräumen','Küche: Spülmaschinensieb leeren und reinigen','Küche: Müll entsorgen und benutzte Geschirrtücher zur Wäsche geben','Abschlusskontrolle: Geräte, Licht und Fenster kontrollieren'].map(title=>({title,interval:'afteruse'}))},{id:'u',name:'Speisesaal',floor:'UG'},{id:'e',name:'Gemeindesaal',floor:'EG'}];
+rooms.push({id:'fw',name:'Damen-WC',floor:'DG'},{id:'mw',name:'Herren-WC',floor:'DG'});
+const state={rooms,calendarEvents:[{id:'test',title:'Synthetische Testveranstaltung',start:'2026-11-08T12:00:00+01:00',end:'2026-11-08T20:00:00+01:00'}],eventDocumentSettings:{accountHolder:'Testverein',bankName:'Testbank',bankAccount:'Muster-IBAN (nicht zahlbar)',bankBic:'Muster-BIC',contactLines:['Test-Hausmeister · Kontakt nach Vereinbarung','Test-Verwaltung · Kontakt nach Vereinbarung','Test-Ansprechpartner · Kontakt nach Vereinbarung']}};
 document.getElementById('show').onclick=()=>{
+ document.getElementById('result').textContent='Prüfung läuft …';
  const kind=document.getElementById('scenario').value;
- const roomIds=kind==='leisure'?['f']:kind==='ug'?['u']:['e','u'];
+ const roomIds=kind==='leisure'?['f','fw','mw']:kind==='ug'?['u']:['e','u'];
  const selected=rooms.filter(r=>roomIds.includes(r.id));
  import('../assets/event-usage-model.js').then(({cleaningLocationFor,suggestedFee})=>{
- const doc=buildUsageDocument({eventId:'test',roomIds,eventType:kind==='wedding'?'wedding':'private',fee:suggestedFee(selected),name:'Testperson',caretaker:'Test-Hausmeister',cleaningLocation:cleaningLocationFor(selected),kitchenUsed:true,toiletsUsed:true},state,{id:'test'});
+ const doc=buildUsageDocument({eventId:'test',roomIds,eventType:kind==='wedding'?'wedding':'private',fee:suggestedFee(selected),name:'Testperson',caretaker:'Test-Hausmeister',caretakerContact:'Test-Hausmeister · Kontakt nach Vereinbarung',cleaningLocation:cleaningLocationFor(selected),kitchenUsed:true,toiletsUsed:true},state,{id:'test'});
  if(kind==='long')doc.sections[0].items.push(...Array.from({length:35},(_,i)=>`Synthetische Zusatzaufgabe ${i+1}: Fläche kontrollieren und nach der Veranstaltung sauber hinterlassen.`));
  const frame=document.getElementById('preview');
- frame.onload=()=>{const timer=setInterval(()=>{const d=frame.contentDocument;if(!d?.querySelector('#print:not([disabled])')&&!d?.defaultView?.documentError)return;clearInterval(timer);const contents=[...d.querySelectorAll('.content')];const overflow=contents.some(x=>x.scrollHeight>x.clientHeight+1);document.getElementById('result').textContent=d.defaultView.documentError?'FEHLER: '+d.querySelector('#status').textContent:overflow?'FEHLER: überlaufender Inhalt':`BESTANDEN: ${contents.length} Seiten, Logo geladen, kein Inhaltsüberlauf; Gebühr ${doc.fee} €, Kaution ${doc.deposit} €.`;},50);};
+ frame.onload=()=>{const timer=setInterval(()=>{const d=frame.contentDocument;if(!d?.querySelector('#print:not([disabled])')&&!d?.defaultView?.documentError)return;clearInterval(timer);const contents=[...d.querySelectorAll('.content')];const overflow=contents.some(x=>x.scrollHeight>x.clientHeight+1);const tasks=[...d.querySelectorAll('#pages .task')].length;const expectedTasks=doc.sections.reduce((n,s)=>n+s.items.length,0);const taskError=tasks!==expectedTasks;const pageError=kind==='leisure'&&contents.length!==3;document.getElementById('result').textContent=d.defaultView.documentError?'FEHLER: '+d.querySelector('#status').textContent:overflow?'FEHLER: überlaufender Inhalt':taskError?'FEHLER: fehlende Aufgaben':pageError?'FEHLER: Standardfeier benötigt mehr als drei Seiten':`BESTANDEN: ${contents.length} Seiten, ${tasks} Aufgaben vollständig, Logo geladen, kein Inhaltsüberlauf; Gebühr ${doc.fee} €, Kaution ${doc.deposit} €.`;},50);};
  frame.srcdoc=usagePrintHtml(doc,new URL('/assets/ecg-letterhead.jpeg',location.origin).href);
  });
 };

@@ -2,6 +2,12 @@
 
 Stand: 24.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Drucklayout der Veranstaltungsunterlagen – 24.10.2026
+
+Korrektur auf Feature-Branch: Seite 1 folgt wieder der ursprünglichen ECG-Vorlage mit einzeln angeordneten Veranstaltungsangaben, breiten Adress-/Kontaktzeilen und zwei Unterschriftszeilen mit getrenntem Ort/Datum. Die Checkliste verwendet kleinere vertikale Abstände bei unveränderter Schriftgröße, damit Abnahme und Unterschriften auch bei zusätzlichen Raumaufgaben auf derselben Seite Platz finden. Keine Aufgaben entfernt, keine Gebühren, gespeicherten Vereinbarungen oder Schnittstellen verändert. Automatische Textvergrößerung mobiler Browser ist für die A4-Druckansicht begrenzt.
+
+Prüfung: event-usage und event-usage-ui sowie Syntax und Diff-Prüfung bestanden. Browser-Prüffall um sieben zusätzliche Raumaufgaben und längere Fuß-/Kontaktzeilen erweitert; prüft alle Aufgaben auf Vollständigkeit und erwartet drei Seiten für die private Einraumfeier. Vercel-Vorschau des Funktionsstands d992186 READY. Echter Browser-Test bestanden: private Einraumfeier einschließlich beider WCs, sieben zusätzlicher Raumaufgaben, Bankangaben und dreier Kontaktzeilen jetzt drei Seiten mit allen 21 Aufgaben; erste Seite und kompletter Abnahmeblock visuell geprüft, ohne Überlauf. UG drei Seiten/15 Aufgaben, Hochzeit EG+UG fünf Seiten/20 Aufgaben mit Kautionsblatt, lange Liste vier Seiten/55 Aufgaben. Aufgabenanzahl gegen Eingabe geprüft; Schriftgröße unverändert. PR #28 zur Veröffentlichung vorbereitet. Noch kein iPhone-/Systemdrucktest; Produktion enthält bis zur Übernahme das bisherige Layout.
+
 ## Raumabhängige Veranstaltungsunterlagen – 24.10.2026
 
 Implementiert und veröffentlicht: Jeder nicht abgesagte Kalendertermin bietet eine Nutzungsvereinbarung, auch ohne zuvor angelegte Abnahmeliste. Räume, Veranstaltungsart, Veranstalter, Reinigung und Abnahme sind auswählbar. Deterministische Raumtarife: Freizeitraum 50 €, Untergeschoss 100 €, Erdgeschoss plus Untergeschoss 200 €; unbekannte Kombinationen verlangen einen begründeten individuellen Betrag. Nur Hochzeiten erhalten 300 € Barkaution; andere private Feiern keine. Kein KI-Aufruf. Bestehende Küchen-/Kooperationsvereinbarung bleibt gesondert erreichbar.
