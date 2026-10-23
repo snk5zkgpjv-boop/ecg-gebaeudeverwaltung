@@ -11,6 +11,7 @@ const rooms=[{id:'f',name:'Freizeitraum',floor:'DG',tasks:['Mobiliar an den vorg
 rooms.push({id:'fw',name:'Damen-WC',floor:'DG'},{id:'mw',name:'Herren-WC',floor:'DG'});
 const state={rooms,calendarEvents:[{id:'test',title:'Synthetische Testveranstaltung',start:'2026-11-08T12:00:00+01:00',end:'2026-11-08T20:00:00+01:00'}],eventDocumentSettings:{accountHolder:'Testverein',bankName:'Testbank',bankAccount:'Muster-IBAN (nicht zahlbar)',bankBic:'Muster-BIC',contactLines:['Test-Hausmeister · Kontakt nach Vereinbarung','Test-Verwaltung · Kontakt nach Vereinbarung','Test-Ansprechpartner · Kontakt nach Vereinbarung']}};
 document.getElementById('show').onclick=()=>{
+ document.getElementById('result').textContent='Prüfung läuft …';
  const kind=document.getElementById('scenario').value;
  const roomIds=kind==='leisure'?['f','fw','mw']:kind==='ug'?['u']:['e','u'];
  const selected=rooms.filter(r=>roomIds.includes(r.id));
