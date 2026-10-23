@@ -15,7 +15,7 @@ assert.equal(ctx.calendarDayKey('2026-10-02T22:30:00Z'),'2026-10-03');
 assert.equal(ctx.calendarDayKey('2026-10-25T23:30:00Z'),'2026-10-26');
 let marker=null,scroll=0;
 const app={set innerHTML(v){marker={getBoundingClientRect:()=>({top:1500-scroll})}}};
-Object.assign(ctx,{header:()=>'',nav:()=>'',window:{scrollBy(x,y){scroll+=y}},$:s=>s==='#calendarToday'?marker:s==='#app'?app:s==='.topbar'?{getBoundingClientRect:()=>({height:80})}:null});
+Object.assign(ctx,{authSession:{user:{appUserId:'test'}},header:()=>'',nav:()=>'',window:{scrollBy(x,y){scroll+=y}},$:s=>s==='#calendarToday'?marker:s==='#app'?app:s==='.topbar'?{getBoundingClientRect:()=>({height:80})}:null});
 ctx.state.activeTab='calendar';
 vm.runInContext(html.slice(html.indexOf('function render('),html.indexOf('window.go=')),ctx);
 ctx.render();assert.equal(scroll,1408,'entry aligns today below header');

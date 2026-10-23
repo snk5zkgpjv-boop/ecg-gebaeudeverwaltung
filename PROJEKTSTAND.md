@@ -1,6 +1,16 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 07.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 23.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Kontozuordnung und Kontowechsel – 23.10.2026
+
+Untersuchung des aktuellen Produktionsstands: Ein nach Nutzerbestätigung falsch zugeordneter Alt-Zeiteintrag wurde gezielt korrigiert, in einer gesonderten privaten Reparaturtabelle mit Vorher-/Nachherstand protokolliert und zurückgelesen. Keine privaten Kennungen, Namen oder Buchungsinhalte in Git. Die Kennung der Buchung bleibt erhalten; ein Versionsschutz verhindert, dass alte vollständige Clients die Zuordnung zurücksetzen. Keine pauschale Kontenzusammenführung. Weitere ungeklärte Altbuchungen unverändert. Keine Freigaben aktiviert. Kein Beleg, dass jede gemeldete Anzeigeabweichung dieselbe Ursache hat.
+
+Implementiert auf fix/account-time-isolation, noch nicht produktiv: Serverseitige Sitzungen werden ausschließlich über die fest gespeicherte Profilkennung gebunden; fehlende und doppelte Kennungen werden abgewiesen. Oberfläche übernimmt Kennung/Rolle aus der bestätigten Sitzung, nicht aus einem lokalen E-Mail-Treffer oder dem ersten Profil. Kontowechsel leert persönliche Zeit-/Planungsansichten und Dialoge; keine Darstellung vor erfolgreicher Sitzung-/Cloudprüfung. Ausstehende Zeitoperationen bleiben nach Eigentümer getrennt erhalten, laufende Timer werden beim Wechsel getrennt gesichert. Abmeldung meldet Erfolg erst nach Serverbestätigung. Andere Tabs erhalten ein Wechselereignis; zusätzliche X-ECG-User-Id-Prüfung verhindert Anfragen unter einem inzwischen gewechselten Sitzungscookie. Alte Clients ohne den optionalen Header bleiben kompatibel.
+
+Benutzerverwaltung und PIN-Migration dürfen vorhandene Login-Zugänge nicht mehr anhand eines E-Mail-Treffers auf eine andere Profilkennung umhängen. Sitzungsantworten sind no-store; inaktive Profile werden auch beim Sitzungsabruf gesperrt. Die bestehende persönliche Freigaberegel bleibt unverändert. ECG→Organisation-API und Eigentümerfilter unverändert; direkter Reparaturzugriff löst keinen Push aus, Übernahme erfolgt beim bestehenden nächsten Organisationsabruf und ist hier nicht produktiv bestätigt.
+
+Prüfung: tests/account-isolation.mjs mit synthetischen Daten prüft die tatsächlichen Resolver-/UI-/API-Funktionen für widersprüchliche und leere E-Mail-Treffer, doppelte Kennungen, Rollenübernahme, Benutzerwechsel, Timer-/Warteschlangenerhalt, fremden Sitzungscookie, abgewiesenes Umhängen, Sichtbarkeit korrigierter Buchungen und Schutz vor alten Uploads. Alle 14 Node-Testdateien einschließlich bestehender Zeit-, Raum-, Kalender-, Mängel- und Wartungsregressionen bestanden; Inline-/Modulsyntax und git diff --check bestanden. Die tatsächliche Wochenberechnung wurde zusätzlich lesend mit den minimierten Zeiträumen aus der aktuellen Datenbank verglichen: SQL und App-Berechnung stimmen überein und sind für die letzten beiden Wochen nicht null. Persönliche Summen und Zeiträume werden nicht in Git gespeichert. Damit ist kein Verlust dieser Buchungen belegt; die konkrete fehlerhafte Geräteansicht wurde nicht authentifiziert reproduziert. Kein authentifizierter Browser-/iPhone-Endtest; keine Produktiv-Testbuchungen. Veröffentlichung der Codeänderungen ausstehend; Produktionsstand bleibt bis Freigabe unverändert. Datenkorrektur bereits separat bestätigt.
 
 ## Gerätebezogene PDF-Anleitungen – 07.10.2026
 
