@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ECG – synthetischer Dokumenttest</title>
+<style>body{font:16px Arial;margin:24px;background:#f7f7f7}button,select{padding:12px;margin:4px}iframe{width:100%;height:1200px;border:1px solid #ccc}</style>
+<h1>Dokumenttest mit ausschließlich synthetischen Daten</h1>
+<p>Keine Anmeldung, kein Zugriff auf Betriebsdaten, keine Speicherung. Prüft die tatsächlichen Vorlagenmodule im Browser.</p>
+<label>Testfall <select id="scenario"><option value="leisure">Freizeitraum / private Feier / 50 €</option><option value="ug">Untergeschoss / private Feier / 100 €</option><option value="wedding">EG + UG / Hochzeit / 200 € + 300 € Kaution</option><option value="long">Lange Reinigungscheckliste</option></select></label><button id="show">Druckansicht prüfen</button><p id="result" role="status"></p><iframe title="ECG-Druckansicht" id="preview"></iframe>
+<script type="module">
+import {buildUsageDocument} from '../assets/event-usage-model.js';
+import {usagePrintHtml} from '../assets/event-usage-print.js';
+const rooms=[{id:'f',name:'Freizeitraum',floor:'DG'},{id:'u',name:'Speisesaal',floor:'UG'},{id:'e',name:'Gemeindesaal',floor:'EG'}];
+const state={rooms,calendarEvents:[{id:'test',title:'Synthetische Testveranstaltung',start:'2026-11-08T12:00:00+01:00',end:'2026-11-08T20:00:00+01:00'}],eventDocumentSettings:{contactLines:['Test-Hausmeister · Kontakt nach Vereinbarung','Test-Verwaltung · Kontakt nach Vereinbarung']}};
+document.getElementById('show').onclick=()=>{
+ const kind=document.getElementById('scenario').value;
+ const roomIds=kind==='leisure'?['f']:kind==='ug'?['u']:['e','u'];
+ const selected=rooms.filter(r=>roomIds.includes(r.id));
+ import('../assets/event-usage-model.js').then(({cleaningLocationFor,suggestedFee})=>{
+ const doc=buildUsageDocument({eventId:'test',roomIds,eventType:kind==='wedding'?'wedding':'private',fee:suggestedFee(selected),name:'Testperson',caretaker:'Test-Hausmeister',cleaningLocation:cleaningLocationFor(selected),kitchenUsed:true,toiletsUsed:true},state,{id:'test'});
+ if(kind==='long')doc.sections[0].items.push(...Array.from({length:35},(_,i)=>`Synthetische Zusatzaufgabe ${i+1}: Fläche kontrollieren und nach der Veranstaltung sauber hinterlassen.`));
+ const frame=document.getElementById('preview');
+ frame.onload=()=>{const timer=setInterval(()=>{const d=frame.contentDocument;if(!d?.querySelector('#print:not([disabled])')&&!d?.defaultView?.documentError)return;clearInterval(timer);const contents=[...d.querySelectorAll('.content')];const overflow=contents.some(x=>x.scrollHeight>x.clientHeight+1);document.getElementById('result').textContent=d.defaultView.documentError?'FEHLER: '+d.querySelector('#status').textContent:overflow?'FEHLER: überlaufender Inhalt':`BESTANDEN: ${contents.length} Seiten, Logo geladen, kein Inhaltsüberlauf; Gebühr ${doc.fee} €, Kaution ${doc.deposit} €.`;},50);};
+ frame.srcdoc=usagePrintHtml(doc,new URL('/assets/ecg-letterhead.jpeg',location.origin).href);
+ });
+};
+document.getElementById('show').click();
+</script></html>
