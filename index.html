@@ -241,7 +241,7 @@ function load(){try{const s=JSON.parse(localStorage.getItem('cleaningAppState'))
 
 const LOCAL_ONLY_KEYS=['currentUserId','currentRole','activeTab','buildingSubTab','inventorySubTab','currentRoomId','elapsedStart','timeRunning','issueListMode'];
 function cloudPayload(){const x=structuredClone(state);x.timeEntriesReadOnly=true;x.timeEntryIdsSeen=[...timeEntryIdsSeen];for(const k of LOCAL_ONLY_KEYS)delete x[k];delete x.myIssuePlanning;if(x.settings)x.settings={...x.settings,cloudSync:undefined};return x}
-function mergeCloudState(remote){remote.timeEntries=mergePendingTimes(remote.timeEntries);(remote.timeEntries||[]).filter(e=>e.userId===state.currentUserId).forEach(e=>timeEntryIdsSeen.add(e.id));const myIssuePlanning=remote.myIssuePlanning||{};delete remote.myIssuePlanning;const local={};for(const k of LOCAL_ONLY_KEYS)local[k]=state[k];const localCloud=state.settings?.cloudSync;state={...state,...remote,...local,myIssuePlanning};state.settings={...(state.settings||{}),...(remote.settings||{}),cloudSync:localCloud};const cu=(state.users||[]).find(u=>u.id===state.currentUserId);if(cu)state.currentRole=cu.role;else if((state.users||[]).length){state.currentUserId=state.users[0].id;state.currentRole=state.users[0].role}if(state.timeRunning&&state.timeEntries.some(e=>e.id===state.timeRunning.id&&e.userId===state.timeRunning.userId))state.timeRunning=null;}
+function mergeCloudState(remote){for(const key of ['calendarEvents','eventRules','eventChecklists','eventDocumentSettings','maintenanceAssets'])if(!Object.hasOwn(remote,key))remote[key]=structuredClone(initialState[key]);remote.timeEntries=mergePendingTimes(remote.timeEntries);(remote.timeEntries||[]).filter(e=>e.userId===state.currentUserId).forEach(e=>timeEntryIdsSeen.add(e.id));const myIssuePlanning=remote.myIssuePlanning||{};delete remote.myIssuePlanning;const local={};for(const k of LOCAL_ONLY_KEYS)local[k]=state[k];const localCloud=state.settings?.cloudSync;state={...state,...remote,...local,myIssuePlanning};state.settings={...(state.settings||{}),...(remote.settings||{}),cloudSync:localCloud};const cu=(state.users||[]).find(u=>u.id===state.currentUserId);if(cu)state.currentRole=cu.role;if(state.timeRunning&&state.timeEntries.some(e=>e.id===state.timeRunning.id&&e.userId===state.timeRunning.userId))state.timeRunning=null;}
 let timeEntryIdsSeen=new Set((state.timeEntries||[]).filter(e=>e.userId===state.currentUserId).map(e=>e.id));
 function cacheAppState(){
  try{localStorage.setItem('cleaningAppState',JSON.stringify(state));return true;}
@@ -250,9 +250,9 @@ function cacheAppState(){
 function save(){cacheAppState();syncCloudDebounced();}
 let syncTimer; function syncCloudDebounced(){clearTimeout(syncTimer);syncTimer=setTimeout(syncCloud,700)}
 let authSession=null;
-async function authHeaders(extra={}){return extra}
+async function authHeaders(extra={}){return {...extra,...(authSession?.user?.appUserId?{'X-ECG-User-Id':authSession.user.appUserId}:{})}}
 async function syncCloud(){if(!state.settings.cloudSync||!authSession) return; try{const r=await fetch('/api/state',{method:'PUT',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify(cloudPayload())}); if(r.ok){$('.sync')?.replaceChildren(document.createTextNode('Cloud synchronisiert'))}else if(r.status===401||r.status===403){showLoginGate('Deine Anmeldung ist abgelaufen.')}else{$('.sync')?.replaceChildren(document.createTextNode('Cloud-Fehler'))}}catch{$('.sync')?.replaceChildren(document.createTextNode('Cloud nicht erreichbar'))}}
-async function pullCloud(){if(!state.settings.cloudSync||!authSession)return;const owner=state.currentUserId,epoch=timeChangeEpoch,issueEpoch=issueChangeEpoch;try{const r=await fetch('/api/state',{headers:await authHeaders()});if(r.ok){const remote=await r.json();if(state.currentUserId!==owner)return;if(remote?.version){if(epoch!==timeChangeEpoch)remote.timeEntries=state.timeEntries;if(issueEpoch!==issueChangeEpoch){remote.issues=state.issues;remote.myIssuePlanning=state.myIssuePlanning;}mergeCloudState(remote);bindAuthUser();cacheAppState();render();void flushTimeChanges()}}else if(r.status===401||r.status===403){showLoginGate('Bitte erneut anmelden.')}}catch{}}
+async function pullCloud(){if(!state.settings.cloudSync||!authSession)return;const session=authSession,owner=state.currentUserId,epoch=timeChangeEpoch,issueEpoch=issueChangeEpoch;try{const r=await fetch('/api/state',{headers:await authHeaders()});if(r.ok){const remote=await r.json();if(state.currentUserId!==owner||authSession!==session)return;if(remote?.version){if(epoch!==timeChangeEpoch)remote.timeEntries=state.timeEntries;if(issueEpoch!==issueChangeEpoch){remote.issues=state.issues;remote.myIssuePlanning=state.myIssuePlanning;}mergeCloudState(remote);bindAuthUser();cacheAppState();render();void flushTimeChanges();return true}}else if(authSession===session&&state.currentUserId===owner&&[401,403,409].includes(r.status)){showLoginGate('Bitte erneut anmelden.')}}catch{}}
 
 const taskIntervalDays={daily:1,weekly:7,biweekly:14,monthly:30,quarterly:90,semiannual:182,annual:365};
 function taskIntervalElapsed(task){const days=taskIntervalDays[task.interval];if(!days)return false;const last=new Date(task.lastDone).getTime();return !Number.isFinite(last)||Date.now()-last>=days*86400000}
@@ -346,6 +346,7 @@ function nav(){return `<nav class="tabs" style="grid-template-columns:repeat(${c
 function currentUser(){return state.users?.find(u=>u.id===state.currentUserId)||null}
 function header(){const u=currentUser();return `<header class="topbar"><div class="brand"><div class="brandmark"><img src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"></div><div><h1>Gebäudeverwaltung</h1><small>Evangeliums-Christengemeinde Hussenhofen</small></div></div><div class="top-actions"><span class="sync">${state.settings.cloudSync?'Cloud aktiv':'Lokal gespeichert'}</span><button class="user-badge" onclick="accountDialog()"><span>👤</span><span><b>${esc(u?.name||'Nicht angemeldet')}</b><span class="email">${u?.email?` · ${esc(u.email)}`:''}</span><br><span class="meta">${esc(roleLabels[u?.role]||'')}</span></span></button></div></header>`}
 function render({calendarToday=false}={}){
+ if(!authSession)return;
  const previousToday=$('#calendarToday');
  const calendarOffset=previousToday?.getBoundingClientRect().top;
  if(['calendar','kitchen'].includes(state.activeTab)&&!can('manageCalendar'))state.activeTab='settings';
@@ -391,7 +392,7 @@ function dashboard(){
   ${can('viewMaintenance')?`<div class="section-title"><h2>Technik & Wartung</h2><div class="spacer"></div><button class="btn tiny" onclick="showMaintenance()">Öffnen</button></div><div class="card"><div class="row"><div><b>${(state.maintenanceAssets||[]).filter(m=>['overdue','due'].includes(maintenanceStatus(m).key)).length}</b><div class="meta">Wartungen fällig / bald fällig</div></div><div class="spacer"></div><span class="pill">🔧</span></div></div>`:''}<div class="section-title"><h2>Schnellzugriff</h2></div><div class="grid room-list">${can('manageCalendar')?`<div class="card room" onclick="go('calendar')"><h3>Kalender & Veranstaltungen</h3><div class="meta">Google-Kalender und Folgeaufgaben</div></div>`:''}${state.rooms.slice(0,3).map(roomCard).join('')}</div>`
 }
 window.startTime=()=>{const u=currentUser();if(!u){alert('Bitte zuerst Benutzer auswählen.');return}const roomId=$('#timeRoom')?.value||'',r=state.rooms.find(x=>x.id===roomId),note=$('#timeNote')?.value.trim()||'';state.timeRunning={id:uid('time'),userId:u.id,start:nowISO(),roomId,workLabel:r?`${r.floor} – ${r.name}`:'Allgemein / kein Raum',note};save();render();startTimerTick()};
-window.stopTime=()=>{if(state.currentRole==='technician'||!state.timeRunning||state.timeRunning.userId!==state.currentUserId)return;const e={...state.timeRunning,end:nowISO()};if(!validTimeChange(e))return;if(!queueTimeChange('create',null,e))return;state.timeRunning=null;try{localStorage.setItem('cleaningAppState',JSON.stringify(state))}catch{}render()};
+window.stopTime=()=>{if(state.currentRole==='technician'||!state.timeRunning||state.timeRunning.userId!==state.currentUserId)return;const e={...state.timeRunning,end:nowISO()};if(!validTimeChange(e))return;if(!queueTimeChange('create',null,e))return;state.timeRunning=null;try{localStorage.removeItem('ecgTimer:'+state.currentUserId);localStorage.setItem('cleaningAppState',JSON.stringify(state))}catch{}render()};
 let timerInterval=null;function startTimerTick(){clearInterval(timerInterval);timerInterval=setInterval(()=>{const el=$('#liveTimer');if(el&&state.timeRunning)el.textContent=fmtDuration(timeElapsed())},15000)}
 
 function taskRow(r,t){if(!canCompleteRoomTask(t))return `<div class="task"><span class="pill">Nur Ansicht</span><div><div class="task-title">${esc(t.title)}</div><small>${esc(r.name)} · ${esc(r.floor||'')} · ${esc(intervals[t.interval]||t.interval||'')}</small></div></div>`;
@@ -973,13 +974,38 @@ window.showUserManagement=()=>{
 };
 window.showFloorPlan=name=>modal(`<h2>Grundriss – ${esc(name)}</h2><img src="${floorPlans[name]}" style="width:100%;max-height:72vh;object-fit:contain;border:1px solid var(--line);border-radius:12px"><div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`);
 function bindAuthUser(){
- const au=authSession?.user;if(!au)return;
- let u=(state.users||[]).find(x=>(x.email||'').toLowerCase()===(au.email||'').toLowerCase());
- const authRole=Array.isArray(au.role)?au.role[0]:au.role;
- const roleMap={coordinator:'coordinator',admin:'admin',cleaner:'cleaner',substitute:'backup',backup:'backup',volunteer:'volunteer',technician:'technician',technik:'technician',user:'cleaner',authenticated:'cleaner'};
- if(!u){u={id:au.appUserId||au.id,name:au.name||au.email?.split('@')[0]||'Benutzer',email:au.email||'',role:roleMap[authRole]||'cleaner',active:true};state.users=[...(state.users||[]),u]}
+ const au=authSession?.user;
+ if(!au?.appUserId)throw new Error('Keine eindeutige Benutzerkennung. Bitte neu anmelden.');
+ if(state.currentUserId!==au.appUserId){
+  clearTimeout(syncTimer);
+  if(state.timeRunning)rememberAccountTimer();
+  resetAccountData();
+  state.timeEntries=[];state.timeRunning=null;state.myTimeSharing=false;state.sharedTimeUsers=[];state.myIssuePlanning={};
+  state.activeTab='dashboard';state.currentRoomId=null;timeEntryIdsSeen=new Set();
+  document.getElementById('modalRoot')?.replaceChildren();
+ }
+ const u={id:au.appUserId,name:au.name,email:au.email,role:au.role,permissions:au.permissions||{},active:true};
+ state.users=[...(state.users||[]).filter(x=>x.id!==u.id),u];
  state.currentUserId=u.id;state.currentRole=u.role;
+ if(!state.timeRunning){try{const timer=JSON.parse(localStorage.getItem('ecgTimer:'+u.id));if(timer?.userId===u.id){if(state.timeEntries.some(e=>e.id===timer.id&&e.userId===u.id))localStorage.removeItem('ecgTimer:'+u.id);else state.timeRunning=timer;}}catch{}}
 }
+function resetAccountData(){
+ // Keep durable time operations and per-owner timers in their separate storage keys.
+ state={...structuredClone(initialState),settings:{...initialState.settings,cloudSync:true},currentUserId:null,currentRole:null,users:[],timeEntries:[],timeRunning:null,myTimeSharing:false,sharedTimeUsers:[],myIssuePlanning:{}};
+}
+function rememberAccountTimer(){
+ const timer=state.timeRunning;
+ if(timer?.userId){localStorage.setItem('ecgTimer:'+timer.userId,JSON.stringify(timer));}
+}
+function notifyAccountChange(){try{localStorage.setItem('ecgAccountChanged',crypto.randomUUID());}catch{/* Server owner checks remain active when storage is unavailable. */}}
+function clearAccountView(){
+ clearTimeout(syncTimer);authSession=null;timeChangeEpoch++;issueChangeEpoch++;
+ resetAccountData();
+ state.timeEntries=[];state.timeRunning=null;state.myTimeSharing=false;state.sharedTimeUsers=[];state.myIssuePlanning={};
+ state.currentUserId=null;state.currentRole=null;state.users=[];timeEntryIdsSeen=new Set();
+ document.getElementById('app')?.replaceChildren();document.getElementById('modalRoot')?.replaceChildren();
+}
+
 function showLoginGate(message=''){
  let g=document.getElementById('authGate');if(g)g.remove();
  document.body.insertAdjacentHTML('beforeend',`<div class="auth-gate" id="authGate"><div class="auth-card"><div style="text-align:center"><img class="auth-logo" src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"><h2>Gebäudeverwaltung</h2><p>Evangeliums-Christengemeinde Hussenhofen</p></div><div id="authStepEmail"><div class="field"><label>E-Mail-Adresse</label><input id="authEmail" type="email" autocomplete="email" placeholder="name@gmail.com"></div><button class="btn primary" style="width:100%;margin-top:12px" onclick="sendLoginCode()">Anmeldecode senden</button></div><div id="authStepCode" class="auth-hidden"><p>Wir haben einen einmaligen Anmeldecode an <b id="authEmailLabel"></b> geschickt.</p><div class="field"><label>Anmeldecode</label><input id="authOtp" class="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></div><button class="btn primary" style="width:100%;margin-top:12px" onclick="verifyLoginCode()">Anmelden</button><button class="btn" style="width:100%;margin-top:8px" onclick="backToEmail()">Andere E-Mail</button></div><div class="auth-status" id="authStatus">${esc(message)}</div></div></div>`);
@@ -1003,7 +1029,7 @@ window.editUser=id=>{
    <div class="field wide"><label>${id?'Neues vorläufiges Kennwort (optional)':'Vorläufiges Kennwort'}</label><input id="uPassword" type="password" minlength="10" autocomplete="new-password" placeholder="Mindestens 10 Zeichen"><div class="meta">Bei Vergabe muss der Benutzer es nach der ersten Anmeldung ändern.</div></div>
    <div class="field wide"><label>Einzelne Rechte</label><div class="card" style="box-shadow:none">${Object.entries(permissionLabels).map(([k,v])=>`<label class="task"><input class="user-permission" type="checkbox" value="${k}" ${(u.permissions?.[k]??(u.role==='coordinator'&&coordinatorDefaults[k]))?'checked':''}><span>${esc(v)}</span></label>`).join('')}</div></div>
  </div>
- <div class="notice" style="margin-top:12px">Deaktivieren ist besser als Löschen, wenn bereits Zeiten, Mängel oder andere Einträge zu diesem Benutzer existieren.</div>
+ <div class="notice" style="margin-top:12px">Für eine andere Person immer einen neuen Benutzer anlegen. Umbenennen überträgt auch die vorhandenen Zuordnungen. Bestehende Benutzer mit Historie bitte deaktivieren statt löschen.</div>
  <div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveUser('${id||''}')">Speichern</button>${id&&id!==state.currentUserId?`<button class="btn danger" onclick="deleteUser('${id}')">Löschen</button>`:''}<div class="spacer"></div><button class="btn" onclick="closeModal();showUserManagement()">Abbrechen</button></div>`)
 };
 window.saveUser=async id=>{
@@ -1025,7 +1051,7 @@ window.saveUser=async id=>{
  }
  const cu=currentUser();if(cu)state.currentRole=cu.role;
  localStorage.setItem('cleaningAppState',JSON.stringify(state));
- try{await syncCloud();const target=id?state.users.find(x=>x.id===id):state.users[state.users.length-1];const r=await fetch('/api/auth/admin-user',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({appUserId:target.id,email,name,active,temporaryPassword})});const b=await r.json();if(!r.ok)throw new Error(b.error||'Zugang konnte nicht gespeichert werden.');closeModal();showUserManagement()}catch(e){alert(e.message||'Benutzer konnte nicht gespeichert werden.')}
+ try{await syncCloud();const target=id?state.users.find(x=>x.id===id):state.users[state.users.length-1];const r=await fetch('/api/auth/admin-user',{method:'POST',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({appUserId:target.id,email,name,active,temporaryPassword})});const b=await r.json();if(!r.ok)throw new Error(b.error||'Zugang konnte nicht gespeichert werden.');closeModal();showUserManagement()}catch(e){alert(e.message||'Benutzer konnte nicht gespeichert werden.')}
 };
 window.deleteUser=id=>{
  if(!can('manageUsers')){alert('Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.');return}
@@ -1043,6 +1069,7 @@ function renderTimeReport(target=null){if(target&&!target.isConnected)return;ret
 let timeSharingBusy=false;
 window.setTimeSharing=async input=>{
  const previous=state.myTimeSharing===true,wanted=input.checked;
+ const session=authSession,owner=state.currentUserId;
  if(timeSharingBusy){input.checked=previous;return}
  timeSharingBusy=true;input.disabled=true;
  const message=document.getElementById('timeSharingMessage');
@@ -1050,7 +1077,7 @@ window.setTimeSharing=async input=>{
  try{
   const r=await fetch('/api/state',{method:'PATCH',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({shareTimes:wanted})});
   if(!r.ok)throw new Error('Die Sichtbarkeit konnte nicht gespeichert werden. Bitte erneut versuchen.');
-  const result=await r.json();state.myTimeSharing=result.shareTimes===true;
+  const result=await r.json();if(authSession!==session||state.currentUserId!==owner)return;state.myTimeSharing=result.shareTimes===true;
   input.checked=state.myTimeSharing;
   if(message)message.textContent=state.myTimeSharing?'Gespeichert: Deine Zeiten sind freigegeben.':'Gespeichert: Deine Zeiten sind nur für dich sichtbar.';
  }catch(error){input.checked=previous;if(message)message.textContent=error.message}
@@ -1096,10 +1123,12 @@ window.modal=modal;
 // aktuelle ECG-Version geladen werden, statt einer veralteten Offline-Kopie.
 
 showLoginGate=function(message=''){
+ if(state.timeRunning){try{rememberAccountTimer();}catch{}}
+ clearAccountView();
  document.getElementById('authGate')?.remove();
  document.body.insertAdjacentHTML('beforeend',`<div class="auth-gate" id="authGate"><div class="auth-card"><div style="text-align:center"><div style="font-size:48px;color:#b00045">✝</div><h2>ECG Gebäudeverwaltung</h2><p>E-Mail-Adresse und Kennwort</p></div><div class="field"><label>E-Mail-Adresse</label><input id="loginEmail" type="email" autocomplete="email"></div><div class="field" style="margin-top:10px"><label>Kennwort</label><input id="loginPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginWithPassword()"></div><button class="btn primary" style="width:100%;margin-top:12px" onclick="loginWithPassword()">Anmelden</button><button class="btn" style="width:100%;margin-top:8px" onclick="forgotPassword()">Kennwort vergessen</button><button class="btn soft" style="width:100%;margin-top:8px" onclick="startLegacyMigration()">Bisherigen PIN-Zugang einmalig umstellen</button><div class="auth-status" id="authStatus">${esc(message)}</div></div></div>`)
 };
-window.loginWithPassword=async()=>{const st=$('#authStatus');st.textContent='Anmeldung wird geprüft …';try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:$('#loginEmail').value,password:$('#loginPassword').value})}),b=await r.json();if(!r.ok)throw new Error(b.error);authSession={user:b.user};bindAuthUser();state.settings.cloudSync=true;$('#authGate')?.remove();await pullCloud();render();openFromQuery();await maybeSyncGoogleCalendar();if(b.user.mustChangePassword)setTimeout(()=>changePasswordDialog(true),100)}catch(e){st.textContent=e.message||'Anmeldung fehlgeschlagen.'}};
+window.loginWithPassword=async()=>{const st=$('#authStatus');st.textContent='Anmeldung wird geprüft …';try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:$('#loginEmail').value,password:$('#loginPassword').value})}),b=await r.json();if(!r.ok)throw new Error(b.error);authSession={user:b.user};bindAuthUser();state.settings.cloudSync=true;if(!await pullCloud())throw new Error('Kontodaten konnten nicht sicher geladen werden. Bitte erneut anmelden.');$('#authGate')?.remove();notifyAccountChange();render();openFromQuery();await maybeSyncGoogleCalendar();if(b.user.mustChangePassword)setTimeout(()=>changePasswordDialog(true),100)}catch(e){showLoginGate(e.message||'Anmeldung fehlgeschlagen.')}};
 window.forgotPassword=async()=>{const email=($('#loginEmail')?.value||prompt('E-Mail-Adresse:')||'').trim();if(!email)return;const st=$('#authStatus');st.textContent='Anfrage wird gesendet …';const r=await fetch('/api/auth/forgot-password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email})}),b=await r.json();st.textContent=r.ok?b.message:(b.error||'E-Mail konnte nicht versendet werden.')};
 window.startLegacyMigration=()=>{const g=$('#authGate .auth-card');g.innerHTML=`<h2>PIN-Zugang umstellen</h2><p>Einmalig den bisherigen E-Mail-Code anfordern und danach ein eigenes Kennwort festlegen.</p><div class="field"><label>E-Mail</label><input id="legacyEmail" type="email"></div><button class="btn primary" style="width:100%;margin-top:10px" onclick="sendLegacyCode()">PIN/Code senden</button><button class="btn" style="width:100%;margin-top:8px" onclick="showLoginGate()">Zurück</button><div class="auth-status" id="authStatus"></div>`};
 window.sendLegacyCode=async()=>{const email=$('#legacyEmail').value.trim().toLowerCase(),st=$('#authStatus');st.textContent='Code wird gesendet …';try{const r=await window.ecgAuth.emailOtp.sendVerificationOtp({email,type:'sign-in'});if(r.error)throw r.error;$('#authGate .auth-card').innerHTML=`<h2>Neues Kennwort festlegen</h2><input id="legacyEmail" type="hidden" value="${esc(email)}"><div class="field"><label>E-Mail-Code</label><input id="legacyOtp" inputmode="numeric"></div><div class="field" style="margin-top:10px"><label>Neues Kennwort</label><input id="legacyPassword" type="password" minlength="10"></div><button class="btn primary" style="width:100%;margin-top:10px" onclick="finishLegacyMigration()">Zugang umstellen</button><div class="auth-status" id="authStatus">Mindestens 10 Zeichen.</div>`}catch(e){st.textContent=e.message||'Code konnte nicht gesendet werden.'}};
@@ -1107,10 +1136,10 @@ window.finishLegacyMigration=async()=>{const st=$('#authStatus');try{const email
 window.changePasswordDialog=forced=>modal(`<h2>${forced?'Vorläufiges Kennwort ändern':'Kennwort ändern'}</h2><p class="meta">Das neue Kennwort muss mindestens 10 Zeichen haben.</p><div class="field"><label>Bisheriges Kennwort</label><input id="oldPw" type="password"></div><div class="field" style="margin-top:10px"><label>Neues Kennwort</label><input id="newPw" type="password"></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="submitPasswordChange()">Ändern</button>${forced?'':'<button class="btn" onclick="closeModal()">Abbrechen</button>'}</div>`);
 window.submitPasswordChange=async()=>{const r=await fetch('/api/auth/change-password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({currentPassword:$('#oldPw').value,newPassword:$('#newPw').value})}),b=await r.json();if(!r.ok)return alert(b.error);alert(b.message);await signOutApp()};
 window.accountDialog=()=>{const u=currentUser();modal(`<h2>Mein Konto</h2><div class="card" style="box-shadow:none">${userSummaryCard(u)}</div><div class="row wrap" style="margin-top:12px">${can('manageUsers')?'<button class="btn" onclick="closeModal();showUserManagement()">Benutzerverwaltung</button>':''}<button class="btn" onclick="closeModal();changePasswordDialog(false)">Kennwort ändern</button><button class="btn danger" onclick="signOutApp()">Abmelden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
-window.signOutApp=async()=>{try{await fetch('/api/auth/logout',{method:'POST'})}catch{}authSession=null;closeModal();showLoginGate('Du wurdest abgemeldet.')};
+window.signOutApp=async()=>{try{rememberAccountTimer();}catch{return alert('Laufenden Timer zuerst sichern oder beenden. Abmeldung abgebrochen.')}clearTimeout(syncTimer);const r=await fetch('/api/auth/logout',{method:'POST'}).catch(()=>null);if(!r?.ok)return alert('Abmeldung nicht bestätigt. Bitte erneut versuchen.');showLoginGate('Du wurdest abgemeldet.');notifyAccountChange()};
 window.submitResetPassword=async()=>{const token=new URLSearchParams(location.search).get('reset'),r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token,newPassword:$('#resetPw').value})}),b=await r.json();if(!r.ok)return $('#resetStatus').textContent=b.error;history.replaceState({},'',location.pathname);showLoginGate('Kennwort geändert. Du kannst dich jetzt anmelden.')};
-function showResetGate(){document.body.insertAdjacentHTML('beforeend',`<div class="auth-gate" id="authGate"><div class="auth-card"><h2>Neues Kennwort</h2><div class="field"><label>Neues Kennwort (mindestens 10 Zeichen)</label><input id="resetPw" type="password"></div><button class="btn primary" style="width:100%;margin-top:12px" onclick="submitResetPassword()">Kennwort speichern</button><div id="resetStatus" class="auth-status"></div></div></div>`)}
-async function bootAuth(){render();if(new URLSearchParams(location.search).get('reset'))return showResetGate();try{const r=await fetch('/api/auth/session'),b=await r.json();if(!r.ok)return showLoginGate();authSession={user:b.user};bindAuthUser();state.settings.cloudSync=true;await pullCloud();render();openFromQuery();await maybeSyncGoogleCalendar();if(state.timeRunning)startTimerTick();if(b.user.mustChangePassword)setTimeout(()=>changePasswordDialog(true),100)}catch{showLoginGate('Anmeldung konnte nicht geprüft werden.')}}
+function showResetGate(){clearAccountView();document.body.insertAdjacentHTML('beforeend',`<div class="auth-gate" id="authGate"><div class="auth-card"><h2>Neues Kennwort</h2><div class="field"><label>Neues Kennwort (mindestens 10 Zeichen)</label><input id="resetPw" type="password"></div><button class="btn primary" style="width:100%;margin-top:12px" onclick="submitResetPassword()">Kennwort speichern</button><div id="resetStatus" class="auth-status"></div></div></div>`)}
+async function bootAuth(){document.getElementById('app')?.replaceChildren();if(new URLSearchParams(location.search).get('reset'))return showResetGate();try{const r=await fetch('/api/auth/session'),b=await r.json();if(!r.ok)return showLoginGate();authSession={user:b.user};bindAuthUser();state.settings.cloudSync=true;if(!await pullCloud())return showLoginGate('Kontodaten konnten nicht sicher geladen werden.');render();openFromQuery();await maybeSyncGoogleCalendar();if(state.timeRunning)startTimerTick();if(b.user.mustChangePassword)setTimeout(()=>changePasswordDialog(true),100)}catch{showLoginGate('Anmeldung konnte nicht geprüft werden.')}}
 </script>
 <script src="/assets/kitchen-ui.js?v=1"></script>
 <script type="module" src="/assets/event-usage-ui.js?v=1"></script>
@@ -1119,6 +1148,6 @@ async function bootAuth(){render();if(new URLSearchParams(location.search).get('
 <script src="/assets/time-summary.js?v=4"></script>
 <script src="/assets/time-save.js?v=1"></script>
 <script src="/assets/time-voice.js?v=3"></script>
-<script>bootAuth();</script>
+<script>window.addEventListener('storage',event=>{if(event.key==='ecgAccountChanged')showLoginGate('Das Konto wurde in einem anderen Fenster gewechselt. Bitte erneut anmelden.');});bootAuth();</script>
 </body>
 </html>

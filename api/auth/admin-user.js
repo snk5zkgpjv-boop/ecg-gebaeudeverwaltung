@@ -30,15 +30,18 @@ export default async function handler(req, res) {
   }
 
   await ensureAuthSchema(sql);
-  const rows = await sql`SELECT id FROM ecg_app_users WHERE app_user_id=${id} OR lower(email)=${email} LIMIT 1`;
+  const rows = await sql`SELECT id,app_user_id,email FROM ecg_app_users WHERE app_user_id=${id} OR lower(email)=${email}`;
+  if (rows.length > 1 || rows.some(user => user.app_user_id !== id)) {
+    return res.status(409).json({ error: 'Diese E-Mail gehört zu einem anderen Benutzerkonto. Bestehende Konten dürfen nicht umgehängt werden.' });
+  }
   if (rows[0]) {
     if (password && password.length < 10) {
       return res.status(400).json({ error: 'Das vorläufige Kennwort muss mindestens 10 Zeichen haben.' });
     }
     if (password) {
-      await sql`UPDATE ecg_app_users SET app_user_id=${id},email=${email},name=${name},password_hash=${hashPassword(password)},must_change_password=true,active=${active},updated_at=now() WHERE id=${rows[0].id}`;
+      await sql`UPDATE ecg_app_users SET email=${email},name=${name},password_hash=${hashPassword(password)},must_change_password=true,active=${active},updated_at=now() WHERE id=${rows[0].id} AND app_user_id=${id}`;
     } else {
-      await sql`UPDATE ecg_app_users SET app_user_id=${id},email=${email},name=${name},active=${active},updated_at=now() WHERE id=${rows[0].id}`;
+      await sql`UPDATE ecg_app_users SET email=${email},name=${name},active=${active},updated_at=now() WHERE id=${rows[0].id} AND app_user_id=${id}`;
     }
     if (!active) await sql`DELETE FROM ecg_app_sessions WHERE user_id=${rows[0].id}`;
     return res.status(200).json({ ok: true });
