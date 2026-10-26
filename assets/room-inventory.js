@@ -19,6 +19,7 @@ export function isLeisureRoom(room) {
 }
 export const inventoryTasksFor = room => isLeisureRoom(room) ? [...leisureInventoryTasks] : [];
 export const inventoryReferencesFor = rooms => rooms.some(isLeisureRoom) ? [...leisureReferenceIds] : [];
+export const hasInventoryPhotos = (ids = []) => Array.isArray(ids) && ids.some(id => Object.hasOwn(references,id) && !!references[id].file);
 export function inventoryReferenceHtml(ids = []) {
   // Only bundled, versioned references are accepted. Never render arbitrary URLs/HTML.
   return [...new Set(Array.isArray(ids) ? ids : [])].filter(id => Object.hasOwn(references,id)).map(id => {

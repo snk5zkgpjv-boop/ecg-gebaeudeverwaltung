@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {cleaningSections,buildUsageDocument} from '../assets/event-usage-model.js';
-import {inventoryTasksFor,inventoryReferencesFor,inventoryReferenceHtml} from '../assets/room-inventory.js';
+import {inventoryTasksFor,inventoryReferencesFor,inventoryReferenceHtml,hasInventoryPhotos} from '../assets/room-inventory.js';
 import {usagePrintHtml} from '../assets/event-usage-print.js';
 import {eventUsage} from '../lib/event-usage.js';
 const rooms=[{id:'f',name:'Freizeitraum',floor:'DG',tasks:[]},{id:'u',name:'Speisesaal',floor:'UG',tasks:[]}];
@@ -46,7 +46,7 @@ assert.equal(saved.code,200);assert.deepEqual(saved.body.document.sections,old.s
 assert.deepEqual(db.eventUsageAgreements.find(d=>d.eventId==='unrelated'),{...old,eventId:'unrelated'});
 // Execute the actual checklist generator and renderer with synthetic state.
 const source=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');let modalHtml='',printed='';
-const ctx=vm.createContext({state:{...state,eventChecklists:[]},window:{ecgRoomInventory:{tasks:inventoryTasksFor,references:inventoryReferencesFor,html:inventoryReferenceHtml},open:()=>({document:{open(){},write(html){printed=html;},close(){},querySelector:()=>({}),images:[]},focus(){}})},uid:(p)=>p+Math.random(),floorSortKey:()=>0,nowISO:()=>new Date().toISOString(),esc:s=>String(s??''),can:()=>true,modal:html=>{modalHtml=html;},document:{querySelector:()=>null},setTimeout:()=>{},Date,Promise});
+const ctx=vm.createContext({state:{...state,eventChecklists:[]},window:{ecgRoomInventory:{tasks:inventoryTasksFor,references:inventoryReferencesFor,html:inventoryReferenceHtml,hasPhotos:hasInventoryPhotos},open:()=>({document:{open(){},write(html){printed=html;},close(){},querySelector:()=>({}),images:[]},focus(){}})},uid:(p)=>p+Math.random(),floorSortKey:()=>0,nowISO:()=>new Date().toISOString(),esc:s=>String(s??''),can:()=>true,modal:html=>{modalHtml=html;},document:{querySelector:()=>null},setTimeout:()=>{},Date,Promise});
 vm.runInContext(source.slice(source.indexOf('function eventChecklistFor('),source.indexOf('window.createEventChecklist=')),ctx);
 vm.runInContext(source.slice(source.indexOf('function checklistProgress('),source.indexOf('window.toggleChecklistItem=')),ctx);
 vm.runInContext(source.slice(source.indexOf('window.printEventChecklist='),source.indexOf('function calendarDayKey(')),ctx);

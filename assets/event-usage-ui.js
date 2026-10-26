@@ -1,7 +1,7 @@
-import { inventoryTasksFor, inventoryReferencesFor, inventoryReferenceHtml } from './room-inventory.js';
+import { inventoryTasksFor, inventoryReferencesFor, inventoryReferenceHtml, hasInventoryPhotos } from './room-inventory.js';
 import { cleaningLocationFor, cleaningSections, suggestedFee, depositFor, roomKind } from './event-usage-model.js';
 import { escapeHtml as h, usagePrintHtml } from './event-usage-print.js';
-window.ecgRoomInventory={tasks:inventoryTasksFor,references:inventoryReferencesFor,html:inventoryReferenceHtml};
+window.ecgRoomInventory={tasks:inventoryTasksFor,references:inventoryReferencesFor,html:inventoryReferenceHtml,hasPhotos:hasInventoryPhotos};
 let draft=null, busy=false, openSerial=0;
 const legacyAgreement=window.createEventAgreement;
 const value=id=>document.getElementById(id)?.value || '';
