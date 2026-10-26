@@ -15,7 +15,7 @@ assert.equal(ctx.profileFor({users:[{id:'empty',email:''}]},{}),null);
 
 const disk=new Map([['ecgTimeChange:v1:pending',JSON.stringify({userId:a.id})]]);
 let cleared=0;
-const c=vm.createContext({state:{currentUserId:a.id,currentRole:'admin',users:[a,b],settings:{cloudSync:true},timeEntries:[{id:'private-a',userId:a.id}],timeRunning:{id:'running-a',userId:a.id,start:'2026-10-01T08:00:00Z'},myTimeSharing:true,sharedTimeUsers:[a],myIssuePlanning:{private:true}},
+const c=vm.createContext({structuredClone,initialState:{settings:{}},state:{currentUserId:a.id,currentRole:'admin',users:[a,b],settings:{cloudSync:true},timeEntries:[{id:'private-a',userId:a.id}],timeRunning:{id:'running-a',userId:a.id,start:'2026-10-01T08:00:00Z'},myTimeSharing:true,sharedTimeUsers:[a],myIssuePlanning:{private:true}},
  authSession:{user:{appUserId:b.id,name:b.name,email:b.email,role:b.role,permissions:{}}},
  syncTimer:1,timeEntryIdsSeen:new Set(['private-a']),timeChangeEpoch:0,issueChangeEpoch:0,
  clearTimeout:()=>{},document:{getElementById:()=>({replaceChildren:()=>cleared++})},
