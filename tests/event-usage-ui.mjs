@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import * as model from '../assets/event-usage-model.js';
+import * as inventory from '../assets/room-inventory.js';
 import {escapeHtml as h,usagePrintHtml} from '../assets/event-usage-print.js';
 const decode=s=>s.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
 function client(){
@@ -24,7 +25,7 @@ function client(){
  }
  const state={currentRole:'admin',currentUserId:'u',users:[{id:'u',name:'Test-Hausmeister'}],rooms:[{id:'f',name:'Freizeitraum',floor:'DG'},{id:'u',name:'Speisesaal',floor:'UG'},{id:'e',name:'Gemeindesaal',floor:'EG'}],calendarEvents:[{id:'event1',title:'Testfeier',start:'2026-11-08T12:00:00+01:00',end:'2026-11-08T20:00:00+01:00'}]};
  const getNodes=sel=>sel==='.eu-room:checked'?nodes.filter(n=>n.className==='eu-room'&&n.checked):sel==='.eu-tasks'?nodes.filter(n=>n.className==='eu-tasks'):sel==='.eu-room,#eu-kitchen,#eu-toilets'?nodes.filter(n=>n.className==='eu-room'||['eu-kitchen','eu-toilets'].includes(n.id)):sel==='#eu-save,#eu-save-print'?nodes.filter(n=>['eu-save','eu-save-print'].includes(n.id)):[];
- const context=vm.createContext({console,state,...model,h,usagePrintHtml,window:{createEventAgreement(){}},document:{getElementById:id=>elements.get(id),querySelectorAll:getNodes},location:{origin:'http://test.local'},currentUser:()=>state.users[0],can:()=>state.currentRole==='admin',modal,closeModal(){},eventChecklistFor:()=>null,floorSortKey:()=>0,authHeaders:async()=>({}),crypto:{randomUUID:()=>`operation_${sent.length.toString().padStart(12,'0')}`},confirm:()=>true,alert(){},URL,Date,
+ const context=vm.createContext({console,state,...model,...inventory,h,usagePrintHtml,window:{createEventAgreement(){}},document:{getElementById:id=>elements.get(id),querySelectorAll:getNodes},location:{origin:'http://test.local'},currentUser:()=>state.users[0],can:()=>state.currentRole==='admin',modal,closeModal(){},eventChecklistFor:()=>null,floorSortKey:()=>0,authHeaders:async()=>({}),crypto:{randomUUID:()=>`operation_${sent.length.toString().padStart(12,'0')}`},confirm:()=>true,alert(){},URL,Date,
  fetch:async(url,options)=>{
   if(!options?.method)return {ok:true,json:async()=>({document:null})};
   sent.push(JSON.parse(options.body).eventUsage);
