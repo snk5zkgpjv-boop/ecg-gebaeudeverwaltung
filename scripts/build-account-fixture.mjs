@@ -57,6 +57,6 @@ window.runAccountFixture=async()=>{
  }catch(error){output.textContent='FEHLER: '+error.message+' (nach '+fixtureResults.length+' Prüfungen)';console.error(error);}
 };
 `;
-html=html.replace('</body>',`<section style="position:relative;z-index:2000;background:white;padding:20px"><h1>Isolierter Kontowechseltest</h1><p>Original-Oberfläche, simulierte Sitzung/API und flüchtiger Speicher. CSP blockiert sämtliche Netzwerk-API-Aufrufe. Kein Zugriff auf Betriebsdaten.</p><button onclick="runAccountFixture()">Kontowechsel prüfen</button><p id="fixture-result" role="status">Bereit</p></section><script>${run}</script></body>`);
+html=html.replace(/<\/body>\s*<\/html>\s*$/,`<section style="position:relative;z-index:2000;background:white;padding:20px"><h1>Isolierter Kontowechseltest</h1><p>Original-Oberfläche, simulierte Sitzung/API und flüchtiger Speicher. CSP blockiert sämtliche Netzwerk-API-Aufrufe. Kein Zugriff auf Betriebsdaten.</p><button onclick="runAccountFixture()">Kontowechsel prüfen</button><p id="fixture-result" role="status">Bereit</p></section><script>${run}</script></body></html>`);
 fs.writeFileSync('tests/account-isolation-browser.html',html);
 console.log('Generated isolated browser fixture from index.html');
