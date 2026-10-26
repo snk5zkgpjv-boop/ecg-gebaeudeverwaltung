@@ -2,6 +2,16 @@
 
 Stand: 26.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Produktionsnachweis PR #26 – 26.10.2026
+
+Veröffentlicht: PR #26 aus dem Entwurf genommen und nach konfliktfreier Integration, bestandenen Prüfungen und erfolgreichem Vercel-Status übernommen. Mergecommit fa698aba77153916b184195bcad718addcd597b1 auf main. Vercel-Produktion READY, regulärer Produktivalias zugeordnet; Build ca. 18 Sekunden, statisches HTML/JavaScript mit Serverfunktionen. Über HTTPS abgerufene Startseite HTTP 200 und bytegleich mit dem geprüften index.html. /api/auth/session, /api/state und /api/state?eventUsage=1 ohne Anmeldung jeweils HTTP 401; Sitzungsantwort private/no-store.
+
+Bestätigtes Produktivverhalten: Bestehende Admin-Sitzung nach Neuladen gültig. Persönliche Zeitübersicht vollständig geladen; sichtbare Einzelbuchungen und Wochenübersicht vor/nach Veröffentlichung exakt gleich, persönliche Zeitfreigabe weiterhin aus. Die zuvor gemeldeten zwei vergangenen Kalenderwochen zeigen in dieser angemeldeten Browseransicht vorhandene Stunden statt Null. Benutzerverwaltung bestätigt die bestehende Objektleitungsrolle; Kalender mit Nutzungsvereinbarungen weiterhin erreichbar. Kein Konto, keine Rolle, keine Zeitbuchung und keine Vereinbarung zu Testzwecken geändert. Persönliche Summen, Namen und Inhalte bleiben außerhalb dieser öffentlichen Dokumentation.
+
+Laufzeitprüfung: Auf das veröffentlichte Deployment begrenzter Error-/Fatal-Scan im 30-Minuten-Fenster enthält nur die bekannte DEP0169-Abkündigungswarnung zu url.parse(), keine neue Anwendungs-Exception. Browser-Konsole zeigt lediglich Fehler einer Browsererweiterung, keine ECG-Anwendungsfehler. Monitoring/Drains nicht geprüft.
+
+Grenzen: Der tatsächliche Kontowechsel zwischen zwei Produktionskonten und die Sicht aus dem Objektleitungskonto wurden nicht authentifiziert geprüft; hierfür liegt kein eigener Sitzungszugang vor. Kein physischer iPhone-/Safari-Test. Die 13 erfolgreichen Browserfälle verwenden simulierte Sitzungen/API, die 17 Node-Testdateien synthetische Daten. Das ist kein Nachweis, dass alle historischen Fehlzuordnungen beseitigt sind. Bestehende Altbuchungen wurden nicht pauschal korrigiert. Nächster Schritt: auf dem Zielgerät nach Neuladen zwischen den eigenen berechtigten Konten wechseln und eigene/private bzw. ausdrücklich freigegebene Zeiten prüfen, ohne Testbuchungen oder Rechteänderungen. Keine weitere Veröffentlichungsfreigabe offen; offen ist die fachliche Geräte-/Zweitkonto-Abnahme. Die folgenden Prüfstandsabschnitte dokumentieren die Vorgeschichte.
+
 ## Integration von PR #26 mit Veranstaltungsfunktionen – 26.10.2026
 
 Quellcodeprüfung: GitHub meldete für PR #26 `mergeable_state: dirty`; der reproduzierte Merge gegen main `f664c9d` hatte ausschließlich einen Inhaltskonflikt in PROJEKTSTAND.md. Beide Dokumentationsabschnitte erhalten. index.html wurde automatisch vereinigt. Veranstaltungs-API, Modell, Drucklayout und bestehende Tests aus PR #27/#28 bleiben erhalten; keine Vereinbarungs-, Zeit- oder Benutzerrechtsdaten geändert.
