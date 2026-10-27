@@ -1,5 +1,5 @@
-// Versioned room references: v1 has captions only; photos await publication consent.
-// Keep this version stable. A later photo release must use new reference IDs.
+// Versioned room references: preserve v1 captions for saved snapshots.
+// Photo publication for v2 was explicitly approved on 2026-10-27.
 export const leisureInventoryTasks = [
   'Tische reinigen und unter dem runden Fenster zurückstellen: insgesamt 6 Tische, davon 4 aufgebaut und 2 zusammengeklappt oben abgelegt.',
   'Normale Stühle kontrollieren und reinigen; in 4 Stapeln vor dem Fenster mit Lamellenvorhang zurückstellen. Stückzahl je Stapel vor der Nutzung mit dem Hausmeister festhalten und bei Rückgabe abgleichen.',
@@ -12,7 +12,10 @@ const references = {
   'freizeitraum-v1-f2': {file:null,title:'F2 – Tische unter dem runden Fenster',caption:'6 Tische: 4 aufgebaut, 2 zusammengeklappt oben abgelegt.',height:50},
   'freizeitraum-v1-f3': {file:null,title:'F3 – Kühlschrank bei Rückgabe',caption:'Netzstecker gezogen; Tür bleibt geöffnet.',height:65},
 };
-export const leisureReferenceIds = Object.freeze(Object.keys(references));
+for (const [number,file] of [[1,'stuehle-piano-v2.jpeg'],[2,'tische-v2.jpeg'],[3,'kuehlschrank-v2.jpeg']]) {
+  references[`freizeitraum-v2-f${number}`] = {...references[`freizeitraum-v1-f${number}`],file};
+}
+export const leisureReferenceIds = Object.freeze(Object.keys(references).filter(id=>id.startsWith('freizeitraum-v2-')));
 export function isLeisureRoom(room) {
   const name = `${room.name || ''} ${room.type || ''}`.toLowerCase();
   return /freizeitraum/.test(name) && !/küche|kueche|\bwc\b|toilette|sanitär/.test(name);

@@ -34,8 +34,13 @@ const updated=buildUsageDocument({...raw,tasks:old.sections.map(s=>s.items)},sta
 assert.deepEqual(updated.sections,old.sections);assert.equal(JSON.stringify(old),before);
 const current=buildUsageDocument({...raw,tasks:doc.sections.map(s=>s.items)},state,actor,doc);
 assert.deepEqual(current.sections,doc.sections);
-assert.ok(usagePrintHtml(current,'/logo.jpeg').includes('Referenzfoto noch nicht beigefügt'));
-assert.ok(!usagePrintHtml(current,'/logo.jpeg').includes('src="/assets/room-reference/'));
+assert.ok(!usagePrintHtml(current,'/logo.jpeg').includes('Referenzfoto noch nicht beigefügt'));
+assert.ok(usagePrintHtml(current,'/logo.jpeg').includes('src="/assets/room-reference/'));
+const v1=structuredClone(doc);v1.sections[0].referenceIds=['freizeitraum-v1-f1','freizeitraum-v1-f2','freizeitraum-v1-f3'];
+const v1Saved=buildUsageDocument({...raw,tasks:v1.sections.map(s=>s.items)},state,actor,v1);
+assert.deepEqual(v1Saved.sections,v1.sections);
+assert.ok(!usagePrintHtml(v1Saved,'/logo.jpeg').includes('src="/assets/room-reference/'));
+assert.ok(usagePrintHtml(v1Saved,'/logo.jpeg').includes('Referenzfoto noch nicht beigefügt'));
 // Real API read/save path also preserves old references and another saved event.
 let db={...state,eventUsageAgreements:[old,{...old,eventId:'unrelated'}]},writes=0;
 const sql=async(strings,...values)=>strings.join('').startsWith('SELECT')?[{data:structuredClone(db),revision:1}]:(writes++,db.eventUsageAgreements=JSON.parse(values[0]),[{revision:2}]);
@@ -54,8 +59,8 @@ const list=ctx.buildEventChecklist(event,['f']);ctx.state.eventChecklists.push(l
 assert.equal(list.referenceIds.length,3);
 assert.equal(list.sections.find(s=>s.key==='after').items.filter(i=>i.text.includes('Kühlschrank')).length,1);
 assert.equal(list.sections.find(s=>s.key==='after').items.filter(i=>i.text.includes('E-Piano')).length,1);
-ctx.window.openEventChecklist(list.id);assert.ok(modalHtml.includes('Referenzfoto noch nicht beigefügt'));
-ctx.window.printEventChecklist(list.id);assert.ok(printed.includes('Referenzfoto noch nicht beigefügt'));
+ctx.window.openEventChecklist(list.id);assert.ok(modalHtml.includes('src="/assets/room-reference/'));
+ctx.window.printEventChecklist(list.id);assert.ok(printed.includes('src="/assets/room-reference/'));
 const legacy={...structuredClone(list),id:'legacy'};delete legacy.referenceIds;ctx.state.eventChecklists.push(legacy);
 const legacyBefore=JSON.stringify(legacy);ctx.window.openEventChecklist('legacy');ctx.window.printEventChecklist('legacy');
 assert.ok(!printed.includes('room-reference/'));assert.ok(!modalHtml.includes('room-reference/'));assert.equal(JSON.stringify(legacy),legacyBefore);
