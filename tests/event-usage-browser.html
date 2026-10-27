@@ -3,7 +3,7 @@
 <style>body{font:16px Arial;margin:24px;background:#f7f7f7}button,select{padding:12px;margin:4px}iframe{width:100%;height:1200px;border:1px solid #ccc}</style>
 <h1>Dokumenttest mit ausschließlich synthetischen Daten</h1>
 <p>Keine Anmeldung, kein Zugriff auf Betriebsdaten, keine Speicherung. Prüft die tatsächlichen Vorlagenmodule im Browser.</p>
-<label>Testfall <select id="scenario"><option value="leisure">Freizeitraum / private Feier / 50 €</option><option value="ug">Untergeschoss / private Feier / 100 €</option><option value="wedding">EG + UG / Hochzeit / 200 € + 300 € Kaution</option><option value="long">Lange Reinigungscheckliste</option></select></label><button id="show">Druckansicht prüfen</button><p id="result" role="status"></p><iframe title="ECG-Druckansicht" id="preview"></iframe>
+<label>Testfall <select id="scenario"><option value="leisure">Freizeitraum / private Feier / 50 €</option><option value="legacy">Gespeicherte Altvereinbarung / ohne neue Möbelordnung</option><option value="ug">Untergeschoss / private Feier / 100 €</option><option value="wedding">EG + UG / Hochzeit / 200 € + 300 € Kaution</option><option value="long">Lange Reinigungscheckliste</option></select></label><button id="show">Druckansicht prüfen</button><p id="result" role="status"></p><iframe title="ECG-Druckansicht" id="preview"></iframe>
 <script type="module">
 import {buildUsageDocument} from '../assets/event-usage-model.js';
 import {usagePrintHtml} from '../assets/event-usage-print.js';
@@ -13,13 +13,14 @@ const state={rooms,calendarEvents:[{id:'test',title:'Synthetische Testveranstalt
 document.getElementById('show').onclick=()=>{
  document.getElementById('result').textContent='Prüfung läuft …';
  const kind=document.getElementById('scenario').value;
- const roomIds=kind==='leisure'?['f','fw','mw']:kind==='ug'?['u']:['e','u'];
+ const roomIds=['leisure','legacy'].includes(kind)?['f','fw','mw']:kind==='ug'?['u']:['e','u'];
  const selected=rooms.filter(r=>roomIds.includes(r.id));
  import('../assets/event-usage-model.js').then(({cleaningLocationFor,suggestedFee})=>{
  const doc=buildUsageDocument({eventId:'test',roomIds,eventType:kind==='wedding'?'wedding':'private',fee:suggestedFee(selected),name:'Testperson',caretaker:'Test-Hausmeister',caretakerContact:'Test-Hausmeister · Kontakt nach Vereinbarung',cleaningLocation:cleaningLocationFor(selected),kitchenUsed:true,toiletsUsed:true},state,{id:'test'});
+ if(kind==='legacy'){doc.templateVersion=1;delete doc.sections[0].referenceIds;doc.sections[0].items.splice(3,5,'Tische reinigen und an den vorgesehenen Platz zurückstellen. Stühle kontrollieren, reinigen und zurückstellen; beim Stapeln 15 Stühle pro Stapel.');}
  if(kind==='long')doc.sections[0].items.push(...Array.from({length:35},(_,i)=>`Synthetische Zusatzaufgabe ${i+1}: Fläche kontrollieren und nach der Veranstaltung sauber hinterlassen.`));
  const frame=document.getElementById('preview');
- frame.onload=()=>{const timer=setInterval(()=>{const d=frame.contentDocument;if(!d?.querySelector('#print:not([disabled])')&&!d?.defaultView?.documentError)return;clearInterval(timer);const contents=[...d.querySelectorAll('.content')];const overflow=contents.some(x=>x.scrollHeight>x.clientHeight+1);const tasks=[...d.querySelectorAll('#pages .task')].length;const expectedTasks=doc.sections.reduce((n,s)=>n+s.items.length,0);const taskError=tasks!==expectedTasks;const pageError=kind==='leisure'&&contents.length!==3;document.getElementById('result').textContent=d.defaultView.documentError?'FEHLER: '+d.querySelector('#status').textContent:overflow?'FEHLER: überlaufender Inhalt':taskError?'FEHLER: fehlende Aufgaben':pageError?'FEHLER: Standardfeier benötigt mehr als drei Seiten':`BESTANDEN: ${contents.length} Seiten, ${tasks} Aufgaben vollständig, Logo geladen, kein Inhaltsüberlauf; Gebühr ${doc.fee} €, Kaution ${doc.deposit} €.`;},50);};
+ frame.onload=()=>{const timer=setInterval(()=>{const d=frame.contentDocument;if(!d?.querySelector('#print:not([disabled])')&&!d?.defaultView?.documentError)return;clearInterval(timer);const contents=[...d.querySelectorAll('.content')];const overflow=contents.some(x=>x.scrollHeight>x.clientHeight+1);const tasks=[...d.querySelectorAll('#pages .task')].length;const expectedTasks=doc.sections.reduce((n,s)=>n+s.items.length,0);const taskError=tasks!==expectedTasks;const pageError=kind==='legacy'&&contents.length!==3;const imageError=d.querySelectorAll('#pages .inventory-reference').length!==(kind==='leisure'?3:0);document.getElementById('result').textContent=d.defaultView.documentError?'FEHLER: '+d.querySelector('#status').textContent:overflow?'FEHLER: überlaufender Inhalt':taskError?'FEHLER: fehlende Aufgaben':pageError?'FEHLER: Altvereinbarung benötigt mehr als drei Seiten':imageError?'FEHLER: falsche Bildreferenzen':`BESTANDEN: ${contents.length} Seiten, ${tasks} Aufgaben vollständig, Logo geladen, kein Inhaltsüberlauf; Gebühr ${doc.fee} €, Kaution ${doc.deposit} €.`;},50);};
  frame.srcdoc=usagePrintHtml(doc,new URL('/assets/ecg-letterhead.jpeg',location.origin).href);
  });
 };

@@ -1,12 +1,14 @@
+import { inventoryTasksFor, inventoryReferencesFor, inventoryReferenceHtml, hasInventoryPhotos } from './room-inventory.js';
 import { cleaningLocationFor, cleaningSections, suggestedFee, depositFor, roomKind } from './event-usage-model.js';
 import { escapeHtml as h, usagePrintHtml } from './event-usage-print.js';
+window.ecgRoomInventory={tasks:inventoryTasksFor,references:inventoryReferencesFor,html:inventoryReferenceHtml,hasPhotos:hasInventoryPhotos};
 let draft=null, busy=false, openSerial=0;
 const legacyAgreement=window.createEventAgreement;
 const value=id=>document.getElementById(id)?.value || '';
 const selectedRooms=()=>[...document.querySelectorAll('.eu-room:checked')].map(x=>state.rooms.find(r=>r.id===x.value)).filter(Boolean);
 const money=n=>n===null?'Individuelle Gebühr eintragen':n.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 function rawForm(){return {eventId:draft.eventId,eventType:value('eu-kind'),roomIds:selectedRooms().map(r=>r.id),name:value('eu-name').trim(),address:value('eu-address').trim(),contact:value('eu-contact').trim(),fee:value('eu-fee')===''?null:Number(value('eu-fee')),feeNote:value('eu-fee-note').trim(),caretaker:value('eu-caretaker').trim(),caretakerContact:value('eu-caretaker-contact').trim(),cleaningLocation:value('eu-cleaning').trim(),kitchenUsed:document.getElementById('eu-kitchen').checked,toiletsUsed:document.getElementById('eu-toilets').checked,notes:value('eu-notes').trim(),tasks:[...document.querySelectorAll('.eu-tasks')].map(t=>t.value.split('\n').map(x=>x.trim()).filter(Boolean))};}
-function tasksHtml(sections){return sections.map(s=>`<div class="field wide"><label>${h(s.title)} (eine Aufgabe je Zeile)<textarea class="eu-tasks" rows="${Math.min(s.items.length+1,7)}">${h(s.items.join('\n'))}</textarea></label></div>`).join('');}
+function tasksHtml(sections){return sections.map(s=>`<div class="field wide"><label>${h(s.title)} (eine Aufgabe je Zeile)<textarea class="eu-tasks" rows="${Math.min(s.items.length+1,7)}">${h(s.items.join('\n'))}</textarea></label>${s.referenceIds?.length?`<details><summary>Bildreferenzen Freizeitraum</summary>${inventoryReferenceHtml(s.referenceIds)}</details>`:''}</div>`).join('');}
 function refreshRules(){
  const rooms=selectedRooms(), fee=suggestedFee(rooms);
  document.getElementById('eu-suggested').textContent='Raumtarif: '+money(fee);

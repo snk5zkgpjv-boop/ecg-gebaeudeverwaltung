@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {cleaningSections,buildUsageDocument} from '../assets/event-usage-model.js';
+import {inventoryTasksFor,inventoryReferencesFor,inventoryReferenceHtml,hasInventoryPhotos} from '../assets/room-inventory.js';
+import {usagePrintHtml} from '../assets/event-usage-print.js';
+import {eventUsage} from '../lib/event-usage.js';
+const rooms=[{id:'f',name:'Freizeitraum',floor:'DG',tasks:[]},{id:'u',name:'Speisesaal',floor:'UG',tasks:[]}];
+const event={id:'e',title:'Synthetischer Test',start:'2026-11-01T12:00:00+01:00',end:'2026-11-01T14:00:00+01:00'};
+const actor={id:'u',role:'admin',active:true};
+const state={rooms,users:[actor],calendarEvents:[event]};
+const raw={eventId:'e',eventType:'private',roomIds:['f'],name:'Test',fee:50,caretaker:'Test',cleaningLocation:'Test'};
+const doc=buildUsageDocument(raw,state,actor);
+const leisure=doc.sections[0];
+assert.ok(leisure.items.some(t=>/6 Tische.*4 aufgebaut.*2 zusammengeklappt/.test(t)));
+assert.ok(leisure.items.some(t=>/Kühlschrank ausstecken.*Tür geöffnet/.test(t)));
+assert.equal(leisure.items.filter(t=>/Stückzahl je Stapel/.test(t)).length,2);
+assert.ok(!leisure.items.some(t=>/15 Stühle/.test(t)));
+assert.equal(leisure.referenceIds.length,3);
+for(const r of [rooms[1],{name:'Jugendraum'},{name:'WC Freizeitraum'},{name:'Küche Freizeitraum'}]) {
+  assert.deepEqual(inventoryTasksFor(r),[]);
+  assert.deepEqual(inventoryReferencesFor([r]),[]);
+}
+const ug=cleaningSections([rooms[1]])[0];
+assert.ok(ug.items.some(t=>/15 Stühle/.test(t)));assert.equal(ug.referenceIds,undefined);
+assert.equal(inventoryReferenceHtml(['https://bad.test/x','<script>']), '');
+for(const match of inventoryReferenceHtml(leisure.referenceIds).matchAll(/src="([^"]+)"/g))assert.ok(fs.existsSync(new URL('..'+match[1],import.meta.url)));
+// Existing snapshots keep their exact sections, including edited tasks and no images.
+const old=structuredClone(doc);old.templateVersion=1;delete old.sections[0].referenceIds;
+old.sections[0].items=['Historische, individuell vereinbarte Aufgabe'];old.version=1;
+const before=JSON.stringify(old), oldHtml=usagePrintHtml(old,'/logo.jpeg');
+assert.ok(!oldHtml.includes('room-reference/'));
+const updated=buildUsageDocument({...raw,tasks:old.sections.map(s=>s.items)},state,actor,old);
+assert.deepEqual(updated.sections,old.sections);assert.equal(JSON.stringify(old),before);
+const current=buildUsageDocument({...raw,tasks:doc.sections.map(s=>s.items)},state,actor,doc);
+assert.deepEqual(current.sections,doc.sections);
+assert.ok(!usagePrintHtml(current,'/logo.jpeg').includes('Referenzfoto noch nicht beigefügt'));
+assert.ok(usagePrintHtml(current,'/logo.jpeg').includes('src="/assets/room-reference/'));
+const v1=structuredClone(doc);v1.sections[0].referenceIds=['freizeitraum-v1-f1','freizeitraum-v1-f2','freizeitraum-v1-f3'];
+const v1Saved=buildUsageDocument({...raw,tasks:v1.sections.map(s=>s.items)},state,actor,v1);
+assert.deepEqual(v1Saved.sections,v1.sections);
+assert.ok(!usagePrintHtml(v1Saved,'/logo.jpeg').includes('src="/assets/room-reference/'));
+assert.ok(usagePrintHtml(v1Saved,'/logo.jpeg').includes('Referenzfoto noch nicht beigefügt'));
+// Real API read/save path also preserves old references and another saved event.
+let db={...state,eventUsageAgreements:[old,{...old,eventId:'unrelated'}]},writes=0;
+const sql=async(strings,...values)=>strings.join('').startsWith('SELECT')?[{data:structuredClone(db),revision:1}]:(writes++,db.eventUsageAgreements=JSON.parse(values[0]),[{revision:2}]);
+const run=async(method,body)=>{const res={setHeader(){},status(code){this.code=code;return this;},json(value){this.body=value;return this;}};await eventUsage({method,query:{eventId:'e'},body},res,sql,{profile:actor,state:db},()=>true);return res;};
+assert.equal((await run('GET')).body.document,old);assert.equal(writes,0);
+const saved=await run('PATCH',{eventUsage:{document:{...raw,tasks:old.sections.map(s=>s.items)},expectedVersion:1,mutationId:'inventory_test_0001'}});
+assert.equal(saved.code,200);assert.deepEqual(saved.body.document.sections,old.sections);
+assert.deepEqual(db.eventUsageAgreements.find(d=>d.eventId==='unrelated'),{...old,eventId:'unrelated'});
+// Execute the actual checklist generator and renderer with synthetic state.
+const source=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');let modalHtml='',printed='';
+const ctx=vm.createContext({state:{...state,eventChecklists:[]},window:{ecgRoomInventory:{tasks:inventoryTasksFor,references:inventoryReferencesFor,html:inventoryReferenceHtml,hasPhotos:hasInventoryPhotos},open:()=>({document:{open(){},write(html){printed=html;},close(){},querySelector:()=>({}),images:[]},focus(){}})},uid:(p)=>p+Math.random(),floorSortKey:()=>0,nowISO:()=>new Date().toISOString(),esc:s=>String(s??''),can:()=>true,modal:html=>{modalHtml=html;},document:{querySelector:()=>null},setTimeout:()=>{},Date,Promise});
+vm.runInContext(source.slice(source.indexOf('function eventChecklistFor('),source.indexOf('window.createEventChecklist=')),ctx);
+vm.runInContext(source.slice(source.indexOf('function checklistProgress('),source.indexOf('window.toggleChecklistItem=')),ctx);
+vm.runInContext(source.slice(source.indexOf('window.printEventChecklist='),source.indexOf('function calendarDayKey(')),ctx);
+const list=ctx.buildEventChecklist(event,['f']);ctx.state.eventChecklists.push(list);
+assert.equal(list.referenceIds.length,3);
+assert.equal(list.sections.find(s=>s.key==='after').items.filter(i=>i.text.includes('Kühlschrank')).length,1);
+assert.equal(list.sections.find(s=>s.key==='after').items.filter(i=>i.text.includes('E-Piano')).length,1);
+ctx.window.openEventChecklist(list.id);assert.ok(modalHtml.includes('src="/assets/room-reference/'));
+ctx.window.printEventChecklist(list.id);assert.ok(printed.includes('src="/assets/room-reference/'));
+const legacy={...structuredClone(list),id:'legacy'};delete legacy.referenceIds;ctx.state.eventChecklists.push(legacy);
+const legacyBefore=JSON.stringify(legacy);ctx.window.openEventChecklist('legacy');ctx.window.printEventChecklist('legacy');
+assert.ok(!printed.includes('room-reference/'));assert.ok(!modalHtml.includes('room-reference/'));assert.equal(JSON.stringify(legacy),legacyBefore);
+assert.equal(ctx.buildEventChecklist(event,['u']).referenceIds.length,0);
+console.log('PASS: leisure scope, verified furniture requirements, reference allowlist, old/new snapshots, API preservation and actual checklist UI/print. Synthetic data only.');

@@ -1,5 +1,6 @@
+import { inventoryTasksFor, inventoryReferencesFor } from './room-inventory.js';
 // Shared deterministic rules. No event/contact/account data belongs in this file.
-export const DOCUMENT_VERSION = 1;
+export const DOCUMENT_VERSION = 2;
 export const CLEANING_LOCATION = '1. OG, Technikraum, im Putzschrank';
 const norm = value => String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
 export function floorKind(room) {
@@ -41,12 +42,12 @@ export function cleaningSections(rooms, { kitchenUsed = false, toiletsUsed = tru
       'Eigene Gegenstände und Dekoration entfernen; den ursprünglichen Zustand wiederherstellen.',
       'Teppichflächen vollständig saugen, auch unter Tischen und Stühlen, soweit vorhanden.',
       'Marmor- und Fliesenflächen mit dem vorgesehenen Wischmopp trocken reinigen; stärkere Verschmutzungen nach Absprache beseitigen.',
-      'Tische reinigen und an den vorgesehenen Platz zurückstellen. Stühle kontrollieren, reinigen und zurückstellen; beim Stapeln 15 Stühle pro Stapel.',
+      ...(roomKind(r) === 'leisure' ? inventoryTasksFor(r) : ['Tische reinigen und an den vorgesehenen Platz zurückstellen. Stühle kontrollieren, reinigen und zurückstellen; beim Stapeln 15 Stühle pro Stapel.']),
     ];
     if (floorKind(r) === 'ug') items.push('Gestapelte Tische im Tischraum verstauen (10 Tische pro Wagen); Stühle im Stuhllager abstellen. Stehtische reinigen und wegräumen.');
     if (/gemeindesaal|großer saal|grosser saal/i.test(r.name)) items.push('Den Saal einschließlich Bühne saugen; Kerzenwachs und Klebereste rückstandsfrei entfernen.');
     for (const t of r.tasks || []) if (['afteruse', 'afterevent'].includes(t.interval) && t.taskType !== 'technical' && t.title) items.push(t.title);
-    return { title: [r.floor, r.name].filter(Boolean).join(' – '), items: [...new Set(items)] };
+    return { title: [r.floor, r.name].filter(Boolean).join(' – '), items: [...new Set(items)], ...(roomKind(r) === 'leisure' ? {referenceIds:inventoryReferencesFor([r])} : {}) };
   });
   if (toiletsUsed || rooms.some(r => roomKind(r) === 'toilet')) sections.push({title:'Toiletten', items:[
     'Toiletten und Pissoirs gründlich putzen; Waschbecken, Spiegel und WC-Böden reinigen.',
@@ -71,7 +72,7 @@ function text(raw, key, max = 300, required = false) {
   if (typeof value !== 'string' || value.length > max || (required && !value.trim())) throw new Error(`Bitte ${key} gültig ausfüllen (max. ${max} Zeichen).`);
   return value.trim();
 }
-export function buildUsageDocument(raw, state, actor) {
+export function buildUsageDocument(raw, state, actor, previous = null) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Ungültige Vereinbarung.');
   const event = (state.calendarEvents || []).find(e => e.id === raw.eventId);
   if (!event || event.cancelled) throw new Error('Der Termin ist nicht mehr verfügbar. Bitte Kalender aktualisieren.');
@@ -104,6 +105,13 @@ export function buildUsageDocument(raw, state, actor) {
       const items = raw.tasks[i];
       if (!Array.isArray(items) || !items.length || items.length > 60 || items.some(t => typeof t !== 'string' || !t.trim() || t.length > 800)) throw new Error('Bitte gültige Reinigungsaufgaben eingeben.');
       return {...section,items:items.map(t=>t.trim())};
+    });
+  }
+  // Editing an existing snapshot must not silently attach new reference requirements.
+  if (previous && raw.tasks !== undefined && JSON.stringify(previous.roomIds) === JSON.stringify(doc.roomIds)) {
+    doc.sections.forEach((section,i) => {
+      delete section.referenceIds;
+      if (previous.sections?.[i]?.referenceIds) section.referenceIds = [...previous.sections[i].referenceIds];
     });
   }
   if (JSON.stringify(doc).length > 150000) throw new Error('Die Vereinbarung ist zu umfangreich.');

@@ -1,6 +1,18 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 26.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 27.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Freizeitraum: Möbelordnung und freigegebene Fotos – 27.10.2026
+
+Implementiert in PR #29, Veröffentlichung noch ausstehend: Neue Freizeitraum-Nutzungsvereinbarungen und neue Veranstaltungs-Abnahmelisten erhalten eigene Aufgaben für sechs Tische (vier aufgebaut, zwei zusammengeklappt oben), normale Stühle, Kinderhochstühle, E-Piano mit Sitzbank und ausgesteckten Kühlschrank mit offener Tür. Der pauschale Standard „15 Stühle pro Stapel“ entfällt ausschließlich für diesen Raum. Andere Raumvorlagen, Tarife und Kautionen bleiben unverändert.
+
+Die öffentliche Veröffentlichung genau der drei Originalfotos von Stühlen/E-Piano, Tischen und Kühlschrank im GitHub-Projekt und als öffentlich abrufbare App-Anlagen wurde am 27.10.2026 ausdrücklich freigegeben. Diese drei Bilder sind unverändert unter `assets/room-reference/*-v2.jpeg` eingebunden. Die übrigen zwei Raumfotos werden nicht veröffentlicht. Aus den geprüften Fotos belegt: vier normale Stuhlstapel, links zwei Kinderhochstuhlstapel, rechts E-Piano und Sitzbank an der Fensterseite; Tische unter dem runden Fenster. Die genaue Stückzahl je Stapel ist nicht zuverlässig belegt und wird nicht erfunden: vor der Nutzung mit dem Hausmeister festhalten und bei Rückgabe abgleichen. Das Foto bestätigt keine zulässige Stapelhöhe.
+
+Datenfluss und Bestandsschutz: Das gemeinsame statische Raumregelmodul liefert Aufgaben und versionierte Bildkennungen bei der Neuanlage. Veranstaltungslisten speichern diese im jeweiligen Snapshot, Nutzungsvereinbarungen pro Abschnitt über das bestehende authentifizierte GET/PATCH `/api/state?eventUsage=1` mit `manageCalendar` und Versionsprüfung. V2 enthält die freigegebenen Bilder, V1 bleibt dauerhaft bei den bisherigen Aufstellhinweisen ohne Fotos. Bestehende Fassungen werden nicht migriert oder beim Öffnen/Drucken ergänzt. Bei erneutem Speichern unveränderter Raumauswahl mit bestehenden Aufgaben bleiben bisherige Bildkennungen einschließlich fehlender Kennungen erhalten. Keine Produktivdaten oder Raumaufgaben geändert. Keine neue Route, Migration oder Änderung der ECG→Organisation-Schnittstelle. Nur bekannte Bildkennungen werden gerendert; keine beliebigen URLs. Druckfreigabe wartet auf geladene Bilder und meldet Ladefehler.
+
+Prüfung der Fotofassung `0ad0618`: Alle 18 Node-Testdateien und `git diff --check` bestanden, einschließlich Erhalt alter V1-Kennungen ohne Fotos. Vercel-Vorschau im Browser geprüft: Freizeitraum 6 Seiten/25 vollständige Aufgaben mit allen drei geladenen Originalfotos auf zwei Anhangseiten; Fotos und Beschriftungen visuell kontrolliert. Altvereinbarung 3 Seiten/21 Aufgaben, UG 3/15, Hochzeit 5/20, lange Liste 4/55; kein Inhaltsüberlauf. Andere Raumvorlagen exakt gegen main verglichen. Kein physischer iPhone-/Safari- oder Produktiv-Schreibtest.
+
+Offen: genaue Stückzahl je normalem Stuhlstapel und Kinderhochstuhlstapel fachlich bestätigen, bis dahin bei Übergabe dokumentieren. Fotofassung geprüft; Übernahme und Produktivnachweis folgen. Bereits gespeicherte Vereinbarungen/Abnahmelisten bleiben unverändert; Ergänzungen bewusst abstimmen. Die folgenden Abschnitte dokumentieren frühere Releases.
 
 ## Produktionsnachweis PR #26 – 26.10.2026
 
