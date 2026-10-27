@@ -4,7 +4,7 @@ Stand: 27.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 ## Freizeitraum: Möbelordnung und freigegebene Fotos – 27.10.2026
 
-Implementiert in PR #29, Veröffentlichung noch ausstehend: Neue Freizeitraum-Nutzungsvereinbarungen und neue Veranstaltungs-Abnahmelisten erhalten eigene Aufgaben für sechs Tische (vier aufgebaut, zwei zusammengeklappt oben), normale Stühle, Kinderhochstühle, E-Piano mit Sitzbank und ausgesteckten Kühlschrank mit offener Tür. Der pauschale Standard „15 Stühle pro Stapel“ entfällt ausschließlich für diesen Raum. Andere Raumvorlagen, Tarife und Kautionen bleiben unverändert.
+Veröffentlicht mit PR #29: Neue Freizeitraum-Nutzungsvereinbarungen und neue Veranstaltungs-Abnahmelisten erhalten eigene Aufgaben für sechs Tische (vier aufgebaut, zwei zusammengeklappt oben), normale Stühle, Kinderhochstühle, E-Piano mit Sitzbank und ausgesteckten Kühlschrank mit offener Tür. Der pauschale Standard „15 Stühle pro Stapel“ entfällt ausschließlich für diesen Raum. Andere Raumvorlagen, Tarife und Kautionen bleiben unverändert.
 
 Die öffentliche Veröffentlichung genau der drei Originalfotos von Stühlen/E-Piano, Tischen und Kühlschrank im GitHub-Projekt und als öffentlich abrufbare App-Anlagen wurde am 27.10.2026 ausdrücklich freigegeben. Diese drei Bilder sind unverändert unter `assets/room-reference/*-v2.jpeg` eingebunden. Die übrigen zwei Raumfotos werden nicht veröffentlicht. Aus den geprüften Fotos belegt: vier normale Stuhlstapel, links zwei Kinderhochstuhlstapel, rechts E-Piano und Sitzbank an der Fensterseite; Tische unter dem runden Fenster. Die genaue Stückzahl je Stapel ist nicht zuverlässig belegt und wird nicht erfunden: vor der Nutzung mit dem Hausmeister festhalten und bei Rückgabe abgleichen. Das Foto bestätigt keine zulässige Stapelhöhe.
 
@@ -12,7 +12,9 @@ Datenfluss und Bestandsschutz: Das gemeinsame statische Raumregelmodul liefert A
 
 Prüfung der Fotofassung `0ad0618`: Alle 18 Node-Testdateien und `git diff --check` bestanden, einschließlich Erhalt alter V1-Kennungen ohne Fotos. Vercel-Vorschau im Browser geprüft: Freizeitraum 6 Seiten/25 vollständige Aufgaben mit allen drei geladenen Originalfotos auf zwei Anhangseiten; Fotos und Beschriftungen visuell kontrolliert. Altvereinbarung 3 Seiten/21 Aufgaben, UG 3/15, Hochzeit 5/20, lange Liste 4/55; kein Inhaltsüberlauf. Andere Raumvorlagen exakt gegen main verglichen. Kein physischer iPhone-/Safari- oder Produktiv-Schreibtest.
 
-Offen: genaue Stückzahl je normalem Stuhlstapel und Kinderhochstuhlstapel fachlich bestätigen, bis dahin bei Übergabe dokumentieren. Fotofassung geprüft; Übernahme und Produktivnachweis folgen. Bereits gespeicherte Vereinbarungen/Abnahmelisten bleiben unverändert; Ergänzungen bewusst abstimmen. Die folgenden Abschnitte dokumentieren frühere Releases.
+Produktivnachweis: PR #29 übernommen, Mergecommit `c811e0254a611b5c54b14d5f16300cb5e40fa60c`. Vercel-Deployment `dpl_DebvXFk5iHvbTA1SQCS5aJmYdoey` ist READY, Ziel production, regulärer Produktivalias zugeordnet. Auf dem Produktivalias bestand der synthetische Browser-Drucktest mit sechs Seiten und 25 vollständigen Aufgaben ohne Inhaltsüberlauf; alle drei Fotoanlagen waren vollständig geladen. Keine bestehenden Vereinbarungen oder Betriebsdaten zu Testzwecken geändert.
+
+Offen: genaue Stückzahl je normalem Stuhlstapel und Kinderhochstuhlstapel fachlich bestätigen, bis dahin bei Übergabe dokumentieren. Keine weitere Veröffentlichungsfreigabe offen. Bereits gespeicherte Vereinbarungen/Abnahmelisten bleiben unverändert; Ergänzungen bewusst abstimmen. Die folgenden Abschnitte dokumentieren frühere Releases.
 
 ## Produktionsnachweis PR #26 – 26.10.2026
 
