@@ -4,7 +4,7 @@ Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 ## Gemeinderollen – 06.11.2026
 
-Implementiert im Feature-Branch. Bei der Rollenauswahl werden Einzelrechte vorbelegt. Ältester / Pastor erhält operative Verwaltungsrechte, Wartungsleserecht und Personalrechte. Diakon erhält lesenden Zugriff auf Gebäude, Wartungen und Kalender. Diakon Finanzen erhält Finanzübersicht, Kalenderleserecht und Gebäude-Teamurlaub. Der private pastorale Teamkalender benötigt ein eigenes Recht. Finanzfunktionen sind weiterhin als geplant gekennzeichnet. Persönliche Zeitfreigaben bleiben beim Eigentümer. Kontenzuordnungen erfolgen durch die Administration.
+Live veröffentlicht mit PR #45 (366dde9). Die Produktionsadresse liefert die neuen Rollenvorlagen mit HTTP 200 aus. Alle 23 Testdateien bestanden. Bei der Rollenauswahl werden Einzelrechte vorbelegt. Ältester / Pastor erhält operative Verwaltungsrechte, Wartungsleserecht und Personalrechte. Diakon erhält lesenden Zugriff auf Gebäude, Wartungen und Kalender. Diakon Finanzen erhält Finanzübersicht, Kalenderleserecht und Gebäude-Teamurlaub. Der private pastorale Teamkalender benötigt ein eigenes Recht. Finanzfunktionen sind weiterhin als geplant gekennzeichnet. Persönliche Zeitfreigaben bleiben beim Eigentümer. Kontenzuordnungen erfolgen durch die Administration.
 
 Prüfung: Rollenmatrix, Sichtbarkeit privater Zeiten und bestehende Tests. Produktive Anmeldung mit den neuen Rollen steht aus.
 
