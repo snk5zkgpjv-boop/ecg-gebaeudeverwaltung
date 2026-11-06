@@ -2,7 +2,7 @@ function currentSection(){
  const query=new URLSearchParams(location.search);
  const id=query.get('bereich') || (query.has('room')?'raeume':query.has('asset')||query.has('location')?'inventar':null);
  for(const [parent,[name,items]] of Object.entries(areaSections)){
-  if(parent==='members')continue;
+  if(parent==='members'||parent==='personnel')continue;
   const item=items.find(([key,,right])=>key===id && right!=='planned');
   if(item)return {parent,name,id,title:item[1],right:item[2]};
  }

@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   if (!profile || profile.email?.toLowerCase() !== email) {
     return res.status(400).json({ error: 'Benutzerprofil zuerst speichern.' });
   }
-  if (auth.profile.role !== 'admin' && (profile.role === 'admin' || profile.id === auth.profile.id || profile.permissions?.manageUsers === true || profile.permissions?.manageMembers === true)) {
+  if (auth.profile.role !== 'admin' && (profile.role === 'admin' || profile.id === auth.profile.id || profile.permissions?.manageUsers === true || profile.permissions?.manageMembers === true || ['staffPastoral','staffBuilding','approvePastoral','approveBuilding'].some(key=>profile.permissions?.[key]))) {
     return res.status(403).json({ error: 'Nur Administratoren dürfen Administratorkonten oder Benutzerverwalter ändern.' });
   }
 

@@ -2,6 +2,16 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Personal und Abwesenheitsplanung – 06.11.2026
+
+Personal enthält Meine Abwesenheiten, Teamkalender und Freigaben & Vertretungen. Für Pastoren/Älteste und Hausmeister/Reinigung bestehen je ein Teamrecht und ein eigenes Freigaberecht, zu vergeben durch Admins in Verwaltung → Benutzer & Rechte. Admins sehen beide Teams. Es gibt keine automatische Übernahme von Personalnamen oder Vertragsdaten.
+
+GET/POST /api/state?personnel=eigene|team|freigaben verlangt gültige Sitzung, passendes Profil und Teamrechte. Anträge, Entscheidungen und Vertretungsantworten werden separat in ecg_absences gespeichert. Schema: scripts/personnel-schema.sql. Ganztägige Zeiträume sind in der App beidseitig einschließlich. Sabbatjahr ist eine eigene Abwesenheitsart. Die Teamansicht zeigt nur genehmigte Zeiträume ohne Abwesenheitsgrund. Überschneidungen mit genehmigten Anträgen im selben Team erscheinen bei der Freigabe. Entscheidung und Übernahme einer Vertretung sind unabhängige Zustände. Veraltete Änderungen oder unzulässige Übergänge liefern einen Konflikt.
+
+Externe Kalenderanbindung für das pastorale Team: nur mit expliziter ECG_PASTORAL_ABSENCE_CALENDAR_ID und freigeschaltetem Google-Dienstkonto. Es gibt keinen Rückgriff auf den Gemeindekalender. Externe Einträge werden zur Laufzeit als belegte Zeiträume gelesen. Freigabeberechtigte können genehmigte pastorale Abwesenheiten bewusst in diesen Kalender übertragen; bestehende personenbezogene Überschneidungen blockieren neue Einträge. Wiederholungen verwenden dieselbe Google-Ereignis-ID. Kein Google-Export für das Gebäudeteam. Bis zur Freigabe des richtigen Kalenders zeigt die App dessen ausstehende Anbindung an.
+
+Prüfung vor Veröffentlichung: 22 Testdateien. Mobiler Browsertest mit synthetischem Team bei 390 px: Antrag, Vertretungsanfrage, Freigabe und reduzierte Teamansicht. Neues Datenbankschema eingerichtet. Prüfung in einem echten freigegebenen Google-Abwesenheitskalender bleibt offen.
+
 ## Bildschirmtypografie und App-Start – 06.11.2026
 
 Gästeseite, Portal, Mitglieder und Gebäudefachansichten verwenden die gemeinsame Systemschrift aus assets/typography.css. Größen bei standardmäßiger Browsereinstellung: Seitentitel 28–40 px, Abschnitt 22 px, Kachel/Zwischentitel 18 px, Fließtext und Eingaben 16 px, Zusatzangaben 14 px. Relative Einheiten berücksichtigen die gewählte Schriftgröße. Vorhandene Druckvorlagen führen eigene Formate. Die Vorgabe für künftige Oberflächen ist in AGENTS.md festgehalten.

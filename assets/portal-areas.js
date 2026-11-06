@@ -1,5 +1,6 @@
 // Shared by the portal and the authenticated work screen.
 const areaSections = {
+ personnel: ['Personal',[['eigene','Meine Abwesenheiten','staff'],['team','Teamkalender','staff'],['freigaben','Freigaben & Vertretungen','approveStaff']]],
  members: ['Mitglieder',[['profil','Mein Profil','profile'],['mitgliederverwaltung','Mitgliederverwaltung','manageMembers']]],
  building: ['Gebäude', [
   ['pflege','Gebäudepflege'], ['technik','Haustechnik'], ['wartung','Wartung','viewMaintenance'],
@@ -22,6 +23,10 @@ const areaSections = {
  ]]
 };
 function sectionAllowed(right,user) {
+ if(right==='staff'||right==='approveStaff'){
+  const keys=right==='staff'?['staffPastoral','staffBuilding','approvePastoral','approveBuilding']:['approvePastoral','approveBuilding'];
+  return user.role==='admin'||keys.some(key=>user.permissions?.[key]===true);
+ }
  if(right==='profile')return true;
  if(right==='manageMembers')return user.role==='admin'||user.permissions?.manageMembers===true;
  if(user.role==='member')return false;

@@ -1,3 +1,4 @@
+import { personnel } from '../lib/personnel.js';
 import { members } from '../lib/members.js';
 import { organizationExport } from '../lib/organization-export.js';
 import { applyStateChanges } from '../lib/concurrent-state.js';
@@ -120,7 +121,7 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 
   const current = currentUsers || [];
   const incoming = incomingUsers || current;
-  const protectedIds = new Set(current.filter((user) => user.role === 'admin' || user.permissions?.manageMembers === true || user.id === profile.id).map((user) => user.id));
+  const protectedIds = new Set(current.filter((user) => user.role === 'admin' || user.permissions?.manageMembers === true || ['staffPastoral','staffBuilding','approvePastoral','approveBuilding'].some(key=>user.permissions?.[key]) || user.id === profile.id).map((user) => user.id));
   const allowedPermissions = Object.keys(defaults.coordinator).filter((key) => key !== 'manageUsers' && has(profile, key));
   const limitPermissions = (permissions = {}) => Object.fromEntries(
     Object.keys(defaults.coordinator).map((key) => [key, allowedPermissions.includes(key) && permissions[key] === true]),
@@ -291,6 +292,7 @@ export default async function handler(req, res) {
     const areas=(row.areas||[]).map(a=>({id:a.id,name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
     return res.status(200).json({areas});
   }
+  if(['eigene','team','freigaben'].includes(req.query?.personnel))return personnel(req,res,sql);
   if(['self','list'].includes(req.query?.members))return members(req,res,sql);
   const auth = await requireUser(req, res, sql);
   if (!auth) return;
