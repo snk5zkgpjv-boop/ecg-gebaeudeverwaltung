@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Rückweg und Laden der Arbeitsbereiche – 06.11.2026
+
+Die Kopfzeile der Gebäudeverwaltung sowie die Ladeansicht verlinken auf „Meine Bereiche“. Vor regulärer Navigation aus der Arbeitsansicht werden offene Änderungen zum Speichern übergeben. Beim Direkteinstieg in Gebäude, Außenanlage oder Küche liefert GET /api/state?entry=1 nach der bestehenden Sitzungsprüfung Profil und rollenbereinigten Zustand zusammen aus (private, no-store). Das bisherige GET-Format bleibt erhalten. Die erste Ansicht öffnet den gewählten Bereich direkt.
+
 ## Regulärer App-Einstieg und ECG-Bilder – 06.11.2026
 
 Der gespeicherte Hauptlink öffnet nach erfolgreicher Sitzungsprüfung die persönliche Kachelansicht. Fachbereichs-, Raum-, Inventar-, Lagerort- und Kennwortlinks behalten ihr Ziel. Im Login erscheint die ECG-Wortmarke. Portal und Gästeseite nutzen lokal optimierte Motive der öffentlichen ECG-Website (Profil, kleinGruppen, Bibelstunde aus fileadmin/BilderMediathek/InhaltsBilder/SlideshowImages).
