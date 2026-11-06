@@ -20,6 +20,10 @@ window.openRunSheet=async eventId=>{
   modal('<h2>Ablaufplan</h2><p class="rs-event"></p><label>Beginn (Ortszeit)<input type="time" class="rs-start" required></label><ol class="rs-items"></ol><button class="btn rs-add">Punkt hinzufügen</button><p class="rs-total"></p><p role="status" class="rs-status"></p><button class="btn primary rs-save">Ablaufplan speichern</button>',view);
   const get=s=>view.querySelector(s);
   get('.rs-event').textContent=event.title;
+  if(!location.pathname.startsWith('/tests/')){
+   import('./duties.js').then(({addDutyPlanner})=>{if(active())addDutyPlanner(view,owner,event.id);})
+    .catch(()=>{if(active())get('.rs-status').textContent='Dienstplanung konnte nicht geladen werden.';});
+  }
   const start=get('.rs-start'),list=get('.rs-items'),notice=get('.rs-status');
   start.value=sheet?.start||(event.allDay?'09:00':clock.format(new Date(event.start)));
   let version=sheet?.version||0,lastBody='',mutationId='';

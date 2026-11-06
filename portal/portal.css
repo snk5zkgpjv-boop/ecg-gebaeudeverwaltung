@@ -27,3 +27,8 @@
 .tile svg{flex:none}
 .tiles [data-key=personnel]{--bg:#e6dfe8}
 @media(max-width:359px){.tiles{grid-template-columns:1fr}}
+#personal-duties{margin:1.25rem 0}
+#personal-duties article{background:white;border:1px solid #dfd5da;border-radius:14px;padding:1rem;margin:.6rem 0;overflow-wrap:anywhere}
+#personal-duties article :is(h3,p){margin:.3rem 0}
+#personal-duties button{margin:.4rem .5rem 0 0;padding:.5rem .9rem;border-radius:.5rem;border:1px solid #bdaeb6;background:white}
+.section-mode #personal-duties,.outdoor-mode #personal-duties{display:none}

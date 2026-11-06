@@ -4,11 +4,15 @@ Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 ## Gemeindeentwicklung – 06.11.2026
 
+Diensteinteilung: Kalenderverwaltung fragt für einen bestehenden Termin einen Dienst bei einem aktiv verknüpften Personalkonto an. Zusage und Absage erfolgen mit dessen eigenem Login auf der persönlichen Startseite. Die separate Diensttabelle prüft Duplikate und Versionen. Genehmigte Abwesenheiten werden bei Anfragen und Zusagen berücksichtigt. Keine externe Einladung; keine personenbezogenen Musteranfragen.
+
+Auslagenpilot: Das geschützte ECG-Testjournal akzeptiert drei feste Musterbelege. Eingereichte Testauslagen werden von Admin oder berechtigtem Finanzdiakon freigegeben und genau einmal als Testeintrag übernommen. Daneben steht ein persönlicher Browser-Testlauf zur Verfügung. Keine Beleguploads, Zahlungen, Steuerzuordnung oder Verbindung zu RH. Beide neuen Tabellen wurden separat eingerichtet; die Testbuchung für die Datenbankprüfung erfolgte in einer temporären Tabelle.
+
 Die [Roadmap](docs/GEMEINDE-ROADMAP.md) erfasst die zehn Funktionspakete und ihre Abnahmekriterien. Erstes Paket: Ablaufpläne je Veranstaltung. Diensteinteilung und persönliche Startseite folgen darauf. Die Paketliste dokumentiert geplante Funktionen.
 
 Finanzpaket: Wiederverwendung des RH-Buchungslabors v0.10 für einen isolierten Vereins-Testmandanten prüfen. Als Pilot ist die Übergabe einer freigegebenen Auslage vorgesehen. Die fachliche Konfiguration und der Nachweis strikter Mandantentrennung gehen einer produktiven Verbindung voraus.
 
-Paket 1 im Vorschau-Branch: geschützter Ablaufplan am einzelnen Kalendertermin mit Beginn, Dauer, Reihenfolge und optionalem Zuständigkeitstext. Der Server prüft Kalenderrecht, Termin und Version. Allgemeine Zustandsantworten enthalten keine Pläne. Reine Browserdemo unter `tests/ablaufplan-demo.html` mit Beispieldaten und lokaler Speicherung. Geprüft: synthetische Serverprüfungen sowie Hinzufügen, Verschieben, Speichern und Neuladen bei 390 und 1280 px. Fachliche Abnahme und Produktionsveröffentlichung offen.
+Paket 1 auf Produktionsfreigabe veröffentlicht (PR #50, 45a0a22). Geschützter Ablaufplan am einzelnen Kalendertermin mit Beginn, Dauer, Reihenfolge und optionalem Zuständigkeitstext. Der Server prüft Kalenderrecht, Termin und Version. Allgemeine Zustandsantworten enthalten keine Pläne. Reine Browserdemo unter `tests/ablaufplan-demo.html` mit Beispieldaten und lokaler Speicherung. Geprüft: synthetische Serverprüfungen sowie Hinzufügen, Verschieben, Speichern und Neuladen bei 390 und 1280 px. Produktionsdeployment bereit, Demo auf der Produktionsadresse erreichbar.
 
 ## Kachelbeschriftung und Personalansicht – 06.11.2026
 
