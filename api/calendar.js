@@ -1,3 +1,4 @@
+import {weekPdf,validateWeek} from '../lib/week-pdf.js';
 import publicProgram from '../lib/public-program-handler.js';
 import { neon } from '@neondatabase/serverless';
 import {serviceAccountAccessToken} from '../lib/google-calendar-token.js';
@@ -113,7 +114,8 @@ async function readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigure
 
 export default async function handler(req, res) {
   if(req.query?.publicProgram==='1')return publicProgram(req,res);
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Methode nicht erlaubt' });
+  const pdf=req.query?.weekPdf==='1';
+  if (req.method !== (pdf?'POST':'GET')) return res.status(405).json({ error: 'Methode nicht erlaubt' });
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
 
   const sql = neon(process.env.DATABASE_URL);
@@ -123,6 +125,12 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.' });
   }
 
+  if(pdf){
+    try{const bytes=await weekPdf(req.body?.start,req.body?.items);res.setHeader('Cache-Control','private, no-store');res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition','attachment; filename="ECG-Wochenplan-'+req.body.start+'.pdf"');return res.status(200).send(Buffer.from(bytes));}
+    catch{return res.status(400).json({error:'Wochenplan konnte nicht erstellt werden. Auswahl prüfen.'});}
+  }
+  const week=req.query?.week;
+  if(week){try{validateWeek(week);}catch{return res.status(400).json({error:'Ungültiger Wochenbeginn.'});}}
   const calendarId = String(process.env.GOOGLE_CALENDAR_ID || '').trim();
   const apiKey = String(process.env.GOOGLE_CALENDAR_API_KEY || '').trim();
   const icalUrl = String(process.env.GOOGLE_CALENDAR_ICAL_URL || '').trim();
@@ -139,13 +147,14 @@ export default async function handler(req, res) {
 
   try {
     const now = new Date();
-    const rangeStart = new Date(now.getTime() - 30 * 86400000);
-    const rangeEnd = new Date(now.getTime() + 370 * 86400000);
+    const rangeStart = week?new Date(week+'T00:00:00+02:00'):new Date(now.getTime() - 30 * 86400000);
+    const rangeEnd = week?new Date(+rangeStart+8*86400000+3600000):new Date(now.getTime() + 370 * 86400000);
     const result = icalUrl
       ? await readIcalCalendar(icalUrl, rangeStart, rangeEnd)
       : await readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigured, rangeStart, rangeEnd);
     const { events, calendarName } = result;
 
+    if(week){res.setHeader('Cache-Control','private, no-store');return res.json({events:events.map(({title,start,allDay,cancelled})=>({title,start,allDay,cancelled}))});}
     const syncedAt = new Date().toISOString();
     const eventJson = JSON.stringify(events);
     const settingsJson = JSON.stringify({ calendarLastSync: syncedAt, calendarName });

@@ -2,6 +2,12 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Export des Gemeinde-Wochenplans – 06.11.2026
+
+Veranstaltungen → Wochenplan als PDF öffnet die Kalenderauswahl für acht Tage ab Sonntag. Der geschützte Kalenderabruf lädt die gewählte Woche ohne Überschreiben des allgemeinen Kalendercaches. Standardtermine und erkannte Sonderveranstaltungen sind vorausgewählt. Weitere Kalendereinträge können bewusst ausgewählt werden, fehlende Termine lassen sich ergänzen. Nur Titel, Uhrzeit und Darstellung der ausgewählten Einträge gelangen in den PDF-Export. Grün markiert hervorgehobene Termine und Rot einen Ausfall. PDF im A4-Querformat mit Vormittag und Nachmittag, automatischen Folgeseiten und Gemeindezeichen. Der eigentliche Versand in WhatsApp bleibt bei der Person, die den Plan erstellt. Zugriff setzt das bestehende Kalenderrecht voraus.
+
+Prüfung: bestehende 22 Testdateien und mit Beispieldaten erzeugter einseitiger Export visuell geprüft. Die zeitweilige Urlaubsvorschau im Gebäudeteam ist ein bestätigter Einzelvorgang aus dem bisherigen Hausmeisterkalender; keine Gesamtsynchronisierung mit diesem Kalender.
+
 ## Personal und Abwesenheitsplanung – 06.11.2026
 
 Personal enthält Meine Abwesenheiten, Teamkalender und Freigaben & Vertretungen. Für Pastoren/Älteste und Hausmeister/Reinigung bestehen je ein Teamrecht und ein eigenes Freigaberecht, zu vergeben durch Admins in Verwaltung → Benutzer & Rechte. Admins sehen beide Teams. Es gibt keine automatische Übernahme von Personalnamen oder Vertragsdaten.
