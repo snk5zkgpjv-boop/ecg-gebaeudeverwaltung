@@ -1,7 +1,8 @@
 const preview=new URLSearchParams(location.search).get('entwurf')==='1';
 const panels=[
- ['administration','Verwaltung','Benutzer & Rechte','M4 6h16M4 12h16M4 18h16M8 4v4M16 10v4M10 16v4','/?bereich=verwaltung'],
+ ['administration','Verwaltung','Kalender, Konten & Arbeitszeit','M4 6h16M4 12h16M4 18h16M8 4v4M16 10v4M10 16v4','/?bereich=verwaltung'],
  ['building','Gebäude','Räume & Pflege','M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6','/?bereich=gebaeude'],
+ ['events','Veranstaltungen','Planung & Abnahmen','M4 5h16v16H4zM8 3v5M16 3v5M4 11h16','#events'],
  ['members','Mitglieder','Mein Profil · geplant','M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21c0-8 16-8 16 0',null],
  ['finance','Finanzen','Auslagen · geplant','M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h6',null],
  ['outdoor','Außenanlage','Gelände & Aufgaben','M12 21v-7M5 15l7-12 7 12z','#aussenanlage'],
@@ -10,7 +11,7 @@ const panels=[
 ];
 function available(key,user){
  if(preview || user.role==='admin')return true;
- if(key==='administration')return user.role!=='technician' && user.permissions?.manageUsers===true;
+ if(areaSections[key])return areaSections[key][1].some(([, ,right])=>sectionAllowed(right,user));
  if(['finance','members'].includes(key))return false;
  if(key==='groups')return true;
  if(key==='kitchen')return user.role!=='technician' && (user.permissions?.manageCalendar ?? user.role==='coordinator');
@@ -20,6 +21,33 @@ function explain(title,text){
  document.querySelector('#detail-title').textContent=title;
  document.querySelector('#detail-text').textContent=text;
  document.querySelector('#detail').showModal();
+}
+const outdoorTopics=[
+ ['Grünpflege & Rasen',/grün|rasen|beet|hecke|wiese|pflanz/i],
+ ['Spielplatz & Sandkasten',/spielplatz|sandkasten|spielgerät|schaukel/i],
+ ['Tischtennis & Gummiplatz',/tischtennis|gummiplatz|sportplatz/i],
+ ['Sitzstufen & Kolosseum',/stufen|kolosseum|amphitheater|sitzbereich/i],
+ ['Sonnenschirme',/sonnen.?schirm/i]
+];
+function outdoorTiles(areas,list){
+ const groups=new Map(outdoorTopics.map(([label])=>[label,[]]));
+ for(const area of areas){
+  const label=outdoorTopics.find(([,pattern])=>pattern.test(area.name))?.[0]||area.name;
+  if(!groups.has(label))groups.set(label,[]);
+  groups.get(label).push(area);
+ }
+ for(const [label,entries] of groups){
+  const detail=document.createElement('details'),summary=document.createElement('summary');
+  detail.className='tile';detail.dataset.key='outdoor';summary.textContent=label;detail.append(summary);
+  if(!entries.length){const note=document.createElement('p');note.textContent='Noch kein Außenbereich zugeordnet.';detail.append(note);}
+  for(const area of entries){
+   const tasks=document.createElement('ul'),edit=document.createElement('a');
+   for(const task of area.tasks){const item=document.createElement('li');item.textContent=(task.done?'Erledigt: ':'Offen: ')+task.title;tasks.append(item);}
+   edit.href='/?bereich=aussenanlage&ort='+encodeURIComponent(area.id);
+   edit.textContent=area.name+' bearbeiten';detail.append(tasks,edit);
+  }
+  list.append(detail);
+ }
 }
 function setupOutdoor(user){
  const panel=document.querySelector('#outdoor-view'),list=document.querySelector('#areas-list'),status=document.querySelector('#areas-status');
@@ -40,15 +68,46 @@ function setupOutdoor(user){
    const {areas}=await response.json();
    if(request.signal.aborted)return;
    status.textContent=areas.length?'':'Bisher sind keine Außenbereiche eingetragen.';
-   for(const area of areas){
-    const detail=document.createElement('details'),summary=document.createElement('summary'),tasks=document.createElement('ul');
-    summary.textContent=area.name+' · '+area.tasks.length+' Aufgaben';
-    for(const task of area.tasks){const item=document.createElement('li');item.textContent=(task.done?'Erledigt: ':'Offen: ')+task.title;tasks.append(item);}
-    detail.append(summary,tasks);list.append(detail);
-   }
+   list.className='tiles';
+   outdoorTiles(areas,list);
   }catch(error){if(!request.signal.aborted)status.textContent=error.message;}
  }
  document.querySelector('#areas-back').onclick=()=>{history.replaceState(null,'',location.pathname+location.search);route();document.querySelector('[data-key=outdoor]')?.focus();};
+ window.addEventListener('hashchange',route);route();
+}
+function labelTile(tile,key,title,description=''){
+ const panel=panels.find(([id])=>id===key);
+ const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ const path=document.createElementNS(icon.namespaceURI,'path');
+ icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');
+ path.setAttribute('d',panel[3]);icon.append(path);
+ const arrow=document.createElement('span');arrow.className='arrow';
+ arrow.setAttribute('aria-hidden','true');arrow.textContent=tile.tagName==='A'?'↗':'·';
+ const caption=document.createElement('span'),label=document.createElement('b');
+ label.textContent=title;caption.append(label);
+ if(description){const note=document.createElement('small');note.textContent=description;caption.append(note);}
+ tile.append(icon,arrow,caption);
+}
+function setupSections(user){
+ const view=document.querySelector('#section-view');
+ function route(){
+  const key=location.hash.slice(1),group=Object.hasOwn(areaSections,key)&&areaSections[key];
+  const open=Boolean(group && available(key,user));
+  view.hidden=!open;document.body.classList.toggle('section-mode',open);
+  if(!open)return;
+  view.querySelector('h1').textContent=group[0];
+  const grid=view.querySelector('.tiles');grid.replaceChildren();
+  for(const [id,title,right] of group[1]){
+   if(!preview && !sectionAllowed(right,user))continue;
+   const planned=right==='planned',tile=document.createElement(planned||preview?'button':'a');
+   tile.className='tile';tile.dataset.key=key;
+   labelTile(tile,key,title,planned?'Geplant':'');
+   if(planned||preview)tile.onclick=()=>explain(title,planned?'Dieser Bereich ist geplant.':'Diese Funktion öffnet sich nach der Anmeldung.');
+   else tile.href='/?bereich='+id;
+   grid.append(tile);
+  }
+  scrollTo(0,0);
+ }
  window.addEventListener('hashchange',route);route();
 }
 function show(user){
@@ -56,14 +115,16 @@ function show(user){
  document.querySelector('#mode').textContent=preview?'Designvorschau · Ansicht mit allen Bereichen':'ECG Hussenhofen';
  for(const [key,title,description,path,url] of panels){
   if(!available(key,user))continue;
-  const linked=url && (!preview || key==='groups');
+  const group=Object.hasOwn(areaSections,key);
+  const linked=group || (url && (!preview || key==='groups'));
   const tile=document.createElement(linked?'a':'button');
   tile.className='tile';tile.dataset.key=key;
-  if(linked)tile.href=url;
+  if(linked)tile.href=group?'#'+key:url;
   else tile.onclick=()=>explain(title,key==='members'?'Hier ist die Pflege des eigenen Profils vorgesehen.':key==='finance'?'Hier sollen Mitglieder künftig Auslagen mit Beleg einreichen können.':'Nach Anmeldung öffnet diese Kachel den vorhandenen Arbeitsbereich.');
-  tile.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+path+'"/></svg><span class="arrow" aria-hidden="true">'+(url?'↗':'·')+'</span><span><b>'+title+'</b><small>'+description+'</small></span>';
+  labelTile(tile,key,title,description);
   document.querySelector('#tiles').append(tile);
  }
+ setupSections(user);
  if(!preview && available('outdoor',user))setupOutdoor(user);
 }
 async function start(){
