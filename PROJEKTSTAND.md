@@ -4,6 +4,8 @@ Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 ## Personalstamm und Mitgliederexport – 06.11.2026
 
+Live mit PR #46 (a11d042). Produktionsprüfung: Beide Oberflächen erreichbar, beide Datenabrufe ohne Anmeldung mit HTTP 401 gesperrt.
+
 Die Personalverwaltung speichert Beschäftigte unabhängig von Login und Abwesenheitskalender. Nur Administratoren können die Liste abrufen und Personen anlegen. Beschäftigungsart und Abrechnung nach Stunden sind getrennte Angaben. Die neue Tabelle wurde in der produktiven ECG-Datenbank eingerichtet. Private Stammdaten stehen ausschließlich in der Datenbank.
 
 Die Mitgliederverwaltung exportiert die sieben importierbaren Profilfelder aller Mitglieder als XLSX. Beim Download prüft der Server die aktuelle Sitzung, Kontozuordnung und Verwaltungsberechtigung erneut. Test mit einer Excel-Lesebibliothek: Textwerte, führende Null, Telefonnummer und formelähnlicher Name bleiben erhalten. 23 Testdateien erfolgreich.
