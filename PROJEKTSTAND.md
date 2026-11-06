@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## ECG-Portal und öffentliche Gruppen – 06.11.2026
+
+Der Einstieg über die Gästeseite führt nach bestätigter Anmeldung zu /portal/. Vorhandene Arbeitsbereiche werden verlinkt. Mitglieder und Finanzen sind für Admins als geplante Funktionen gekennzeichnet. Die separat aufrufbare Designansicht /portal/?entwurf=1 enthält ausschließlich Beispieldarstellung ohne Kontodaten. Die Gästeseite enthält öffentliche Gruppenzeiten laut ECG-Website, Kleingruppen- und Familienangebote. Keine neuen Schreibrechte. Der direkte Einstieg ins bisherige Gebäudetool bleibt erhalten.
+
 ## Öffentliche Gästestartseite – 06.11.2026
 
 Eigener Einstieg unter /willkommen/ für QR-Code und Gäste. Zeigt veröffentlichte reguläre Termine und die beiden Thementage am 6./7. November um 19 Uhr. Beim Haupttermin führen Datum, Uhrzeit und Videolink direkt zur offiziellen ECG-Streamseite. Kein Streamstatus wird vorausgesetzt. Ortsdatum Europe/Berlin, Neuberechnung beim Tageswechsel. Ohne Abruf von internen APIs oder Mitgliederdaten. Anmeldung führt zum bestehenden Gebäudetool. Geprüft: Freitag, Samstag nach Ortsmitternacht, Sonntag und reguläre Mittwoch-/Freitagtermine.
