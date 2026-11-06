@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Öffentliche Gästestartseite – 06.11.2026
+
+Eigener Einstieg unter /willkommen/ für QR-Code und Gäste. Zeigt veröffentlichte reguläre Termine und die beiden Thementage am 6./7. November um 19 Uhr. Beim Haupttermin führen Datum, Uhrzeit und Videolink direkt zur offiziellen ECG-Streamseite. Kein Streamstatus wird vorausgesetzt. Ortsdatum Europe/Berlin, Neuberechnung beim Tageswechsel. Ohne Abruf von internen APIs oder Mitgliederdaten. Anmeldung führt zum bestehenden Gebäudetool. Geprüft: Freitag, Samstag nach Ortsmitternacht, Sonntag und reguläre Mittwoch-/Freitagtermine.
+
 ## Gleichzeitiges Speichern – 06.11.2026
 
 Auf einem separaten Korrekturzweig getestet. Die Oberfläche sendet über den bestehenden authentifizierten PUT /api/state nur geänderte Bereiche mit ihrem Ausgangswert. Der Server gleicht die Werte mit dem sichtbaren Stand der angemeldeten Rolle ab. In Listen mit eindeutigen IDs werden unabhängige Einträge gemeinsam übernommen. Widersprüchliche Änderungen an einem Eintrag werden mit Konflikthinweis zurückgewiesen. Der Schreibzugriff prüft den vollständigen vorherigen Datenstand atomar. Überholte Volluploads erhalten HTTP 428 und erfordern Neuladen. Zeit- und Veranstaltungs-Spezialrouten behalten ihre vorhandenen Zuständigkeiten.
