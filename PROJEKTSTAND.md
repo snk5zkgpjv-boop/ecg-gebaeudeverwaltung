@@ -4,6 +4,8 @@ Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 ## Gemeindeentwicklung – 06.11.2026
 
+Live veröffentlicht mit PR #51 (771595d). Produktion bereit. Finanzseite und Dienstmodul liefern HTTP 200; beide Daten-APIs ohne Sitzung HTTP 401. 28 Testdateien bestanden. Handy- und Desktoptests mit synthetischen Daten bestätigen Dienstanfrage, Antwort und Finanzablauf.
+
 Diensteinteilung: Kalenderverwaltung fragt für einen bestehenden Termin einen Dienst bei einem aktiv verknüpften Personalkonto an. Zusage und Absage erfolgen mit dessen eigenem Login auf der persönlichen Startseite. Die separate Diensttabelle prüft Duplikate und Versionen. Genehmigte Abwesenheiten werden bei Anfragen und Zusagen berücksichtigt. Keine externe Einladung; keine personenbezogenen Musteranfragen.
 
 Auslagenpilot: Das geschützte ECG-Testjournal akzeptiert drei feste Musterbelege. Eingereichte Testauslagen werden von Admin oder berechtigtem Finanzdiakon freigegeben und genau einmal als Testeintrag übernommen. Daneben steht ein persönlicher Browser-Testlauf zur Verfügung. Keine Beleguploads, Zahlungen, Steuerzuordnung oder Verbindung zu RH. Beide neuen Tabellen wurden separat eingerichtet; die Testbuchung für die Datenbankprüfung erfolgte in einer temporären Tabelle.
