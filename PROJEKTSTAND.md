@@ -12,6 +12,8 @@ Externe Kalenderanbindung für das pastorale Team: nur mit expliziter ECG_PASTOR
 
 Prüfung vor Veröffentlichung: 22 Testdateien. Mobiler Browsertest mit synthetischem Team bei 390 px: Antrag, Vertretungsanfrage, Freigabe und reduzierte Teamansicht. Neues Datenbankschema eingerichtet. Prüfung in einem echten freigegebenen Google-Abwesenheitskalender bleibt offen.
 
+Veröffentlicht über PR #43 (7bfa196). Das produktive Personalmodul, die Portalnavigation und die Bereichsdefinition entsprechen dem getesteten Stand. Die Teamabfrage ohne Sitzung antwortete mit HTTP 401. Die Google-Anbindung bleibt bis zur Identifikation des neuen Kalenders und Freigabe des App-Dienstkontos ausstehend.
+
 ## Bildschirmtypografie und App-Start – 06.11.2026
 
 Gästeseite, Portal, Mitglieder und Gebäudefachansichten verwenden die gemeinsame Systemschrift aus assets/typography.css. Größen bei standardmäßiger Browsereinstellung: Seitentitel 28–40 px, Abschnitt 22 px, Kachel/Zwischentitel 18 px, Fließtext und Eingaben 16 px, Zusatzangaben 14 px. Relative Einheiten berücksichtigen die gewählte Schriftgröße. Vorhandene Druckvorlagen führen eigene Formate. Die Vorgabe für künftige Oberflächen ist in AGENTS.md festgehalten.
