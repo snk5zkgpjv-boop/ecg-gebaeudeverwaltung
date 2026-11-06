@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Personalverwaltung · ECG</title><link rel="stylesheet" href="/portal/portal.css"><link rel="stylesheet" href="/members/members.css"><link rel="stylesheet" href="/assets/typography.css">
+</head><body><main><a class="parent-link" href="/portal/#personnel">← Personal</a><h1>Personalverwaltung</h1>
+<p id="status" role="status">Anmeldung wird geprüft …</p><section hidden id="registry">
+<button id="new">Personal anlegen</button>
+<form hidden id="editor"><label>Name<input name="name" required maxlength="120"></label>
+<label>Tätigkeit<input name="duty" maxlength="120"></label>
+<label>Beschäftigungsart<select name="employment"><option>Offen</option><option>Vollzeit</option><option>Teilzeit</option><option>Minijob</option><option>Sonstige</option></select></label>
+<label><input name="hourly" type="checkbox"> Abrechnung nach geleisteten Stunden</label>
+<button>Speichern</button> <button type="button" id="cancel">Abbrechen</button></form>
+<h2>Beschäftigte</h2><div id="entries"></div></section></main><script type="module" src="stamm.js"></script></body></html>

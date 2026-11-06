@@ -300,7 +300,7 @@ export default async function handler(req, res) {
     const areas=(row.areas||[]).map(a=>({id:a.id,name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
     return res.status(200).json({areas});
   }
-  if(['eigene','team','freigaben'].includes(req.query?.personnel))return personnel(req,res,sql);
+  if(['eigene','team','freigaben','stamm'].includes(req.query?.personnel))return personnel(req,res,sql);
   if(['self','list'].includes(req.query?.members))return members(req,res,sql);
   const auth = await requireUser(req, res, sql);
   if (!auth) return;

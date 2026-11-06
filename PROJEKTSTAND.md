@@ -2,6 +2,12 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Personalstamm und Mitgliederexport – 06.11.2026
+
+Die Personalverwaltung speichert Beschäftigte unabhängig von Login und Abwesenheitskalender. Nur Administratoren können die Liste abrufen und Personen anlegen. Beschäftigungsart und Abrechnung nach Stunden sind getrennte Angaben. Die neue Tabelle wurde in der produktiven ECG-Datenbank eingerichtet. Private Stammdaten stehen ausschließlich in der Datenbank.
+
+Die Mitgliederverwaltung exportiert die sieben importierbaren Profilfelder aller Mitglieder als XLSX. Beim Download prüft der Server die aktuelle Sitzung, Kontozuordnung und Verwaltungsberechtigung erneut. Test mit einer Excel-Lesebibliothek: Textwerte, führende Null, Telefonnummer und formelähnlicher Name bleiben erhalten. 23 Testdateien erfolgreich.
+
 ## Gemeinderollen – 06.11.2026
 
 Live veröffentlicht mit PR #45 (366dde9). Die Produktionsadresse liefert die neuen Rollenvorlagen mit HTTP 200 aus. Alle 23 Testdateien bestanden. Bei der Rollenauswahl werden Einzelrechte vorbelegt. Ältester / Pastor erhält operative Verwaltungsrechte, Wartungsleserecht und Personalrechte. Diakon erhält lesenden Zugriff auf Gebäude, Wartungen und Kalender. Diakon Finanzen erhält Finanzübersicht, Kalenderleserecht und Gebäude-Teamurlaub. Der private pastorale Teamkalender benötigt ein eigenes Recht. Finanzfunktionen sind weiterhin als geplant gekennzeichnet. Persönliche Zeitfreigaben bleiben beim Eigentümer. Kontenzuordnungen erfolgen durch die Administration.
