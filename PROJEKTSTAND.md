@@ -2,6 +2,12 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Gemeindeentwicklung – 06.11.2026
+
+Die [Roadmap](docs/GEMEINDE-ROADMAP.md) erfasst die zehn Funktionspakete und ihre Abnahmekriterien. Erstes Paket: Ablaufpläne je Veranstaltung. Diensteinteilung und persönliche Startseite folgen darauf. Die Paketliste dokumentiert geplante Funktionen.
+
+Paket 1 im Vorschau-Branch: geschützter Ablaufplan am einzelnen Kalendertermin mit Beginn, Dauer, Reihenfolge und optionalem Zuständigkeitstext. Der Server prüft Kalenderrecht, Termin und Version. Allgemeine Zustandsantworten enthalten keine Pläne. Reine Browserdemo unter `tests/ablaufplan-demo.html` mit Beispieldaten und lokaler Speicherung. Geprüft: synthetische Serverprüfungen sowie Hinzufügen, Verschieben, Speichern und Neuladen bei 390 und 1280 px. Fachliche Abnahme und Produktionsveröffentlichung offen.
+
 ## Kachelbeschriftung und Personalansicht – 06.11.2026
 
 Portal- und Bereichskacheln haben eine eigene Textspalte mit Innenabstand und Umbruch für lange Namen. Personalstamm mit einheitlicher Navigation, Personenkarten, sichtbarer Kontozuordnung und gruppiertem Formular. Chromium-Prüfung mit synthetischen Personalangaben bei 320, 390, 768 und 1280 Pixeln: Textgrenzen auf der Bereichsauswahl und in sieben Unterbereichen geprüft; Bearbeitung geöffnet und Seitenbreite kontrolliert.

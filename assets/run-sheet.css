@@ -1,0 +1,7 @@
+.rs-items{padding:0;list-style:none;display:grid;gap:.85rem}
+.rs-items li{display:grid;grid-template-columns:minmax(0,1fr) minmax(6rem,8rem);gap:.7rem;padding:1rem;border:1px solid #dfd5da;border-radius:12px}
+.rs-items label,.rs-items li>strong,.rs-items li>.row{min-width:0}
+.rs-items strong,.rs-items .row,.rs-items label:has(.rs-lead){grid-column:1/-1}
+.rs-items label,.modal label:has(.rs-start){display:grid;gap:.25rem}
+.rs-items input,.rs-start{min-width:0;width:100%;padding:.5rem;border:1px solid #beb4b8;border-radius:.45rem}
+@media(max-width:480px){.rs-items li{grid-template-columns:minmax(0,1fr)}}
