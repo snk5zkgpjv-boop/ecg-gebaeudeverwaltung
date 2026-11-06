@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Regulärer App-Einstieg und ECG-Bilder – 06.11.2026
+
+Der gespeicherte Hauptlink öffnet nach erfolgreicher Sitzungsprüfung die persönliche Kachelansicht. Fachbereichs-, Raum-, Inventar-, Lagerort- und Kennwortlinks behalten ihr Ziel. Im Login erscheint die ECG-Wortmarke. Portal und Gästeseite nutzen lokal optimierte Motive der öffentlichen ECG-Website (Profil, kleinGruppen, Bibelstunde aus fileadmin/BilderMediathek/InhaltsBilder/SlideshowImages).
+
 ## Sichtbarer App-Start – 06.11.2026
 
 Der bisher leere App-Container ließ während ausstehender Startanfragen eine weiße Seite erscheinen. Die App zeigt nun bereits im HTML eine Startansicht mit Wiederholungsmöglichkeit und öffentlichem Ersatzlink. Die alten Datenmigrationen laufen bei Schreibfehlern im lokalen Zwischenspeicher im Arbeitsspeicher weiter. Keine Löschung lokaler Daten. Im Chromium-Browser mit simulierten Sitzungsantworten und blockiertem Speicher geprüft; der konkrete iPhone-Zustand ist nicht bekannt.
