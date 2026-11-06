@@ -148,7 +148,24 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 </style>
 </head>
 <body>
+  <section id="startup" style="max-width:32rem;margin:12vh auto;padding:24px">
+    <h1>ECG Gebäudeverwaltung</h1>
+    <p id="startup-status" role="status">Die App wird geöffnet …</p>
+    <a href="" onclick="location.reload();return false">Erneut laden</a> · <a href="/willkommen/">Zur Gästeseite</a>
+  </section>
   <div id="app"></div><div id="modalRoot"></div>
+  <script>
+  (function(){
+    const startup=document.getElementById('startup');
+    const observer=new MutationObserver(()=>{
+      if(document.getElementById('authGate') || document.getElementById('app').childElementCount){
+        startup.hidden=true;
+      } else {startup.hidden=false;}
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+    setTimeout(()=>{document.getElementById('startup-status').textContent='Das Öffnen dauert länger. Du kannst die App erneut laden oder die Gästeseite öffnen.';},12000);
+  })();
+  </script>
   <input id="fileImport" type="file" accept="application/json" hidden />
   <input id="photoInput" type="file" accept="image/*" capture="environment" hidden />
   <script type="module">
@@ -198,7 +215,7 @@ let state=load();
  if(!state.eventTaskDone){state.eventTaskDone={};changed=true}
  if(!Array.isArray(state.eventRules)){state.eventRules=[];changed=true}
  if(!Array.isArray(state.eventChecklists)){state.eventChecklists=[];changed=true}
- if(changed)localStorage.setItem('cleaningAppState',JSON.stringify(state));
+ if(changed)cacheMigration();
 })();
 (function migrateV3(){
  let changed=false;
@@ -207,7 +224,7 @@ let state=load();
  if(!Array.isArray(state.inventory)){state.inventory=[];changed=true}
  if(!state.buildingSubTab)state.buildingSubTab='rooms';
  if(!state.inventorySubTab)state.inventorySubTab='assets';
- if(changed)localStorage.setItem('cleaningAppState',JSON.stringify(state));
+ if(changed)cacheMigration();
 })();
 (function migrateV2(){
   let changed=false;
@@ -219,9 +236,10 @@ let state=load();
   state.settings.personalTimeTracking=true;
   const u=state.users.find(x=>x.id===state.currentUserId);
   if(u) state.currentRole=u.role;
-  if(changed) localStorage.setItem('cleaningAppState',JSON.stringify(state));
+  if(changed)cacheMigration();
 })();
 
+function cacheMigration(){try{localStorage.setItem('cleaningAppState',JSON.stringify(state));}catch(error){console.warn('Lokaler Zwischenspeicher nicht beschreibbar',error.name);}}
 function load(){try{const s=JSON.parse(localStorage.getItem('cleaningAppState'));return s?.version?s:structuredClone(initialState)}catch{return structuredClone(initialState)}}
 // Lagerort-Verknüpfung für bestehende Verbrauchsmaterialien nachrüsten
 (function migrateMaterialLocations(){let changed=false;(state.materials||[]).forEach(m=>{if(!m.locationId&&m.location){const l=(state.storageLocations||[]).find(x=>x.name===m.location);if(l){m.locationId=l.id;changed=true}}});if(changed){try{localStorage.setItem('cleaningAppState',JSON.stringify(state))}catch(e){console.warn(e)}}})();

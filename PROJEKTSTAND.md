@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Sichtbarer App-Start – 06.11.2026
+
+Der bisher leere App-Container ließ während ausstehender Startanfragen eine weiße Seite erscheinen. Die App zeigt nun bereits im HTML eine Startansicht mit Wiederholungsmöglichkeit und öffentlichem Ersatzlink. Die alten Datenmigrationen laufen bei Schreibfehlern im lokalen Zwischenspeicher im Arbeitsspeicher weiter. Keine Löschung lokaler Daten. Im Chromium-Browser mit simulierten Sitzungsantworten und blockiertem Speicher geprüft; der konkrete iPhone-Zustand ist nicht bekannt.
+
 ## ECG-Portal und öffentliche Gruppen – 06.11.2026
 
 Der Einstieg über die Gästeseite führt nach bestätigter Anmeldung zu /portal/. Vorhandene Arbeitsbereiche werden verlinkt. Mitglieder und Finanzen sind für Admins als geplante Funktionen gekennzeichnet. Die separat aufrufbare Designansicht /portal/?entwurf=1 enthält ausschließlich Beispieldarstellung ohne Kontodaten. Die Gästeseite enthält öffentliche Gruppenzeiten laut ECG-Website, Kleingruppen- und Familienangebote. Keine neuen Schreibrechte. Der direkte Einstieg ins bisherige Gebäudetool bleibt erhalten.
