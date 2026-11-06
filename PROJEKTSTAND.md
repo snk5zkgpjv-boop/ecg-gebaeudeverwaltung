@@ -6,6 +6,8 @@ Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 Die [Roadmap](docs/GEMEINDE-ROADMAP.md) erfasst die zehn Funktionspakete und ihre Abnahmekriterien. Erstes Paket: Ablaufpläne je Veranstaltung. Diensteinteilung und persönliche Startseite folgen darauf. Die Paketliste dokumentiert geplante Funktionen.
 
+Finanzpaket: Wiederverwendung des RH-Buchungslabors v0.10 für einen isolierten Vereins-Testmandanten prüfen. Als Pilot ist die Übergabe einer freigegebenen Auslage vorgesehen. Die fachliche Konfiguration und der Nachweis strikter Mandantentrennung gehen einer produktiven Verbindung voraus.
+
 Paket 1 im Vorschau-Branch: geschützter Ablaufplan am einzelnen Kalendertermin mit Beginn, Dauer, Reihenfolge und optionalem Zuständigkeitstext. Der Server prüft Kalenderrecht, Termin und Version. Allgemeine Zustandsantworten enthalten keine Pläne. Reine Browserdemo unter `tests/ablaufplan-demo.html` mit Beispieldaten und lokaler Speicherung. Geprüft: synthetische Serverprüfungen sowie Hinzufügen, Verschieben, Speichern und Neuladen bei 390 und 1280 px. Fachliche Abnahme und Produktionsveröffentlichung offen.
 
 ## Kachelbeschriftung und Personalansicht – 06.11.2026

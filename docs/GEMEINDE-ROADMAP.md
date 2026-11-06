@@ -16,3 +16,9 @@ Ein Paket endet mit einem nachvollziehbaren Testweg. Statusfolge: geplant → in
 | 10 · Anbindungen und Öffentlichkeit | Kalenderfeeds, gezielte Im-/Exporte und API-Anbindungen; freigegebene Inhalte auf der Gemeindewebsite. | Gästeprogramm, Wochenplan-PDF, bestehende Synchronisierung | Freigegebener Termin erscheint öffentlich, private Daten bleiben intern. |
 
 Querschnitt: Berichtswesen und Statistik jeweils beim zugehörigen Modul ergänzen. Änderungen an Zugriffsrechten, Empfängern, externen Anbindungen und Ausgaben werden gesondert geprüft. Keine produktiven Personen- oder Veranstaltungseinträge für Testzwecke verwenden.
+
+### Paket 9: RH-Buchungslabor als möglicher Baustein
+
+Vor einer Neuentwicklung Belegeingang, Originalablage, Dublettenprüfung, Journal und Export aus dem Buchungslabor v0.10 mit synthetischen Vereinsfällen überprüfen. Das Labor ist ein Prototyp. ECG bekommt einen isolierten Mandanten mit eigenen Rollen, Daten und Buchungsregeln. Vereinsstatus, steuerliche Anerkennung, Kontenrahmen und Auswertungen anhand der Vereinsunterlagen und mit der Finanzverantwortung klären.
+
+Erster Pilot: Auslage erfassen → mit Beleg freigeben → einmalig als Buchungsvorschlag im ECG-Testjournal bereitstellen. Wiederholung erzeugt keinen zweiten Vorschlag. Zugriff aus einem anderen Mandanten wird auch beim Originalbeleg verweigert. Keine Übertragung echter Belege, keine automatische Steuerzuordnung, keine Spendenbescheinigung und keine Lohnabrechnung im Pilot.
