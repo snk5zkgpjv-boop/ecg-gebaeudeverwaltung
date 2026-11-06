@@ -17,3 +17,7 @@ Diese Pflege ist ohne erneute Aufforderung des Nutzers Bestandteil der Arbeit:
 - Reine Zeitbuchungen und andere private Betriebsdaten in der jeweiligen Datenbank speichern und dort nachvollziehbar protokollieren. Keine Namen, Zeitlisten, Kontodaten, internen Infrastrukturkennungen oder Geheimnisse in öffentliche Markdown-Dateien übernehmen. Nur neue technische Erkenntnisse daraus öffentlich dokumentieren.
 - Vor „fertig“ prüfen: Daten/Code gespeichert, passende Prüfung erfolgt, technische Dokumentation aktuell. Ist das Speichern der Dokumentation blockiert, ausdrücklich als offen melden.
 - Diese Arbeitsanweisung steuert Bearbeitungen durch Agenten, die dieses Repository lesen. Sie ist kein eigenständig laufender Hintergrunddienst und erfasst fremde Änderungen nicht automatisch.
+
+## Typografie neuer Oberflächen
+
+Für Bildschirmansichten assets/typography.css einbinden. Die Systemschrift und die fünf gemeinsamen Größen für Seitentitel, Abschnittstitel, Kachel-/Zwischentitel, Standardtext und Zusatzangaben verwenden. Formulareingaben in Standardgröße darstellen. Hierarchie über Gewicht und Größe gestalten; beim Ergänzen einer neuen Fachansicht bei 390 px sowie auf Desktop prüfen. Druckvorlagen folgen ihrem separat geprüften Drucklayout.

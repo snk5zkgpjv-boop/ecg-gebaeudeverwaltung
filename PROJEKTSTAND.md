@@ -2,6 +2,14 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Bildschirmtypografie und App-Start – 06.11.2026
+
+Gästeseite, Portal, Mitglieder und Gebäudefachansichten verwenden die gemeinsame Systemschrift aus assets/typography.css. Größen bei standardmäßiger Browsereinstellung: Seitentitel 28–40 px, Abschnitt 22 px, Kachel/Zwischentitel 18 px, Fließtext und Eingaben 16 px, Zusatzangaben 14 px. Relative Einheiten berücksichtigen die gewählte Schriftgröße. Vorhandene Druckvorlagen führen eigene Formate. Die Vorgabe für künftige Oberflächen ist in AGENTS.md festgehalten.
+
+Der installierte App-Einstieg öffnet /portal/ direkt. Alte Startlinks auf / leiten vor der Fachanmeldung zum Portal. Tiefenlinks mit Parametern behalten ihr Ziel. GET /api/auth/session prüft weiterhin Sitzung und eindeutige, aktive Benutzerzuordnung. Aus dem Gebäudezustand fragt der Server gezielt den passenden Benutzereintrag ab. Rollen und Berechtigungen werden pro Start aktuell gelesen.
+
+Geprüft: 21 Testdateien erfolgreich. Browser mit Testkonto bei 390 und 1280 px: vier Oberflächen ohne horizontales Überlaufen, identische Schriftfamilie, erwartete Titelgrößen. Der Start über / bis zu den Kacheln benötigte eine Sitzungsanfrage und keinen Abruf von /api/state. Ladezeit auf einem echten iPhone weiterhin offen.
+
 ## Sicherungsstände und Projektpflege – 06.11.2026
 
 Die elf Integrationen von PR #30 bis #40 änderten jeweils diese Datei. Der nach der Freischaltung von #40 veraltete Veröffentlichungsvermerk wurde korrigiert. Für die Wiederherstellung des Quellcodes gibt es im Projekt drei GitHub-Zweige. Sie verweisen auf vorhandene Commits und enthalten den jeweiligen Stand der Projektstanddatei.

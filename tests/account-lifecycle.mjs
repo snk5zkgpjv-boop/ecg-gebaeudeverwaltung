@@ -70,13 +70,14 @@ for(const role of ['admin','coordinator','cleaner','substitute','volunteer','tec
 // Actual session and migration handlers reject inactive, ambiguous and relinked profiles.
 const response=()=>({code:200,headers:{},setHeader(k,v){this.headers[k]=v},status(n){this.code=n;return this},json(v){this.body=v;return this}});
 let profiles=[{id:'a',email:'same@example.test',active:false}],existing=[],writes=0,sessions=0;
-const sql=async parts=>{if(parts.join('').startsWith('SELECT'))return existing;writes++;return [{id:'login'}]};
+const sql=async parts=>{if(parts.join('').includes('AS profile'))return profiles.map(profile=>({profile}));if(parts.join('').startsWith('SELECT'))return existing;writes++;return [{id:'login'}]};
 const authSource=fs.readFileSync('lib/auth.js','utf8');
 const resolver=authSource.slice(authSource.indexOf('export function profileFor'),authSource.indexOf('export async function requireUser')).replaceAll('export ','');
 const authTest=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},neon:()=>sql,sessionUser:async()=>({id:'login',app_user_id:'a'}),appState:async()=>({users:profiles}),ensureAuthSchema:async()=>{},legacyJwtUser:async()=>({email:'same@example.test'}),hashPassword:()=>'',createSession:async()=>{sessions++}});
 vm.runInContext(resolver+'\n'+fs.readFileSync('api/auth/session.js','utf8').replace(/^import .*;\n/gm,'').replace('export default ',''),authTest);
 let res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,403);assert.equal(res.headers['Cache-Control'],'private, no-store');
 profiles=[{id:'a',email:'same@example.test'},{id:'a',email:'duplicate@example.test'}];res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,403);
+profiles=[{id:'a',role:'member',active:true}];res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,200);assert.equal(res.body.user.appUserId,'a');
 vm.runInContext(fs.readFileSync('api/auth/migrate.js','utf8').replace(/^import .*;\n/gm,'').replace('export default ',''),authTest);
 profiles=[{id:'a',email:'same@example.test'},{id:'b',email:'same@example.test'}];
 res=response();await authTest.handler({method:'POST',body:{password:'synthetic-only'}},res);assert.equal(res.code,403);
