@@ -2,6 +2,12 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Gemeinderollen – 06.11.2026
+
+Implementiert im Feature-Branch. Bei der Rollenauswahl werden Einzelrechte vorbelegt. Ältester / Pastor erhält operative Verwaltungsrechte, Wartungsleserecht und Personalrechte. Diakon erhält lesenden Zugriff auf Gebäude, Wartungen und Kalender. Diakon Finanzen erhält Finanzübersicht, Kalenderleserecht und Gebäude-Teamurlaub. Der private pastorale Teamkalender benötigt ein eigenes Recht. Finanzfunktionen sind weiterhin als geplant gekennzeichnet. Persönliche Zeitfreigaben bleiben beim Eigentümer. Kontenzuordnungen erfolgen durch die Administration.
+
+Prüfung: Rollenmatrix, Sichtbarkeit privater Zeiten und bestehende Tests. Produktive Anmeldung mit den neuen Rollen steht aus.
+
 ## Export des Gemeinde-Wochenplans – 06.11.2026
 
 Veranstaltungen → Wochenplan als PDF öffnet die Kalenderauswahl für acht Tage ab Sonntag. Der geschützte Kalenderabruf lädt die gewählte Woche ohne Überschreiben des allgemeinen Kalendercaches. Standardtermine und erkannte Sonderveranstaltungen sind vorausgewählt. Weitere Kalendereinträge können bewusst ausgewählt werden, fehlende Termine lassen sich ergänzen. Nur Titel, Uhrzeit und Darstellung der ausgewählten Einträge gelangen in den PDF-Export. Grün markiert hervorgehobene Termine und Rot einen Ausfall. PDF im A4-Querformat mit Vormittag und Nachmittag, automatischen Folgeseiten und Gemeindezeichen. Der eigentliche Versand in WhatsApp bleibt bei der Person, die den Plan erstellt. Zugriff setzt das bestehende Kalenderrecht voraus.

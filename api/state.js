@@ -62,7 +62,15 @@ function visible(state, profile) {
   if (profile.role === 'admin') return output;
   if (!has(profile, 'manageUsers')) output.users = (state.users || []).filter(user => user.id === userId);
   if (!has(profile, 'viewMaintenance')) delete output.maintenanceAssets;
-  if (!has(profile, 'manageCalendar')) {
+  if (!has(profile,'manageCalendar') && has(profile,'viewCalendar')) {
+    for (const key of ['eventRules','eventChecklists','eventDocumentSettings']) delete output[key];
+  }
+  if(profile.role==='financeDeacon' && !has(profile,'manageRooms')){
+    for(const key of ['rooms','outdoorAreas','templates','activity'])delete output[key];
+    if(!has(profile,'manageIssues'))delete output.issues;
+    if(!has(profile,'manageInventory'))for(const key of ['inventory','storageLocations','shopping','loans','materials'])delete output[key];
+  }
+  if (!has(profile, 'manageCalendar') && !has(profile,'viewCalendar')) {
     for (const key of ['calendarEvents', 'eventRules', 'eventChecklists', 'eventDocumentSettings']) delete output[key];
   }
   return output;
@@ -121,7 +129,7 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 
   const current = currentUsers || [];
   const incoming = incomingUsers || current;
-  const protectedIds = new Set(current.filter((user) => user.role === 'admin' || user.permissions?.manageMembers === true || ['staffPastoral','staffBuilding','approvePastoral','approveBuilding'].some(key=>user.permissions?.[key]) || user.id === profile.id).map((user) => user.id));
+  const protectedIds = new Set(current.filter((user) => ['admin','elder','deacon','financeDeacon'].includes(user.role) || user.permissions?.manageMembers === true || ['staffPastoral','staffBuilding','approvePastoral','approveBuilding'].some(key=>user.permissions?.[key]) || user.id === profile.id).map((user) => user.id));
   const allowedPermissions = Object.keys(defaults.coordinator).filter((key) => key !== 'manageUsers' && has(profile, key));
   const limitPermissions = (permissions = {}) => Object.fromEntries(
     Object.keys(defaults.coordinator).map((key) => [key, allowedPermissions.includes(key) && permissions[key] === true]),
@@ -129,7 +137,7 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 
   const preserved = current.filter((user) => protectedIds.has(user.id));
   const managed = incoming
-    .filter((user) => user?.id && !protectedIds.has(user.id) && user.role !== 'admin')
+    .filter((user) => user?.id && !protectedIds.has(user.id) && !['admin','elder','deacon','financeDeacon'].includes(user.role))
     .map((user) => ({ ...user, permissions: limitPermissions(user.permissions) }));
 
   // Delegierte Benutzerverwalter dürfen weder Administratoren noch das eigene
@@ -286,7 +294,7 @@ export default async function handler(req, res) {
     const [row]=await sql`SELECT data->'users' AS users, data->'outdoorAreas' AS areas FROM app_state WHERE id='main'`;
     const profile=profileFor({users:row?.users},user);
     if(!profile || profile.active===false || profile.role==='member' || user.must_change_password ||
-      (!['admin','coordinator','technician','cleaner','backup','volunteer'].includes(profile.role) && profile.permissions?.manageRooms!==true))
+      (!['admin','elder','deacon','coordinator','technician','cleaner','backup','volunteer'].includes(profile.role) && profile.permissions?.manageRooms!==true))
       return res.status(403).json({error:'Kein Zugriff auf Außenanlagen'});
     if(req.headers['x-ecg-user-id']!==profile.id)return res.status(409).json({error:'Konto gewechselt'});
     const areas=(row.areas||[]).map(a=>({id:a.id,name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
@@ -318,6 +326,7 @@ export default async function handler(req, res) {
       return res.status(200).json(state);
     }
     if (req.method === 'PATCH') {
+      if (['deacon','financeDeacon'].includes(auth.profile.role) && (req.body?.createIssue || req.body?.deleteIssueId) && !has(auth.profile,'manageIssues'))return res.status(403).json({error:'Mängel sind nur lesbar.'});
       if (req.body?.createIssue && Object.keys(req.body).length === 1) return await createIssue(sql, auth, req.body.createIssue, res);
       if (typeof req.body?.deleteIssueId === 'string' && Object.keys(req.body).length === 1) return await deleteIssue(sql, auth, req.body.deleteIssueId, res);
       if (req.body?.timeChange && Object.keys(req.body).length === 1) return handleTimeChange(sql, auth, req.body.timeChange, res, syncOrganizationTimes);
@@ -373,6 +382,10 @@ export default async function handler(req, res) {
       }
       if (req.body.protocol !== 1 || !req.body.changes || typeof req.body.changes !== 'object' || Array.isArray(req.body.changes)) {
         return res.status(428).json({error:'Bitte die App neu laden, bevor du speicherst.'});
+      }
+      if (['deacon','financeDeacon'].includes(auth.profile.role)) {
+        const editRights={rooms:'manageRooms',outdoorAreas:'manageRooms',templates:'manageTasks',eventTaskDone:'manageTasks',issues:'manageIssues',users:'manageUsers',maintenanceAssets:'manageMaintenance',calendarEvents:'manageCalendar',eventRules:'manageCalendar',eventChecklists:'manageCalendar',eventDocumentSettings:'manageCalendar',inventory:'manageInventory',materials:'manageInventory',storageLocations:'manageInventory',loans:'manageInventory',shopping:'manageInventory'};
+        if(Object.keys(req.body.changes).some(key=>!Object.hasOwn(editRights,key)||!has(auth.profile,editRights[key])))return res.status(403).json({error:'Für diese Änderung fehlt das Schreibrecht.'});
       }
       let incoming;
       try {
