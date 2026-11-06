@@ -36,19 +36,30 @@ function mergeProgram(entries){
 }
 let program=mergeProgram([]),slides=[],index=0,paused=false,loading=false;
 const $=id=>document.getElementById(id);
-function cards(now){
- const seen=new Set();
- return upcoming(program,now).filter(e=>{
-  const name=e.title.toLowerCase();
-  if(seen.has(name))return false;
-  seen.add(name);return true;
- });
+function twoMonthsFrom(today){
+ const day=new Date(today+'T12:00:00Z');
+ const last=new Date(Date.UTC(day.getUTCFullYear(),day.getUTCMonth()+3,0,12));
+ last.setUTCDate(Math.min(day.getUTCDate(),last.getUTCDate()));
+ return last.toISOString().slice(0,10);
+}
+export function cards(now,entries=program){
+ const today=berlinDay.format(now),until=twoMonthsFrom(today);
+ const groups=/krabbelgruppe|kinderstunde|teen(?:y)?kreis|jugendkreis|jungschar|kleingruppe|hauskreis|gruppentreffen|gruppentreff|kinderchor|jugendgruppe/i;
+ const eligible=upcoming(entries,now).filter(e=>e.key<=until && !groups.test(e.title));
+ const results=[...eligible],day=new Date(today+'T12:00:00Z'),fixed=new Set();
+ for(let i=0;i<14;i++,day.setUTCDate(day.getUTCDate()+1)){
+  const key=day.toISOString().slice(0,10),item=regular[day.getUTCDay()];
+  if(!item || fixed.has(item[0]))continue;
+  if(eligible.some(e=>e.key===key && e.time===item[1]))continue;
+  results.push({key,time:item[1],title:item[0],regular:true});fixed.add(item[0]);
+ }
+ return results.sort(order).filter((e,i,all)=>all.findIndex(a=>a.key===e.key && a.time===e.time && a.title===e.title)===i);
 }
 function kind(event){
  if(!event)return 'welcome';
  if(event.kind)return event.kind;
  if(event.key==='2026-12-13' && /adventskonzert/i.test(event.title))return 'concert';
- return /eduard adam/i.test(event.title)?'themes':'general';
+ return event.regular?'regular':/eduard adam/i.test(event.title)?'themes':'general';
 }
 function draw(){
  const slide=slides[index],type=kind(slide),hero=$('guest-banner');
@@ -56,14 +67,14 @@ function draw(){
  $('banner-when').textContent=slide?moment(slide,longDate):'ECG Hussenhofen';
  $('banner-title').textContent=slide?.title||'Herzlich willkommen.';
  $('banner-detail').textContent=slide?.detail||'Evangeliums-Christengemeinde Hussenhofen';
- $('banner-link').href=slide?(slide.kind?'#naechste-termine':source):'#naechste-termine';
- $('banner-link').textContent=slide && !slide.kind?'Zum Programm ↗':'Zu den Terminen ↓';
+ $('banner-link').href=slide?(slide.regular?stream:slide.kind?'#naechste-termine':source):'#naechste-termine';
+ $('banner-link').textContent=slide?.regular?'Zum Video-Livestream ↗':slide && !slide.kind?'Zum Programm ↗':'Zu den Terminen ↓';
  $('banner-count').textContent=(index+1)+' / '+slides.length;
  $('banner-controls').hidden=slides.length<2;
 }
 function render(){
- const now=new Date(),old=slides[index]?.title;
- slides=[null,...cards(now)];index=old?Math.max(0,slides.findIndex(s=>s?.title===old)):0;draw();
+ const now=new Date(),old=slides[index];
+ slides=[null,...cards(now)];index=old?Math.max(0,slides.findIndex(s=>s && s.title===old.title && s.key===old.key && s.time===old.time)):0;draw();
  const [first,...rest]=publicEvents(now,program);
  $('when').textContent=(first.key===berlinDay.format(now)?'Heute · ':'')+moment(first,longDate);
  $('title').textContent=first.title;
@@ -80,7 +91,7 @@ function pause(value){paused=value;$('banner-pause').textContent=paused?'Abspiel
 async function refresh(){
  if(loading)return;loading=true;
  try{
-  const r=await fetch('/api/public-program',{signal:AbortSignal.timeout(12000)});
+  const r=await fetch('/api/calendar?publicProgram=1',{signal:AbortSignal.timeout(12000)});
   if(!r.ok)throw Error();
   const {entries}=await r.json();
   program=mergeProgram(entries);
