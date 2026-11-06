@@ -4,6 +4,10 @@ Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 ## Gemeindeentwicklung – 06.11.2026
 
+Ablaufplanung: Vorlagen für Bibelstunde, Gebetsstunde, Sonntagsgottesdienst und Gottesdienst mit Worship. Dauer und Zuständigkeit bleiben je Programmpunkt bearbeitbar. Besondere Anlässe können bei Bedarf einzeln ergänzt werden. Die geplante Dauer beschreibt den konkreten Termin; Vorlagen ändern keine anderen Serienvorkommen. Vorschau, PDF und Druck geben die aktuell bearbeitete Reihenfolge wieder.
+
+Geprüft mit Beispieldaten: Vorlage ersetzen und rückgängig machen, Sonderpunkt ergänzen, speichern und neu laden. Druckvorschau und PDF-Download im Browser bei 390 und 1280 px. A4-Ausgabe visuell geprüft; automatische Tests umfassen mehrseitige Pläne und Mitternachtswechsel.
+
 Live veröffentlicht mit PR #51 (771595d). Produktion bereit. Finanzseite und Dienstmodul liefern HTTP 200; beide Daten-APIs ohne Sitzung HTTP 401. 28 Testdateien bestanden. Handy- und Desktoptests mit synthetischen Daten bestätigen Dienstanfrage, Antwort und Finanzablauf.
 
 Diensteinteilung: Kalenderverwaltung fragt für einen bestehenden Termin einen Dienst bei einem aktiv verknüpften Personalkonto an. Zusage und Absage erfolgen mit dessen eigenem Login auf der persönlichen Startseite. Die separate Diensttabelle prüft Duplikate und Versionen. Genehmigte Abwesenheiten werden bei Anfragen und Zusagen berücksichtigt. Keine externe Einladung; keine personenbezogenen Musteranfragen.
