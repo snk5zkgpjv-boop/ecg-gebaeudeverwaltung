@@ -1,3 +1,4 @@
+import publicProgram from '../lib/public-program-handler.js';
 import { neon } from '@neondatabase/serverless';
 import { importPKCS8, SignJWT } from 'jose';
 import { createHash } from 'node:crypto';
@@ -158,6 +159,7 @@ async function readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigure
 }
 
 export default async function handler(req, res) {
+  if(req.query?.publicProgram==='1')return publicProgram(req,res);
   if (req.method !== 'GET') return res.status(405).json({ error: 'Methode nicht erlaubt' });
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
 
