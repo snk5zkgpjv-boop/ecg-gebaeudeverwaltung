@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Außenanlage im Portal – 06.11.2026
+
+Die Kachel öffnet eine eigene Ansicht im Portal. Bereichsnamen und Aufgaben werden gezielt über GET /api/state?section=outdoor mit Sitzung, Profil-, Rollen- und Eigentümerprüfung ausgeliefert. Rückkehr zu den Kacheln funktioniert ohne neue Serveranfrage, auch während des Ladens. Bearbeiten und Mängel melden bleiben in der bestehenden Fachansicht verfügbar. Sitzungsabrufe führen keine Schema-Erstellung mehr aus; Login und Einrichtung bleiben dafür zuständig.
+
 ## Rückweg und Laden der Arbeitsbereiche – 06.11.2026
 
 Die Kopfzeile der Gebäudeverwaltung sowie die Ladeansicht verlinken auf „Meine Bereiche“. Vor regulärer Navigation aus der Arbeitsansicht werden offene Änderungen zum Speichern übergeben. Beim Direkteinstieg in Gebäude, Außenanlage oder Küche liefert GET /api/state?entry=1 nach der bestehenden Sitzungsprüfung Profil und rollenbereinigten Zustand zusammen aus (private, no-store). Das bisherige GET-Format bleibt erhalten. Die erste Ansicht öffnet den gewählten Bereich direkt.

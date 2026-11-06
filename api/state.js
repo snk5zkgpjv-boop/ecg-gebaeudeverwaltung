@@ -1,7 +1,7 @@
 import { organizationExport } from '../lib/organization-export.js';
 import { applyStateChanges } from '../lib/concurrent-state.js';
 import { neon } from '@neondatabase/serverless';
-import { publicUser, requireUser } from '../lib/auth.js';
+import { profileFor, publicUser, requireUser, sessionUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
 import { handleTimeChange } from '../lib/time-change.js';
 import { deleteIssue } from '../lib/issue-delete.js';
@@ -276,6 +276,19 @@ export default async function handler(req, res) {
       const result=organizationExport(rows[0]?.data||{},req.headers.authorization);
       return res.status(result.status).json(result.body);
     }catch{return res.status(500).json({error:'ECG-Zeiten konnten nicht gelesen werden.'});}
+  }
+  if(req.method==='GET' && req.query?.section==='outdoor'){
+    res.setHeader('Cache-Control','private, no-store');
+    const user=await sessionUser(req,sql);
+    if(!user)return res.status(401).json({error:'Anmeldung erforderlich'});
+    const [row]=await sql`SELECT data->'users' AS users, data->'outdoorAreas' AS areas FROM app_state WHERE id='main'`;
+    const profile=profileFor({users:row?.users},user);
+    if(!profile || profile.active===false || user.must_change_password ||
+      (!['admin','coordinator','technician','cleaner','backup','volunteer'].includes(profile.role) && profile.permissions?.manageRooms!==true))
+      return res.status(403).json({error:'Kein Zugriff auf Außenanlagen'});
+    if(req.headers['x-ecg-user-id']!==profile.id)return res.status(409).json({error:'Konto gewechselt'});
+    const areas=(row.areas||[]).map(a=>({name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
+    return res.status(200).json({areas});
   }
   const auth = await requireUser(req, res, sql);
   if (!auth) return;
