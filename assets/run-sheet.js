@@ -1,3 +1,5 @@
+import {blockOptions,templates,makeBlock,makeTemplate,suggestTemplate} from './run-sheet-templates.js';
+import {addRunSheetOutputs} from './run-sheet-output.js';
 const clock=new Intl.DateTimeFormat('de-DE',{timeZone:'Europe/Berlin',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 
 window.openRunSheet=async eventId=>{
@@ -25,8 +27,23 @@ window.openRunSheet=async eventId=>{
     .catch(()=>{if(active())get('.rs-status').textContent='Dienstplanung konnte nicht geladen werden.';});
   }
   const start=get('.rs-start'),list=get('.rs-items'),notice=get('.rs-status');
+  const tools=document.createElement('section');
+  tools.className='rs-tools';
+  tools.innerHTML='<h3>Vorlagen und Bausteine</h3><label>Ablaufvorlage<select class="rs-template"></select></label><p class="rs-preview"></p><div class="row wrap"><button class="btn rs-append">Vorlage anhängen</button><button class="btn rs-replace">Punkte ersetzen</button><button class="btn rs-undo" hidden>Rückgängig</button></div><label>Einzelner Baustein<select class="rs-block"></select></label><button class="btn rs-block-add">Baustein hinzufügen</button>';
+  list.before(tools);
+  const source=get('.rs-template'),block=get('.rs-block'),undo=get('.rs-undo');
+  source.replaceChildren(new Option('Vorlage auswählen',''),...templates.map(t=>new Option(t.title,t.id)));
+  source.value=suggestTemplate(event.title);
+  block.replaceChildren(...blockOptions.map(b=>new Option(b.title+' · '+b.minutes+' Min.',b.id)));
+  source.onchange=()=>{
+   const t=templates.find(t=>t.id===source.value);
+   get('.rs-append').disabled=!t;get('.rs-replace').disabled=!t;
+   get('.rs-preview').textContent=t?t.note+' Vorschlag: '+makeTemplate(t.id).map(r=>r.title+' ('+r.minutes+' Min.)').join(' · '):'';
+  };
+  source.onchange();
   start.value=sheet?.start||(event.allDay?'09:00':clock.format(new Date(event.start)));
-  let version=sheet?.version||0,lastBody='',mutationId='';
+  let version=sheet?.version||0,lastBody='',mutationId='',undoItems=null;
+  function clearUndo(){undoItems=null;undo.hidden=true;}
   function update(){
    const [hours,minutes]=start.value.split(':').map(Number);
    let elapsed=0;
@@ -45,26 +62,48 @@ window.openRunSheet=async eventId=>{
    row.querySelector('.rs-title').value=item.title||'';
    row.querySelector('[type=number]').value=item.minutes??5;
    row.querySelector('.rs-lead').value=item.lead||'';
-   row.querySelector('.rs-up').onclick=()=>{list.insertBefore(row,row.previousElementSibling);update();};
-   row.querySelector('.rs-down').onclick=()=>{list.insertBefore(row.nextElementSibling,row);update();};
-   row.querySelector('.rs-remove').onclick=()=>{row.remove();update();};
+   row.querySelector('.rs-up').onclick=()=>{clearUndo();list.insertBefore(row,row.previousElementSibling);update();};
+   row.querySelector('.rs-down').onclick=()=>{clearUndo();list.insertBefore(row.nextElementSibling,row);update();};
+   row.querySelector('.rs-remove').onclick=()=>{clearUndo();row.remove();update();};
    list.append(row);update();
    return row;
   }
   for(const item of sheet?.items||[])add(item);
-  start.oninput=update;list.oninput=update;update();
-  get('.rs-add').onclick=()=>{if(list.children.length>=80){notice.textContent='Höchstens 80 Programmpunkte möglich.';return;}add().querySelector('input').focus();};
+  start.oninput=update;list.oninput=()=>{clearUndo();update();};update();
+  function currentItems(){
+   return Array.from(list.children,row=>({title:row.querySelector('.rs-title').value,minutes:row.querySelector('[type=number]').value,lead:row.querySelector('.rs-lead').value}));
+  }
+  function readDraft(){
+   for(const field of [start,...list.querySelectorAll('input')])if(!field.reportValidity())return null;
+   const items=currentItems().map(row=>({title:row.title.trim(),minutes:Number(row.minutes),lead:row.lead.trim()}));
+   if(items.some(row=>!row.title)||items.reduce((sum,r)=>sum+r.minutes,0)>1440){notice.textContent='Bitte Titel und Gesamtdauer (maximal 24 Stunden) prüfen.';return null;}
+   return {start:start.value,items};
+  }
+  function applyPreset(items,replace){
+   if(items.length+(replace?0:list.children.length)>80){notice.textContent='Höchstens 80 Programmpunkte möglich.';return;}
+   if(replace&&list.children.length&&!confirm('Alle aktuellen Programmpunkte in diesem Entwurf durch die Vorlage ersetzen?'))return;
+   undoItems=currentItems();undo.hidden=false;
+   if(replace)list.replaceChildren();
+   for(const item of items)add(item);
+   notice.textContent='In den Entwurf übernommen. Zum Übernehmen für diesen Termin speichern.';
+  }
+  get('.rs-append').onclick=()=>applyPreset(makeTemplate(source.value),false);
+  get('.rs-replace').onclick=()=>applyPreset(makeTemplate(source.value),true);
+  get('.rs-block-add').onclick=()=>applyPreset([makeBlock(block.value)],false);
+  undo.onclick=()=>{const before=undoItems;if(!before)return;list.replaceChildren();for(const row of before)add(row);clearUndo();update();notice.textContent='Vorherige Programmpunkte wiederhergestellt.';};
+  get('.rs-add').onclick=()=>{if(list.children.length>=80){notice.textContent='Höchstens 80 Programmpunkte möglich.';return;}clearUndo();add().querySelector('input').focus();};
+  const outputs=document.createElement('div');outputs.className='rs-output';get('.rs-save').after(outputs);
+  addRunSheetOutputs(outputs,()=>{if(!active())return null;const draft=readDraft();return draft?{event,...draft}:null;});
   get('.rs-save').onclick=async()=>{
-   for(const input of view.querySelectorAll('input'))if(!input.reportValidity())return;
-   const items=Array.from(list.children,row=>({title:row.querySelector('.rs-title').value.trim(),minutes:Number(row.querySelector('[type=number]').value),lead:row.querySelector('.rs-lead').value.trim()}));
-   const data={version,start:start.value,items};
+   const draft=readDraft();if(!draft)return;
+   const data={version,...draft};
    const key=JSON.stringify(data);
    if(lastBody!==key){mutationId=crypto.randomUUID();lastBody=key;}
-   const controls=[...view.querySelectorAll('input,button:not(.modal-close)')];
+   const controls=[start,get('.rs-add'),get('.rs-save'),...list.querySelectorAll('input,button'),...tools.querySelectorAll('select,button')];
    controls.forEach(c=>c.disabled=true);notice.textContent='Speichern …';
-   try{const saved=await request({...data,mutationId});if(active()){version=saved.version;notice.textContent='Ablaufplan gespeichert.';}}
+   try{const saved=await request({...data,mutationId});if(active()){version=saved.version;clearUndo();notice.textContent='Ablaufplan gespeichert.';}}
    catch(e){if(active())notice.textContent=e.message;}
-   finally{if(active()){controls.forEach(c=>c.disabled=false);update();}}
+   finally{if(active()){controls.forEach(c=>c.disabled=false);source.onchange();update();}}
   };
  }catch(e){if(active())view.querySelector('[role=status]').textContent=e.message;}
 };
