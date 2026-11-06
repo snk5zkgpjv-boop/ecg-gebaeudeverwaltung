@@ -16,7 +16,7 @@ function available(key,user){
  if(['finance','members'].includes(key))return false;
  if(key==='groups')return true;
  if(key==='kitchen')return user.role!=='technician' && (user.permissions?.manageCalendar ?? user.role==='coordinator');
- return ['coordinator','technician','cleaner','backup','volunteer'].includes(user.role) || user.permissions?.manageRooms===true;
+ return ['elder','deacon','coordinator','technician','cleaner','backup','volunteer'].includes(user.role) || user.permissions?.manageRooms===true;
 }
 function explain(title,text){
  document.querySelector('#detail-title').textContent=title;

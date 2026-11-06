@@ -23,6 +23,10 @@ function roomWorkView(technical,kitchenOnly=false){
  }
  return blocks.join('')||'<p class="empty">Keine passenden Raumaufgaben eingetragen.</p>';
 }
+function readOnlyCalendar(){
+ const events=[...(state.calendarEvents||[])].sort((a,b)=>new Date(a.start)-new Date(b.start));
+ return events.map(event=>'<article class="card"><b>'+esc(event.title)+'</b><div>'+esc(new Date(event.start).toLocaleString('de-DE',event.allDay?{dateStyle:'medium'}:{dateStyle:'medium',timeStyle:'short'}))+'</div></article>').join('')||'<p>Keine Termine im gespeicherten Kalenderstand.</p>';
+}
 function workSectionView(section){
  const button=(action,text)=>'<button class="btn primary" onclick="'+action+'">'+text+'</button>';
  switch(section.id){
@@ -36,8 +40,10 @@ function workSectionView(section){
   case 'grundrisse':return floorplanView();
   case 'benutzer':return userManagementView();
   case 'arbeitszeit':return timeWorkCard()+button('showTimeReport()','Arbeitszeiten und Berichte öffnen');
-  case 'kalender':return calendarView();
-  case 'termine':return calendarView(true);
+  case 'kalender':
+   if(can('manageCalendar'))return calendarView();
+   return readOnlyCalendar();
+  case 'termine':return can('manageCalendar')?calendarView(true):readOnlyCalendar();
   case 'vereinbarungen':return button('showEventDocumentSettings()','Vereinbarungsvorlagen bearbeiten');
   case 'daten':return backupView();
   case 'system':return button('showSystemStatus()','Systemstatus prüfen');

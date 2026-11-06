@@ -121,7 +121,7 @@ export default async function handler(req, res) {
   const sql = neon(process.env.DATABASE_URL);
   const auth = await requireUser(req, res, sql);
   if (!auth) return;
-  if (!canManageCalendar(auth.profile)) {
+  if (!canManageCalendar(auth.profile) && !auth.profile.permissions?.viewCalendar) {
     return res.status(403).json({ error: 'Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.' });
   }
 

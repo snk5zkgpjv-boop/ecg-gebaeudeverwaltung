@@ -8,7 +8,7 @@ const areaSections = {
   ['maengel','Gebäudemängel'], ['grundrisse','Grundrisse']
  ]],
  administration: ['Verwaltung', [
-  ['kalender','Kalender','manageCalendar'], ['benutzer','Benutzer & Rechte','manageUsers'],
+  ['kalender','Kalender','viewCalendar'], ['benutzer','Benutzer & Rechte','manageUsers'],
   ['arbeitszeit','Zeiterfassung','personal'], ['system','Systemstatus','admin'], ['daten','Datensicherung','admin']
  ]],
  events: ['Veranstaltungen', [
@@ -31,10 +31,12 @@ function sectionAllowed(right,user) {
  if(right==='manageMembers')return user.role==='admin'||user.permissions?.manageMembers===true;
  if(user.role==='member')return false;
  if(user.role==='admin')return true;
- if(right==='admin'||right==='planned')return false;
+ if(right==='planned')return user.permissions?.viewFinance===true;
+ if(right==='admin')return false;
+ if(right==='viewCalendar')return user.permissions?.viewCalendar || sectionAllowed('manageCalendar',user);
  if(right==='personal')return user.role!=='technician';
  if(right==='kitchenMaintenance')return sectionAllowed('manageCalendar',user)&&sectionAllowed('viewMaintenance',user);
  if(right && user.role==='technician')return right==='viewMaintenance';
  if(right)return user.permissions?.[right] ?? (right==='manageCalendar' && user.role==='coordinator');
- return ['coordinator','technician','cleaner','backup','volunteer'].includes(user.role)||user.permissions?.manageRooms===true;
+ return ['elder','deacon','coordinator','technician','cleaner','backup','volunteer'].includes(user.role)||user.permissions?.manageRooms===true;
 }
