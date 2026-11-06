@@ -1,6 +1,12 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 27.10.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Gleichzeitiges Speichern – 06.11.2026
+
+Auf einem separaten Korrekturzweig getestet. Die Oberfläche sendet über den bestehenden authentifizierten PUT /api/state nur geänderte Bereiche mit ihrem Ausgangswert. Der Server gleicht die Werte mit dem sichtbaren Stand der angemeldeten Rolle ab. In Listen mit eindeutigen IDs werden unabhängige Einträge gemeinsam übernommen. Widersprüchliche Änderungen an einem Eintrag werden mit Konflikthinweis zurückgewiesen. Der Schreibzugriff prüft den vollständigen vorherigen Datenstand atomar. Überholte Volluploads erhalten HTTP 428 und erfordern Neuladen. Zeit- und Veranstaltungs-Spezialrouten behalten ihre vorhandenen Zuständigkeiten.
+
+Lokal alle 19 Node-Testdateien erfolgreich ausgeführt. Der neue Test verwendet zwei simulierte Clients mit den tatsächlichen Speicherfunktionen und simuliertem Datenbankzugriff. Abgedeckt sind Inventar plus Termin, zwei Ergänzungen derselben Liste, konkurrierende Bearbeitung, Löschen gegen Bearbeiten, Wiederholung nach Schreibkollision und ein veralteter Client. Browserabnahme mit zwei angemeldeten Konten und Veröffentlichung separat zu bestätigen.
 
 ## Freizeitraum: Möbelordnung und freigegebene Fotos – 27.10.2026
 

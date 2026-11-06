@@ -251,8 +251,46 @@ function save(){cacheAppState();syncCloudDebounced();}
 let syncTimer; function syncCloudDebounced(){clearTimeout(syncTimer);syncTimer=setTimeout(syncCloud,700)}
 let authSession=null;
 async function authHeaders(extra={}){return {...extra,...(authSession?.user?.appUserId?{'X-ECG-User-Id':authSession.user.appUserId}:{})}}
-async function syncCloud(){if(!state.settings.cloudSync||!authSession) return; try{const r=await fetch('/api/state',{method:'PUT',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify(cloudPayload())}); if(r.ok){$('.sync')?.replaceChildren(document.createTextNode('Cloud synchronisiert'))}else if(r.status===401||r.status===403){showLoginGate('Deine Anmeldung ist abgelaufen.')}else{$('.sync')?.replaceChildren(document.createTextNode('Cloud-Fehler'))}}catch{$('.sync')?.replaceChildren(document.createTextNode('Cloud nicht erreichbar'))}}
-async function pullCloud(){if(!state.settings.cloudSync||!authSession)return;const session=authSession,owner=state.currentUserId,epoch=timeChangeEpoch,issueEpoch=issueChangeEpoch;try{const r=await fetch('/api/state',{headers:await authHeaders()});if(r.ok){const remote=await r.json();if(state.currentUserId!==owner||authSession!==session)return;if(remote?.version){if(epoch!==timeChangeEpoch)remote.timeEntries=state.timeEntries;if(issueEpoch!==issueChangeEpoch){remote.issues=state.issues;remote.myIssuePlanning=state.myIssuePlanning;}mergeCloudState(remote);bindAuthUser();cacheAppState();render();void flushTimeChanges();return true}}else if(authSession===session&&state.currentUserId===owner&&[401,403,409].includes(r.status)){showLoginGate('Bitte erneut anmelden.')}}catch{}}
+let cloudBase;
+function rememberCloudBase(session, remote) {
+  cloudBase = {session, remote, local:JSON.parse(JSON.stringify(cloudPayload()))};
+}
+async function syncCloud(){
+  if(!state.settings.cloudSync || !authSession) return false;
+  const session=authSession, base=cloudBase;
+  if(!base || base.session!==session) return false;
+  const local=JSON.parse(JSON.stringify(cloudPayload()));
+  const changes=Object.create(null);
+  for(const [field,value] of Object.entries(local)){
+    if(['timeEntries','timeEntryIdsSeen','timeEntriesReadOnly','sharedTimeUsers','myTimeSharing'].includes(field)) continue;
+    if(JSON.stringify(value)!==JSON.stringify(base.local[field])) changes[field]={before:base.remote[field],after:value};
+  }
+  if(!Object.keys(changes).length) return true;
+  const status=message=>$('.sync')?.replaceChildren(document.createTextNode(message));
+  try{
+    for(let attempt=0;attempt<3;attempt++){
+      if(authSession!==session || cloudBase!==base) return false;
+      const r=await fetch('/api/state',{method:'PUT',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({protocol:1,changes})});
+      if(authSession!==session || cloudBase!==base) return false;
+      if(r.ok){
+        for(const [field,edit] of Object.entries(changes)){
+          base.local[field]=edit.after;
+          if(field==='roomDeleteIds') delete base.remote[field];
+          else base.remote[field]=edit.after;
+        }
+        status('Cloud synchronisiert'); return true;
+      }
+      const info=await r.json();
+      if(r.status===409 && !info.conflict && attempt<2) continue;
+      if(r.status===401 || r.status===403) showLoginGate('Deine Anmeldung ist abgelaufen.');
+      status(info.error || 'Speichern fehlgeschlagen');
+      if(info.conflict) alert(info.error+' Deine Eingabe steht noch in dieser Ansicht. Sichere sie vor dem Neuladen.');
+      return false;
+    }
+  }catch{status('Cloud nicht erreichbar – Änderungen noch nicht gespeichert');}
+  return false;
+}
+async function pullCloud(){if(!state.settings.cloudSync||!authSession)return;const session=authSession,owner=state.currentUserId,epoch=timeChangeEpoch,issueEpoch=issueChangeEpoch;try{const r=await fetch('/api/state',{headers:await authHeaders()});if(r.ok){const remote=await r.json();if(state.currentUserId!==owner||authSession!==session)return;if(remote?.version){const original=structuredClone(remote);if(epoch!==timeChangeEpoch)remote.timeEntries=state.timeEntries;if(issueEpoch!==issueChangeEpoch){remote.issues=state.issues;remote.myIssuePlanning=state.myIssuePlanning;}mergeCloudState(remote);bindAuthUser();rememberCloudBase(session,original);cacheAppState();render();void flushTimeChanges();return true}}else if(authSession===session&&state.currentUserId===owner&&[401,403,409].includes(r.status)){showLoginGate('Bitte erneut anmelden.')}}catch{}}
 
 const taskIntervalDays={daily:1,weekly:7,biweekly:14,monthly:30,quarterly:90,semiannual:182,annual:365};
 function taskIntervalElapsed(task){const days=taskIntervalDays[task.interval];if(!days)return false;const last=new Date(task.lastDone).getTime();return !Number.isFinite(last)||Date.now()-last>=days*86400000}
@@ -1059,7 +1097,7 @@ window.saveUser=async id=>{
  }
  const cu=currentUser();if(cu)state.currentRole=cu.role;
  localStorage.setItem('cleaningAppState',JSON.stringify(state));
- try{await syncCloud();const target=id?state.users.find(x=>x.id===id):state.users[state.users.length-1];const r=await fetch('/api/auth/admin-user',{method:'POST',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({appUserId:target.id,email,name,active,temporaryPassword})});const b=await r.json();if(!r.ok)throw new Error(b.error||'Zugang konnte nicht gespeichert werden.');closeModal();showUserManagement()}catch(e){alert(e.message||'Benutzer konnte nicht gespeichert werden.')}
+ try{if(!await syncCloud())throw new Error('Benutzeränderung noch nicht gespeichert.');const target=id?state.users.find(x=>x.id===id):state.users[state.users.length-1];const r=await fetch('/api/auth/admin-user',{method:'POST',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({appUserId:target.id,email,name,active,temporaryPassword})});const b=await r.json();if(!r.ok)throw new Error(b.error||'Zugang konnte nicht gespeichert werden.');closeModal();showUserManagement()}catch(e){alert(e.message||'Benutzer konnte nicht gespeichert werden.')}
 };
 window.deleteUser=id=>{
  if(!can('manageUsers')){alert('Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.');return}
