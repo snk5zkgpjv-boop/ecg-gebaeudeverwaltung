@@ -3,6 +3,7 @@ const panels=[
  ['administration','Verwaltung','Kalender, Konten & Arbeitszeit','M4 6h16M4 12h16M4 18h16M8 4v4M16 10v4M10 16v4','/?bereich=verwaltung'],
  ['building','Gebäude','Räume & Pflege','M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6','/?bereich=gebaeude'],
  ['events','Veranstaltungen','Planung & Abnahmen','M4 5h16v16H4zM8 3v5M16 3v5M4 11h16','#events'],
+ ['personnel','Personal','Abwesenheiten & Vertretungen','M4 5h16v15H4zM8 3v5M16 3v5M7 14l3 3 6-6','#personnel'],
  ['members','Mitglieder','Profil & Mitgliederverwaltung','M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21c0-8 16-8 16 0',null],
  ['finance','Finanzen','Auslagen · geplant','M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h6',null],
  ['outdoor','Außenanlage','Gelände & Aufgaben','M12 21v-7M5 15l7-12 7 12z','#aussenanlage'],
@@ -103,6 +104,7 @@ function setupSections(user){
    tile.className='tile';tile.dataset.key=key;
    labelTile(tile,key,title,planned?'Geplant':'');
    if(planned||preview)tile.onclick=()=>explain(title,planned?'Dieser Bereich ist geplant.':'Diese Funktion öffnet sich nach der Anmeldung.');
+   else if(key==='personnel')tile.href='/personal/?ansicht='+id;
    else tile.href=key==='members'?'/members/?ansicht='+id:'/?bereich='+id;
    grid.append(tile);
   }
