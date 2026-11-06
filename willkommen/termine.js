@@ -1,6 +1,6 @@
 // Ausschließlich öffentliche Ankündigungen, ohne Verbindung zum internen Kalender.
 const regular = {0:['Gottesdienst','10:00'],3:['Bibelstunde','19:00'],5:['Gebetsstunde','19:00']};
-const specials = {'2026-11-06':['Thementage mit Eduard Adam','19:00'],'2026-11-07':['Thementage mit Eduard Adam','19:00']};
+const specials = {'2026-11-06':['Thementage mit Eduard Adam','19:00'],'2026-11-07':['Thementage mit Eduard Adam','19:00'],'2026-11-08':['Thementage mit Eduard Adam','10:00']};
 const berlinDay = new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'});
 const longDate = new Intl.DateTimeFormat('de-DE',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'});
 const shortDate = new Intl.DateTimeFormat('de-DE',{timeZone:'UTC',weekday:'short',day:'2-digit',month:'2-digit'});
