@@ -10,6 +10,8 @@ Der installierte App-Einstieg öffnet /portal/ direkt. Alte Startlinks auf / lei
 
 Geprüft: 21 Testdateien erfolgreich. Browser mit Testkonto bei 390 und 1280 px: vier Oberflächen ohne horizontales Überlaufen, identische Schriftfamilie, erwartete Titelgrößen. Der Start über / bis zu den Kacheln benötigte eine Sitzungsanfrage und keinen Abruf von /api/state. Ladezeit auf einem echten iPhone weiterhin offen.
 
+Veröffentlicht über PR #42 (a4d07a5). Die produktive Schriftdatei, das Startmanifest und die HTML-Einstiege für Portal, Gäste, Mitglieder und Fachansichten wurden mit der getesteten Version verglichen.
+
 ## Sicherungsstände und Projektpflege – 06.11.2026
 
 Die elf Integrationen von PR #30 bis #40 änderten jeweils diese Datei. Der nach der Freischaltung von #40 veraltete Veröffentlichungsvermerk wurde korrigiert. Für die Wiederherstellung des Quellcodes gibt es im Projekt drei GitHub-Zweige. Sie verweisen auf vorhandene Commits und enthalten den jeweiligen Stand der Projektstanddatei.
