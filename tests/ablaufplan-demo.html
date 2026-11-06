@@ -1,0 +1,22 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none';form-action 'none'">
+<title>Ablaufplan testen · ECG</title><link rel="stylesheet" href="/assets/typography.css"><link rel="stylesheet" href="/assets/run-sheet.css">
+<style>*{box-sizing:border-box}body{background:#f8f6f2;color:#30282b;margin:0;font-family:var(--ecg-font)}main{max-width:760px;margin:auto;padding:1.25rem}button{background:white;padding:.55rem .85rem;border:1px solid #bdaeb6;border-radius:.55rem;cursor:pointer}button.primary{background:#87153f;color:white}.modal{padding:1rem;border:1px solid #dfd5da;border-radius:14px;background:white;margin-top:1rem}.row{display:flex;gap:.5rem;flex-wrap:wrap}</style></head><body><main><h1>Ablaufplan testen</h1>
+<p>Beispielgottesdienst · Sonntag, 10 Uhr. Änderungen gelten nur in dieser Demo und werden in diesem Browser gespeichert.</p>
+<button id="open">Ablaufplan öffnen</button><div id="mount"></div></main>
+<script>
+const state={currentUserId:'demo',calendarEvents:[{id:'demo-occurrence',title:'Beispielgottesdienst',start:'2026-11-08T10:00:00+01:00'}]};
+function can(key){return key==='manageCalendar';}
+function modal(html,target){const node=target||document.createElement('div');node.className='modal';node.innerHTML=html;document.getElementById('mount').replaceChildren(node);return node;}
+const storageKey='ecg.synthetic.run-sheet.demo.v1';
+window.fetch=async(url,options)=>{
+ if(!String(url).startsWith('/api/state?runSheet=1'))throw Error('Demo verwendet keine externe API.');
+ const original=JSON.parse(localStorage.getItem(storageKey)||'null')||{version:0,start:'10:00',items:[{title:'Begrüßung',minutes:5,lead:'Moderation'},{title:'Musik',minutes:10,lead:'Musikteam'}]};
+ if(options.method==='GET')return {ok:true,json:async()=>({sheet:original})};
+ const body=JSON.parse(options.body);
+ if(body.version!==original.version)return {ok:false,json:async()=>({error:'Ein anderer Tab hat die Demo geändert. Bitte erneut öffnen.'})};
+ const sheet={...body,version:original.version+1};localStorage.setItem(storageKey,JSON.stringify(sheet));
+ return {ok:true,json:async()=>({sheet})};
+};
+</script><script type="module">import '/assets/run-sheet.js';
+document.getElementById('open').onclick=()=>openRunSheet('demo-occurrence');document.getElementById('open').click();</script></body></html>
