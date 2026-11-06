@@ -1,3 +1,4 @@
+import { members } from '../lib/members.js';
 import { organizationExport } from '../lib/organization-export.js';
 import { applyStateChanges } from '../lib/concurrent-state.js';
 import { neon } from '@neondatabase/serverless';
@@ -119,7 +120,7 @@ function mergeManagedUsers(currentUsers, incomingUsers, profile) {
 
   const current = currentUsers || [];
   const incoming = incomingUsers || current;
-  const protectedIds = new Set(current.filter((user) => user.role === 'admin' || user.id === profile.id).map((user) => user.id));
+  const protectedIds = new Set(current.filter((user) => user.role === 'admin' || user.permissions?.manageMembers === true || user.id === profile.id).map((user) => user.id));
   const allowedPermissions = Object.keys(defaults.coordinator).filter((key) => key !== 'manageUsers' && has(profile, key));
   const limitPermissions = (permissions = {}) => Object.fromEntries(
     Object.keys(defaults.coordinator).map((key) => [key, allowedPermissions.includes(key) && permissions[key] === true]),
@@ -283,13 +284,14 @@ export default async function handler(req, res) {
     if(!user)return res.status(401).json({error:'Anmeldung erforderlich'});
     const [row]=await sql`SELECT data->'users' AS users, data->'outdoorAreas' AS areas FROM app_state WHERE id='main'`;
     const profile=profileFor({users:row?.users},user);
-    if(!profile || profile.active===false || user.must_change_password ||
+    if(!profile || profile.active===false || profile.role==='member' || user.must_change_password ||
       (!['admin','coordinator','technician','cleaner','backup','volunteer'].includes(profile.role) && profile.permissions?.manageRooms!==true))
       return res.status(403).json({error:'Kein Zugriff auf Außenanlagen'});
     if(req.headers['x-ecg-user-id']!==profile.id)return res.status(409).json({error:'Konto gewechselt'});
     const areas=(row.areas||[]).map(a=>({id:a.id,name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
     return res.status(200).json({areas});
   }
+  if(['self','list'].includes(req.query?.members))return members(req,res,sql);
   const auth = await requireUser(req, res, sql);
   if (!auth) return;
 
