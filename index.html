@@ -146,6 +146,7 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 .modal-close{position:sticky;top:0;z-index:6;float:right;width:42px;height:42px;margin:-4px -4px 8px 12px;border:1px solid var(--line);border-radius:50%;background:rgba(255,255,255,.96);color:var(--ink);box-shadow:0 3px 12px rgba(16,24,40,.16);font-size:28px;line-height:1;display:grid;place-items:center}
 .modal-close:active{background:var(--accent2);color:var(--accent)}
 .portal-back{display:inline-flex;align-items:center;min-height:36px;font-weight:700;font-size:14px;text-decoration:none;color:#86123e}
+.kitchen-devices{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}.kitchen-devices>.btn{min-height:52px;text-align:left;padding:12px 16px}
 </style>
 </head>
 <body>
@@ -180,8 +181,8 @@ const esc = s => String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>
 const uid = p => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
 const nowISO=()=>new Date().toISOString();
 const intervals={daily:'täglich',weekly:'wöchentlich',biweekly:'14-tägig',monthly:'monatlich',quarterly:'vierteljährlich',semiannual:'halbjährlich',annual:'jährlich',asneeded:'bei Bedarf',afteruse:'nach Nutzung',afterevent:'nach Veranstaltung'};
-const roleLabels={admin:'Admin',coordinator:'Objektleitung',cleaner:'Putzkraft',backup:'Vertretung',volunteer:'Ehrenamtlich',technician:'Technik'};
-const permissionLabels={manageRooms:'Räume anlegen und bearbeiten',manageTasks:'Aufgaben und Putzpläne verwalten',manageInventory:'Inventar und Lagerorte verwalten',manageCalendar:'Kalender und Veranstaltungen verwalten',manageIssues:'Mängel verwalten',useAI:'KI-Bilderkennung verwenden',viewMaintenance:'Technik und Wartungen sehen',manageMaintenance:'Technik und Wartungen bearbeiten',viewAllTimes:'Zeiten nur nach persönlicher Freigabe sichtbar',manageUsers:'Benutzer verwalten'};
+const roleLabels={member:'Mitglied',admin:'Admin',coordinator:'Objektleitung',cleaner:'Putzkraft',backup:'Vertretung',volunteer:'Ehrenamtlich',technician:'Technik'};
+const permissionLabels={manageMembers:'Mitgliederverwaltung und Import',manageRooms:'Räume anlegen und bearbeiten',manageTasks:'Aufgaben und Putzpläne verwalten',manageInventory:'Inventar und Lagerorte verwalten',manageCalendar:'Kalender und Veranstaltungen verwalten',manageIssues:'Mängel verwalten',useAI:'KI-Bilderkennung verwenden',viewMaintenance:'Technik und Wartungen sehen',manageMaintenance:'Technik und Wartungen bearbeiten',viewAllTimes:'Zeiten nur nach persönlicher Freigabe sichtbar',manageUsers:'Benutzer verwalten'};
 const coordinatorDefaults={manageRooms:true,manageTasks:true,manageInventory:true,manageCalendar:true,manageIssues:true,useAI:true,viewMaintenance:false,manageMaintenance:false,viewAllTimes:false,manageUsers:false};
 function can(key){if(state.currentRole==='technician')return ['viewMaintenance','manageMaintenance','manageInventory'].includes(key);if(state.currentRole==='admin')return true;const u=currentUser();return u?.permissions?.[key]??(state.currentRole==='coordinator'?coordinatorDefaults[key]===true:state.currentRole==='technician'&&['viewMaintenance','manageMaintenance'].includes(key))}
 const ECG_CALENDAR_ID='';
@@ -589,6 +590,11 @@ window.exportRoomQRList=()=>{
 
 function openPortalHome(user){
  const query=new URLSearchParams(location.search);
+ if(user?.role==='member'){
+  if(user.mustChangePassword){document.getElementById('authGate')?.remove();changePasswordDialog(true);}
+  else location.replace('/portal/');
+  return true;
+ }
  if(!user || user.mustChangePassword || ['bereich','room','asset','location','reset'].some(key=>query.has(key)))return false;
  location.replace('/portal/');
  return true;

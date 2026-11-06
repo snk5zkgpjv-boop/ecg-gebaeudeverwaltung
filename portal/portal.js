@@ -3,15 +3,15 @@ const panels=[
  ['administration','Verwaltung','Kalender, Konten & Arbeitszeit','M4 6h16M4 12h16M4 18h16M8 4v4M16 10v4M10 16v4','/?bereich=verwaltung'],
  ['building','Gebäude','Räume & Pflege','M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6','/?bereich=gebaeude'],
  ['events','Veranstaltungen','Planung & Abnahmen','M4 5h16v16H4zM8 3v5M16 3v5M4 11h16','#events'],
- ['members','Mitglieder','Mein Profil · geplant','M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21c0-8 16-8 16 0',null],
+ ['members','Mitglieder','Profil & Mitgliederverwaltung','M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21c0-8 16-8 16 0',null],
  ['finance','Finanzen','Auslagen · geplant','M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h6',null],
  ['outdoor','Außenanlage','Gelände & Aufgaben','M12 21v-7M5 15l7-12 7 12z','#aussenanlage'],
  ['kitchen','Küche','Geräte & Dienste','M4 3v6c0 3 6 3 6 0V3M7 3v18M18 21V3c-4 3-5 8-1 10h1','/?bereich=kueche'],
- ['groups','Gruppen','Treffen & Angebote','M9 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M21 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M1 20c0-7 11-7 11 0M13 15c5-3 10 0 10 5','/willkommen/#gruppen']
 ];
 function available(key,user){
  if(preview || user.role==='admin')return true;
  if(areaSections[key])return areaSections[key][1].some(([, ,right])=>sectionAllowed(right,user));
+ if(user.role==='member')return false;
  if(['finance','members'].includes(key))return false;
  if(key==='groups')return true;
  if(key==='kitchen')return user.role!=='technician' && (user.permissions?.manageCalendar ?? user.role==='coordinator');
@@ -103,7 +103,7 @@ function setupSections(user){
    tile.className='tile';tile.dataset.key=key;
    labelTile(tile,key,title,planned?'Geplant':'');
    if(planned||preview)tile.onclick=()=>explain(title,planned?'Dieser Bereich ist geplant.':'Diese Funktion öffnet sich nach der Anmeldung.');
-   else tile.href='/?bereich='+id;
+   else tile.href=key==='members'?'/members/?ansicht='+id:'/?bereich='+id;
    grid.append(tile);
   }
   scrollTo(0,0);

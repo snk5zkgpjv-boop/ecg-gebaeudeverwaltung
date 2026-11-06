@@ -2,6 +2,28 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Sicherungsstände und Projektpflege – 06.11.2026
+
+Die elf Integrationen von PR #30 bis #40 änderten jeweils diese Datei. Der nach der Freischaltung von #40 veraltete Veröffentlichungsvermerk wurde korrigiert. Für die Wiederherstellung des Quellcodes gibt es im Projekt drei GitHub-Zweige. Sie verweisen auf vorhandene Commits und enthalten den jeweiligen Stand der Projektstanddatei.
+
+| Sicherungszweig | Stand |
+| --- | --- |
+| backup/2026-11-06-vor-portalumbau | f8296c2, vor Speicherkorrektur und Portal |
+| backup/2026-11-06-vor-unterkacheln | 8f7e5f4, vor der neuen Unterstruktur |
+| backup/2026-11-06-vor-mitgliederbereich | 77c9844, veröffentlichtes Portal vor Mitgliedererweiterung |
+
+Private Datenbankinhalte, Sitzungen und Gerätedokumente werden getrennt vom Quellcode gespeichert. Die Git-Sicherungen bilden den Code ab.
+
+## Mitglieder und Küchengeräte – 06.11.2026
+
+Mitglieder → Mein Profil verwendet das persönliche Konto als Zuordnung. Das separat vergebene Recht manageMembers und die Adminrolle öffnen außerdem die Mitgliederverwaltung mit Anlage, Bearbeitung, expliziter Kontozuordnung, Excel-Vorschau und Importbestätigung. Die Excel-Vorlage enthält nur Überschriften. Ein Import legt Mitgliederdatensätze an; persönliche Zugänge werden separat in der Benutzerverwaltung eingerichtet. Konten der Rolle Mitglied erhalten keinen Zugriff auf den allgemeinen Gebäudezustand.
+
+GET/POST /api/state?members=self oder list liest/schreibt ausschließlich die separate Tabelle ecg_members. Sitzung, aktiver Benutzer und übereinstimmende Kontokennung sind erforderlich. Eigene Bearbeitung ist an die Sitzungsidentität gebunden, Verwaltung an das ausdrückliche Recht. Versionskonflikte werden mit 409 gemeldet. Importe erfolgen atomar; identische Kombinationen aus Name, Geburtsdatum und E-Mail werden übersprungen. Profilfotos werden im Browser für das Profil verkleinert und privat gespeichert. Datenbankschema: scripts/members-schema.sql.
+
+Die Gruppenweiterleitung und die beiden Bildlinks wurden aus dem Arbeitsportal entfernt. Die Geräteansicht setzt Abstände und separate Bedienflächen. Zwei ECG-Anleitungen je Gerät für MEIKO M-iClean HL und RATIONAL iVario sind in der bestehenden privaten Dokumententabelle mit Dateiinhalt und geprüftem Hash abrufbar. Der ausführliche MEIKO-Leitfaden wurde für das Uploadlimit auf fünf A4-Seiten komprimiert.
+
+Prüfung vor Veröffentlichung: 21 Testdateien, darunter Tests für eigenen Datenzugriff, Importrechte und Versionsbindung. Browser bei 390 px mit simulierten Konten und echtem XLSX-Testimport: Standardmitglied sieht Mein Profil, bearbeitet eine Adresse; Verwaltung bestätigt eine Excel-Zeile nach Vorschau. Das Datenbankschema ist eingerichtet. Persönliche Daten und Fotos gehören ausschließlich in die geschützte Anwendung.
+
 ## Fachbereiche und Unterkacheln – 06.11.2026
 
 Die Portalübersichten für Gebäude, Verwaltung, Veranstaltungen, Küche und Finanzen öffnen per Hashnavigation innerhalb derselben Seite. Die Fachansichten öffnen gezielt die ausgewählte Funktion mit Rückwegen zur Bereichsübersicht und zum Portal. Gebäudepflege und Haustechnik unterscheiden Raumaufgaben anhand des gespeicherten Aufgabentyps; die konfigurierte Küche hat eine eigene Reinigungsansicht. Wartung nutzt die vorhandenen Anlagen und Fristen. Kalender und Benutzerverwaltung sind getrennte Einstiege unter Verwaltung. Veranstaltungen verwendet dieselben Termine für Planung und Abnahme. Finanzfunktionen sind als geplant gekennzeichnet.
@@ -10,7 +32,7 @@ Die geschützte Außenanlagenabfrage liefert zusätzlich die bestehende Bereichs
 
 Geprüft vor Veröffentlichung: alle 20 bestehenden Tests sowie 19 Fachansichten im Browser mit synthetischen Daten bei 390 px, getrennte Reinigungs- und Technikaufgaben, Rückweg, Außenthemen und gesperrter Wartungsdirektlink für eine Putzkraft. Noch offen: persönliche Abnahme auf dem iPhone mit dem realen Konto.
 
-Ergänzende Prüfung: Unterkacheln verwenden dieselbe Darstellung mit Symbol, Pfeil und Puzzlekante wie die Hauptkacheln. Raum-, Inventar- und Lagerort-QR-Einstiege verwenden die zugehörige Fachansicht. Im mobilen Browsertest wurden Benutzeranlage bis zum Abbrechen, Kalender, Küchenreinigung und Küchendienste mit beiden Rückwegen sowie ein Raum-QR mit Beispieldaten geprüft. Alle 20 Testdateien erneut erfolgreich. Veröffentlichung ausstehend.
+Ergänzende Prüfung: Unterkacheln verwenden dieselbe Darstellung mit Symbol, Pfeil und Puzzlekante wie die Hauptkacheln. Raum-, Inventar- und Lagerort-QR-Einstiege verwenden die zugehörige Fachansicht. Im mobilen Browsertest wurden Benutzeranlage bis zum Abbrechen, Kalender, Küchenreinigung und Küchendienste mit beiden Rückwegen sowie ein Raum-QR mit Beispieldaten geprüft. Alle 20 Testdateien erneut erfolgreich. Über PR #40 veröffentlicht (77c9844). Verwaltung und Küche einschließlich Rückweg wurden auf der Live-Adresse in der Vorschau bei 390 px geprüft.
 
 ## Eigenständige Kachel Verwaltung – 06.11.2026
 

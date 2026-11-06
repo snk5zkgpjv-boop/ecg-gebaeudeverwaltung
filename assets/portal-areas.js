@@ -1,5 +1,6 @@
 // Shared by the portal and the authenticated work screen.
 const areaSections = {
+ members: ['Mitglieder',[['profil','Mein Profil','profile'],['mitgliederverwaltung','Mitgliederverwaltung','manageMembers']]],
  building: ['Gebäude', [
   ['pflege','Gebäudepflege'], ['technik','Haustechnik'], ['wartung','Wartung','viewMaintenance'],
   ['raeume','Räume & QR-Codes'], ['inventar','Inventar & Lager'], ['ausleihe','Ausleihe','admin'],
@@ -21,6 +22,9 @@ const areaSections = {
  ]]
 };
 function sectionAllowed(right,user) {
+ if(right==='profile')return true;
+ if(right==='manageMembers')return user.role==='admin'||user.permissions?.manageMembers===true;
+ if(user.role==='member')return false;
  if(user.role==='admin')return true;
  if(right==='admin'||right==='planned')return false;
  if(right==='personal')return user.role!=='technician';

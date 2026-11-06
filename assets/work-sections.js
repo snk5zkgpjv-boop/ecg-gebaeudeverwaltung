@@ -2,6 +2,7 @@ function currentSection(){
  const query=new URLSearchParams(location.search);
  const id=query.get('bereich') || (query.has('room')?'raeume':query.has('asset')||query.has('location')?'inventar':null);
  for(const [parent,[name,items]] of Object.entries(areaSections)){
+  if(parent==='members')continue;
   const item=items.find(([key,,right])=>key===id && right!=='planned');
   if(item)return {parent,name,id,title:item[1],right:item[2]};
  }
@@ -45,7 +46,7 @@ function workSectionView(section){
   case 'kuechenordnung':return button('editKitchenContacts()','Kontakte, Bestand und Küchenordnung öffnen');
   case 'kuechengeraete':{
    const assets=(state.maintenanceAssets||[]).filter(m=>kitchenConfig()?.roomId && m.roomId===kitchenConfig().roomId);
-   return assets.map(m=>button('openMaintenance('+esc(JSON.stringify(m.id))+')',esc(m.name))).join('')||'<p>Keine Geräte zugeordnet.</p>';
+   return assets.length?'<div class="kitchen-devices">'+assets.map(m=>button('openMaintenance('+esc(JSON.stringify(m.id))+')',esc(m.name))) .join('')+'</div>':'<p>Keine Geräte zugeordnet.</p>';
   }
   case 'aussenanlage':{
    const id=new URLSearchParams(location.search).get('ort');
