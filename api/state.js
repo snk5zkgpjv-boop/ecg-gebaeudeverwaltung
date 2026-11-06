@@ -287,7 +287,7 @@ export default async function handler(req, res) {
       (!['admin','coordinator','technician','cleaner','backup','volunteer'].includes(profile.role) && profile.permissions?.manageRooms!==true))
       return res.status(403).json({error:'Kein Zugriff auf Außenanlagen'});
     if(req.headers['x-ecg-user-id']!==profile.id)return res.status(409).json({error:'Konto gewechselt'});
-    const areas=(row.areas||[]).map(a=>({name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
+    const areas=(row.areas||[]).map(a=>({id:a.id,name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
     return res.status(200).json({areas});
   }
   const auth = await requireUser(req, res, sql);

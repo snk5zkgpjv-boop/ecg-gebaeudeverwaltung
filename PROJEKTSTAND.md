@@ -2,6 +2,16 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Fachbereiche und Unterkacheln – 06.11.2026
+
+Die Portalübersichten für Gebäude, Verwaltung, Veranstaltungen, Küche und Finanzen öffnen per Hashnavigation innerhalb derselben Seite. Die Fachansichten öffnen gezielt die ausgewählte Funktion mit Rückwegen zur Bereichsübersicht und zum Portal. Gebäudepflege und Haustechnik unterscheiden Raumaufgaben anhand des gespeicherten Aufgabentyps; die konfigurierte Küche hat eine eigene Reinigungsansicht. Wartung nutzt die vorhandenen Anlagen und Fristen. Kalender und Benutzerverwaltung sind getrennte Einstiege unter Verwaltung. Veranstaltungen verwendet dieselben Termine für Planung und Abnahme. Finanzfunktionen sind als geplant gekennzeichnet.
+
+Die geschützte Außenanlagenabfrage liefert zusätzlich die bestehende Bereichs-ID für den gezielten Bearbeitungslink. Themen ohne zugeordneten Bestand bleiben als solche erkennbar. Bestehende Sitzung, Profilprüfung und Fehlerbehandlung bleiben Voraussetzung. Keine Datenmigration. Frühere Portalbeschreibungen weiter unten dokumentieren den vorherigen Stand.
+
+Geprüft vor Veröffentlichung: alle 20 bestehenden Tests sowie 19 Fachansichten im Browser mit synthetischen Daten bei 390 px, getrennte Reinigungs- und Technikaufgaben, Rückweg, Außenthemen und gesperrter Wartungsdirektlink für eine Putzkraft. Noch offen: persönliche Abnahme auf dem iPhone mit dem realen Konto.
+
+Ergänzende Prüfung: Unterkacheln verwenden dieselbe Darstellung mit Symbol, Pfeil und Puzzlekante wie die Hauptkacheln. Raum-, Inventar- und Lagerort-QR-Einstiege verwenden die zugehörige Fachansicht. Im mobilen Browsertest wurden Benutzeranlage bis zum Abbrechen, Kalender, Küchenreinigung und Küchendienste mit beiden Rückwegen sowie ein Raum-QR mit Beispieldaten geprüft. Alle 20 Testdateien erneut erfolgreich. Veröffentlichung ausstehend.
+
 ## Eigenständige Kachel Verwaltung – 06.11.2026
 
 Admin und berechtigte Konten erreichen Benutzer, Rollen und Zugänge über „Verwaltung“ im Portal. Der Direkteinstieg prüft das Verwaltungsrecht serverseitig. Die bestehende Kontobearbeitung wird wiederverwendet. Unter Gebäude → Mehr entfällt der doppelte Benutzerverwaltungseintrag.

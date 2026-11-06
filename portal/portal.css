@@ -7,3 +7,9 @@
 #outdoor-view{margin:24px 0}#areas-back{background:#86123e;color:white;padding:12px 20px;border:0;border-radius:9px;margin-bottom:20px}#areas-list details{background:white;border:1px solid #dad1d1;border-radius:12px;padding:14px;margin:10px 0}#areas-list summary{cursor:pointer;font-weight:700}#areas-list ul{padding-left:18px}.outdoor-mode .photo-hero,.outdoor-mode .tiles,.outdoor-mode .picture-links{display:none}
 
 .tiles [data-key=administration]{--bg:#534360;--ink:white}
+
+#section-view{margin:24px 0}.parent-link{display:inline-block;color:#86123e;font-weight:700;padding:10px 0}.section-mode .photo-hero,.section-mode #tiles,.section-mode .picture-links{display:none}.tiles [data-key=events]{--bg:#d6dfea}.tiles .tile{text-align:left}
+#areas-list.tiles details{margin:0;background:#d4e1d1;align-self:start}#areas-list.tiles summary{padding:8px 0}
+
+.outdoor-mode #areas-list.tiles{display:grid}
+#areas-list details.tile{display:block;min-height:100px;--bg:#d4e1d1;border:0}#areas-list details.tile summary{cursor:pointer}#areas-list details.tile p{font-size:.88rem}
