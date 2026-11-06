@@ -1,7 +1,7 @@
 import { organizationExport } from '../lib/organization-export.js';
 import { applyStateChanges } from '../lib/concurrent-state.js';
 import { neon } from '@neondatabase/serverless';
-import { requireUser } from '../lib/auth.js';
+import { publicUser, requireUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
 import { handleTimeChange } from '../lib/time-change.js';
 import { deleteIssue } from '../lib/issue-delete.js';
@@ -294,7 +294,11 @@ export default async function handler(req, res) {
       return res.status(200).send(Buffer.from(photo, 'base64'));
     }
     res.setHeader('Cache-Control', 'private, no-store');
-    if (req.method === 'GET') return res.status(200).json(visible(auth.state, auth.profile));
+    if (req.method === 'GET') {
+      const state = visible(auth.state, auth.profile);
+      if (req.query?.entry === '1') return res.status(200).json({user:publicUser(auth.user, auth.profile),state});
+      return res.status(200).json(state);
+    }
     if (req.method === 'PATCH') {
       if (req.body?.createIssue && Object.keys(req.body).length === 1) return await createIssue(sql, auth, req.body.createIssue, res);
       if (typeof req.body?.deleteIssueId === 'string' && Object.keys(req.body).length === 1) return await deleteIssue(sql, auth, req.body.deleteIssueId, res);
