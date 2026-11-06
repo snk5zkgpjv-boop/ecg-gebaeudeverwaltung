@@ -49,6 +49,18 @@ el('editor').onsubmit=async event=>{
 };
 el('new').onclick=()=>edit();el('search').oninput=list;el('cancel').onclick=list;
 el('import').onclick=()=>{el('importer').hidden=!el('importer').hidden;};
+const download=document.createElement('button');
+download.textContent='Als Excel exportieren';el('import').after(download);
+download.onclick=async()=>{
+ download.disabled=true;
+ try{
+  const r=await fetch('/api/state?members=list&download=xlsx',{cache:'no-store',headers:{'X-ECG-User-Id':user.appUserId}});
+  if(!r.ok)throw Error('Export fehlgeschlagen. Bitte Anmeldung und Berechtigung prüfen.');
+  const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');
+  a.href=url;a.download='ECG-Mitglieder.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  status('Excel-Datei zum Download bereitgestellt.');
+ }catch(e){status(e.message);}finally{download.disabled=false;}
+};
 const headings={name:'name',vorname:'first',nachname:'last',familienname:'last',geburtsdatum:'birthDate',geburtstag:'birthDate',straße:'street',strasse:'street',adresse:'street',plz:'postalCode',postleitzahl:'postalCode',ort:'city',wohnort:'city',email:'email',telefon:'phone',telefonnummer:'phone'};
 function date(value){
  if(value instanceof Date)return value.toISOString().slice(0,10);

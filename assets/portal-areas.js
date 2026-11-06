@@ -1,6 +1,6 @@
 // Shared by the portal and the authenticated work screen.
 const areaSections = {
- personnel: ['Personal',[['eigene','Meine Abwesenheiten','staff'],['team','Teamkalender','staff'],['freigaben','Freigaben & Vertretungen','approveStaff']]],
+ personnel: ['Personal',[['stamm','Personalverwaltung','admin'],['eigene','Meine Abwesenheiten','staff'],['team','Teamkalender','staff'],['freigaben','Freigaben & Vertretungen','approveStaff']]],
  members: ['Mitglieder',[['profil','Mein Profil','profile'],['mitgliederverwaltung','Mitgliederverwaltung','manageMembers']]],
  building: ['Gebäude', [
   ['pflege','Gebäudepflege'], ['technik','Haustechnik'], ['wartung','Wartung','viewMaintenance'],
