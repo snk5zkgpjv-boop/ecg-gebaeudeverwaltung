@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Eigenständige Kachel Verwaltung – 06.11.2026
+
+Admin und berechtigte Konten erreichen Benutzer, Rollen und Zugänge über „Verwaltung“ im Portal. Der Direkteinstieg prüft das Verwaltungsrecht serverseitig. Die bestehende Kontobearbeitung wird wiederverwendet. Unter Gebäude → Mehr entfällt der doppelte Benutzerverwaltungseintrag.
+
 ## Automatische Veranstaltungsbanner – 06.11.2026
 
 Die Gästeseite lädt öffentlich angekündigte Sondertermine über GET /api/calendar?publicProgram=1 von der ECG-Terminseite. Zehn Minuten CDN-Cache, automatischer Abruf beim Öffnen und regelmäßig bei geöffneter Seite. Bei einem Quellfehler bleibt der zuletzt geladene öffentliche Stand nutzbar; abgelaufene Ankündigungen entfallen nach Berliner Datum. Zwei ausdrücklich gewünschte Gemeindetermine ergänzen die öffentliche Quelle. Manuelle Navigation, Pause und reduzierte Bewegung werden unterstützt. Der interne Kalender wird nicht veröffentlicht. Banner sind auf maximal zwei Kalendermonate begrenzt. Jeder Thementag erhält ein eigenes Datum, regelmäßige Gemeindegottesdienste je einen kommenden Termin. Gruppentreffen gehören in den Gruppenbereich. Daten ohne Jahresangabe werden anhand von Monat, Tag und veröffentlichtem Wochentag zugeordnet. Layoutänderungen der Quellseite können eine Anpassung erfordern.

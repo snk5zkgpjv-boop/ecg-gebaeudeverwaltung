@@ -5,3 +5,5 @@
 .bar a:first-child{display:block;background:white;padding:9px 12px;border-radius:7px}
 
 #outdoor-view{margin:24px 0}#areas-back{background:#86123e;color:white;padding:12px 20px;border:0;border-radius:9px;margin-bottom:20px}#areas-list details{background:white;border:1px solid #dad1d1;border-radius:12px;padding:14px;margin:10px 0}#areas-list summary{cursor:pointer;font-weight:700}#areas-list ul{padding-left:18px}.outdoor-mode .photo-hero,.outdoor-mode .tiles,.outdoor-mode .picture-links{display:none}
+
+.tiles [data-key=administration]{--bg:#534360;--ink:white}

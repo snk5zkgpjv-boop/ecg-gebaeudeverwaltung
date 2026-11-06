@@ -1,5 +1,6 @@
 const preview=new URLSearchParams(location.search).get('entwurf')==='1';
 const panels=[
+ ['administration','Verwaltung','Benutzer & Rechte','M4 6h16M4 12h16M4 18h16M8 4v4M16 10v4M10 16v4','/?bereich=verwaltung'],
  ['building','Gebäude','Räume & Pflege','M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6','/?bereich=gebaeude'],
  ['members','Mitglieder','Mein Profil · geplant','M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21c0-8 16-8 16 0',null],
  ['finance','Finanzen','Auslagen · geplant','M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h6',null],
@@ -9,6 +10,7 @@ const panels=[
 ];
 function available(key,user){
  if(preview || user.role==='admin')return true;
+ if(key==='administration')return user.role!=='technician' && user.permissions?.manageUsers===true;
  if(['finance','members'].includes(key))return false;
  if(key==='groups')return true;
  if(key==='kitchen')return user.role!=='technician' && (user.permissions?.manageCalendar ?? user.role==='coordinator');
