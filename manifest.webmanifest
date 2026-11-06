@@ -3,7 +3,7 @@
   "name": "ECG Gebäudeverwaltung",
   "short_name": "ECG Gebäude",
   "lang": "de",
-  "start_url": "/",
+  "start_url": "/portal/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",

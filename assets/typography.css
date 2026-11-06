@@ -1,0 +1,20 @@
+/* Shared screen typography. Printed forms have their own page-specific styles. */
+:root {
+  --ecg-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ecg-meta: .875rem;
+  --ecg-body: 1rem;
+  --ecg-label: 1.125rem;
+  --ecg-section: 1.375rem;
+  --ecg-title: clamp(1.75rem, 1.375rem + 1.5vw, 2.5rem);
+}
+@media screen {
+  html, body { font-family: var(--ecg-font); }
+  body { font-size: var(--ecg-body); line-height: 1.5; }
+  h1, h2, h3, h4 { line-height: 1.2; font-weight: 700; }
+  h1 { font-size: var(--ecg-title); }
+  h2 { font-size: var(--ecg-section); }
+  h3, h4 { font-size: var(--ecg-label); }
+  small { font-size: var(--ecg-meta); }
+  button, input, textarea, select { font-family: inherit; }
+  input:not([type="checkbox"]):not([type="radio"]), textarea, select { font-size: var(--ecg-body); }
+}
