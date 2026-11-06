@@ -11,6 +11,8 @@ import { createIssue } from '../lib/issue-create.js';
 import { maintenanceDocuments } from '../lib/maintenance-documents.js';
 import { eventUsage } from '../lib/event-usage.js';
 import { runSheet } from '../lib/run-sheet.js';
+import { financePilot } from '../lib/finance-pilot.js';
+import { eventDuties } from '../lib/event-duties.js';
 
 const defaults = {
   coordinator: {
@@ -303,6 +305,7 @@ export default async function handler(req, res) {
     const areas=(row.areas||[]).map(a=>({id:a.id,name:a.name,type:a.type,tasks:(a.tasks||[]).map(t=>({title:t.title,done:t.status==='done'}))}));
     return res.status(200).json({areas});
   }
+  if(req.query?.duties==='1')return eventDuties(req,res,sql,has);
   if(['eigene','team','freigaben','stamm'].includes(req.query?.personnel))return personnel(req,res,sql);
   if(['self','list'].includes(req.query?.members))return members(req,res,sql);
   const auth = await requireUser(req, res, sql);
@@ -311,6 +314,7 @@ export default async function handler(req, res) {
   try {
     if (req.query?.eventUsage === '1') return await eventUsage(req, res, sql, auth, has);
     if (req.query?.runSheet === '1') return await runSheet(req, res, sql, auth, has);
+    if (req.query?.financePilot === '1') return await financePilot(req, res, sql, auth);
     if (req.query?.maintenanceDocuments === '1') return await maintenanceDocuments(req, res, sql, auth, has);
     if (req.method === 'GET' && req.query?.kitchenPhoto) {
       const name = String(req.query.kitchenPhoto);

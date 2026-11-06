@@ -5,7 +5,7 @@ const panels=[
  ['events','Veranstaltungen','Planung & Abnahmen','M4 5h16v16H4zM8 3v5M16 3v5M4 11h16','#events'],
  ['personnel','Personal','Abwesenheiten & Vertretungen','M4 5h16v15H4zM8 3v5M16 3v5M7 14l3 3 6-6','#personnel'],
  ['members','Mitglieder','Profil & Mitgliederverwaltung','M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21c0-8 16-8 16 0',null],
- ['finance','Finanzen','Auslagen · geplant','M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h6',null],
+ ['finance','Finanzen','Auslagen im Testbetrieb','M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h6',null],
  ['outdoor','Außenanlage','Gelände & Aufgaben','M12 21v-7M5 15l7-12 7 12z','#aussenanlage'],
  ['kitchen','Küche','Geräte & Dienste','M4 3v6c0 3 6 3 6 0V3M7 3v18M18 21V3c-4 3-5 8-1 10h1','/?bereich=kueche'],
 ];
@@ -109,6 +109,7 @@ function setupSections(user){
    labelTile(tile,key,title,planned?'Geplant':'');
    if(planned||preview)tile.onclick=()=>explain(title,planned?'Dieser Bereich ist geplant.':'Diese Funktion öffnet sich nach der Anmeldung.');
    else if(id==='wochenplan')tile.href='/wochenplan/';
+   else if(id==='auslagen'&&key==='finance')tile.href='/finanzen/';
    else if(key==='personnel')tile.href=id==='stamm'?'/personal/stamm.html':'/personal/?ansicht='+id;
    else tile.href=key==='members'?'/members/?ansicht='+id:'/?bereich='+id;
    grid.append(tile);
@@ -143,6 +144,7 @@ async function start(){
   const {user}=await response.json();
   if(!user || user.mustChangePassword){location.replace('/?einstieg=portal');return;}
   show(user);
+  import('../assets/duties.js').then(({personalDuties})=>personalDuties(user.appUserId)).catch(()=>{});
   const logout=document.querySelector('#logout');
   logout.hidden=false;
   logout.onclick=async()=>{try{const r=await fetch('/api/auth/logout',{method:'POST'});if(!r.ok)throw Error();location.replace('/willkommen/');}catch{alert('Abmeldung fehlgeschlagen. Bitte erneut versuchen.');}};

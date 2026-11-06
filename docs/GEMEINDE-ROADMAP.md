@@ -17,6 +17,12 @@ Ein Paket endet mit einem nachvollziehbaren Testweg. Statusfolge: geplant → in
 
 Querschnitt: Berichtswesen und Statistik jeweils beim zugehörigen Modul ergänzen. Änderungen an Zugriffsrechten, Empfängern, externen Anbindungen und Ausgaben werden gesondert geprüft. Keine produktiven Personen- oder Veranstaltungseinträge für Testzwecke verwenden.
 
+### Aktueller Lieferumfang
+
+- Paket 1: Ablaufplan pro Termin veröffentlicht (PR #50).
+- Pakete 2 und 3: Erste Dienstanfrage pro Veranstaltung und persönlicher Eingang für die Antwort. Tausch, Neuigkeiten, Benachrichtigungen und tageweise Urlaubsvertretung sind weitere Teilschritte.
+- Paket 9: Ein begrenzter Ablauf mit fest vorgegebenen Musterbelegen und eigenem ECG-Testjournal. Der fachliche und technische Anschluss an das RH-Labor steht aus.
+
 ### Paket 9: RH-Buchungslabor als möglicher Baustein
 
 Vor einer Neuentwicklung Belegeingang, Originalablage, Dublettenprüfung, Journal und Export aus dem Buchungslabor v0.10 mit synthetischen Vereinsfällen überprüfen. Das Labor ist ein Prototyp. ECG bekommt einen isolierten Mandanten mit eigenen Rollen, Daten und Buchungsregeln. Vereinsstatus, steuerliche Anerkennung, Kontenrahmen und Auswertungen anhand der Vereinsunterlagen und mit der Finanzverantwortung klären.

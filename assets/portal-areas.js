@@ -19,7 +19,7 @@ const areaSections = {
   ['kuechenordnung','Kontakte, Bestand & Regeln','manageCalendar'], ['kuechengeraete','Geräte & Anleitungen','kitchenMaintenance']
  ]],
  finance: ['Finanzen', [
-  ['auslagen','Auslage einreichen','planned'], ['kontodaten','Kontodaten','planned'], ['spenden','Spenden','planned']
+  ['auslagen','Auslagen testen','viewFinance'], ['kontodaten','Kontodaten','planned'], ['spenden','Spenden','planned']
  ]]
 };
 function sectionAllowed(right,user) {
