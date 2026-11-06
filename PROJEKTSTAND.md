@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Automatische Veranstaltungsbanner – 06.11.2026
+
+Die Gästeseite lädt öffentlich angekündigte Sondertermine über GET /api/public-program von der ECG-Terminseite. Zehn Minuten CDN-Cache, automatischer Abruf beim Öffnen und regelmäßig bei geöffneter Seite. Bei einem Quellfehler bleibt der zuletzt geladene öffentliche Stand nutzbar; abgelaufene Ankündigungen entfallen nach Berliner Datum. Zwei ausdrücklich gewünschte Gemeindetermine ergänzen die öffentliche Quelle. Manuelle Navigation, Pause und reduzierte Bewegung werden unterstützt. Der interne Kalender wird nicht veröffentlicht. Daten ohne Jahresangabe werden anhand von Monat, Tag und veröffentlichtem Wochentag zugeordnet. Layoutänderungen der Quellseite können eine Anpassung erfordern.
+
 ## Außenanlage im Portal – 06.11.2026
 
 Die Kachel öffnet eine eigene Ansicht im Portal. Bereichsnamen und Aufgaben werden gezielt über GET /api/state?section=outdoor mit Sitzung, Profil-, Rollen- und Eigentümerprüfung ausgeliefert. Rückkehr zu den Kacheln funktioniert ohne neue Serveranfrage, auch während des Ladens. Bearbeiten und Mängel melden bleiben in der bestehenden Fachansicht verfügbar. Sitzungsabrufe führen keine Schema-Erstellung mehr aus; Login und Einrichtung bleiben dafür zuständig.
