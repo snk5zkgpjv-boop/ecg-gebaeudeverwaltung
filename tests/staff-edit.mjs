@@ -9,7 +9,7 @@ async function patch({role='admin',body=data,outcome='success'}={}){
   if(q.includes('ecg_app_sessions'))return [{app_user_id:'user'}];
   if(q.includes('app_state'))return [{users:[{id:'user',role}]}];
   assert.match(q,/UPDATE ecg_staff.*WHERE id=\? AND xmin::text=\?/);
-  assert.deepEqual(params,['Beispiel','Dienst','Teilzeit',false,data.id,data.revision]);
+  assert.deepEqual(params,['Beispiel','Dienst','Teilzeit',false,false,null,null,null,data.id,data.revision]);
   written=true;
   if(outcome==='duplicate')throw Object.assign(Error(),{code:'23505'});
   return outcome==='stale'?[]:[{id:data.id}];

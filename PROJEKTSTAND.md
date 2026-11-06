@@ -2,6 +2,12 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Urlaubsvertretung und Übergabe – 06.11.2026
+
+Admin verknüpft Personal über die feste Benutzer-ID mit bestehenden Konten. Der Vertretungsbereich und eine Aufgabenvorlage sind am Personalstamm hinterlegt. Für Reinigung schlägt die App andere Reinigungskräfte und Hausmeister vor. Personal ohne Gebäude-Teamzugang kann vorgemerkt werden. Hausmeister erhalten Vorschläge aus ausdrücklich als Gebäudediakonie markierten Konten mit Gebäude-Teamrecht. Eine Anfrage oder Vormerkung ist keine Zusage. Für die Übergabe gibt es pro Antrag einen eigenen Aufgabentext. Er ist für Eigentümer, angefragte Vertretung und zuständige Freigeber sichtbar. Änderungen des Falltextes prüfen die Version. Der allgemeine Teamkalender und Google-Export enthalten keine Aufgabentexte.
+
+Erweiterung der privaten Datenbank angewandt. Zuordnungen und Einzelfallinhalte stehen ausschließlich in der Datenbank. Getestet mit synthetischen Kandidaten, fehlendem Zugang, Selbstausschluss und Teamtrennung. Besetzung der Gebäudediakonie bleibt bei der Administration.
+
 ## Personalstamm und Mitgliederexport – 06.11.2026
 
 Live mit PR #46 (a11d042). Produktionsprüfung: Beide Oberflächen erreichbar, beide Datenabrufe ohne Anmeldung mit HTTP 401 gesperrt.

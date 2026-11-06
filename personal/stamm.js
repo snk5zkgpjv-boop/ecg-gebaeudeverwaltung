@@ -8,7 +8,8 @@ async function api(body){
  return result;
 }
 async function refresh(){
- const {staff}=await api();
+ const {staff,accounts}=await api();
+ el('editor').elements.account_id.replaceChildren(new Option('Ohne Konto',''),...accounts.map(a=>new Option(a.name,a.id)));
  const entries=el('entries');entries.replaceChildren();
  for(const row of staff){
   const article=document.createElement('article'),name=document.createElement('h3'),details=document.createElement('p');
@@ -21,11 +22,12 @@ async function refresh(){
 }
 function openEditor(row=null){
  if(saving)return;
- editing=row;
+ editing=row;el('coverage-settings').hidden=!row;
  const form=el('editor');form.reset();
  if(row){
   for(const key of ['name','duty','employment'])form.elements[key].value=row[key];
   form.elements.hourly.checked=row.hourly;
+  for(const key of ['account_id','cover_group','handover'])form.elements[key].value=row[key]||'';
  }
  el('edit-title').textContent=row?'Personal bearbeiten':'Personal anlegen';
  form.hidden=false;form.elements.name.focus();form.scrollIntoView({block:'center'});
