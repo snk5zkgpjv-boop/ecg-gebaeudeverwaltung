@@ -409,20 +409,22 @@ async function leaveForPortal(event){
  if(state.settings.cloudSync && cloudBase && !await syncCloud())return;
  location.assign('/portal/');
 }
-function header(){const u=currentUser();return `<header class="topbar"><div class="brand"><div class="brandmark"><img src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"></div><div><a href="/portal/" class="portal-back" onclick="leaveForPortal(event)">← Meine Bereiche</a><h1>Gebäudeverwaltung</h1></div></div><div class="top-actions"><span class="sync">${state.settings.cloudSync?'Cloud aktiv':'Lokal gespeichert'}</span><button class="user-badge" onclick="accountDialog()"><span>👤</span><span><b>${esc(u?.name||'Nicht angemeldet')}</b><span class="email">${u?.email?` · ${esc(u.email)}`:''}</span><br><span class="meta">${esc(roleLabels[u?.role]||'')}</span></span></button></div></header>`}
+function header(){const u=currentUser();return `<header class="topbar"><div class="brand"><div class="brandmark"><img src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"></div><div><a href="/portal/" class="portal-back" onclick="leaveForPortal(event)">← Meine Bereiche</a><h1>${new URLSearchParams(location.search).get('bereich')==='verwaltung'?'Verwaltung':'Gebäudeverwaltung'}</h1></div></div><div class="top-actions"><span class="sync">${state.settings.cloudSync?'Cloud aktiv':'Lokal gespeichert'}</span><button class="user-badge" onclick="accountDialog()"><span>👤</span><span><b>${esc(u?.name||'Nicht angemeldet')}</b><span class="email">${u?.email?` · ${esc(u.email)}`:''}</span><br><span class="meta">${esc(roleLabels[u?.role]||'')}</span></span></button></div></header>`}
 function render({calendarToday=false}={}){
  if(!authSession)return;
  const previousToday=$('#calendarToday');
  const calendarOffset=previousToday?.getBoundingClientRect().top;
  if(['calendar','kitchen'].includes(state.activeTab)&&!can('manageCalendar'))state.activeTab='settings';
- let body=state.activeTab==='dashboard'?dashboard():
+ const adminArea=state.activeTab==='administration';
+ if(adminArea && !can('manageUsers')){location.replace('/portal/');return;}
+ let body=adminArea?userManagementView():state.activeTab==='dashboard'?dashboard():
           state.activeTab==='building'?buildingView():
           state.activeTab==='inventory'?inventoryView():
           state.activeTab==='issues'?issuesView():
           state.activeTab==='calendar'?calendarView():
           state.activeTab==='kitchen'?kitchenView():
           settingsView();
- $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${body}</main>${nav()}</div>`;
+ $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${body}</main>${adminArea?'':nav()}</div>`;
  if(state.activeTab==='calendar'){
   const marker=$('#calendarToday');
   if(marker){const target=calendarToday||calendarOffset===undefined?($('.topbar')?.getBoundingClientRect().height||0)+12:calendarOffset;window.scrollBy(0,marker.getBoundingClientRect().top-target);}
@@ -587,6 +589,7 @@ function openPortalHome(user){
 function openFromQuery(){const p=new URLSearchParams(location.search);
  if(openPortalHome(authSession?.user))return;
  const area=p.get('bereich');
+ if(area==='verwaltung'){if(!can('manageUsers')){location.replace('/portal/');return;}state.activeTab='administration';render();return;}
  if(area==='kueche' && can('manageCalendar')){go('kitchen');return}
  if(['gebaeude','aussenanlage'].includes(area)){state.activeTab='building';state.buildingSubTab=area==='gebaeude'?'rooms':'outdoor';render();return}
  const q=p.get('room'),asset=p.get('asset'),locId=p.get('location');if(q){const r=state.rooms.find(r=>r.qrId===q);if(r){state.activeTab='building';state.buildingSubTab='rooms';setTimeout(()=>openRoom(r.id),150)}}if(asset){const a=state.inventory?.find(a=>a.assetId===asset);if(a){state.activeTab='inventory';state.inventorySubTab='assets';setTimeout(()=>openAsset(a.id),150)}}if(locId){const l=state.storageLocations?.find(l=>l.id===locId);if(l){state.activeTab='inventory';state.inventorySubTab='locations';setTimeout(()=>openLocation(l.id),150)}}}
@@ -1011,18 +1014,17 @@ window.completeMaintenance=id=>{const m=state.maintenanceAssets.find(x=>x.id===i
 window.saveMaintenanceCompletion=id=>{const m=state.maintenanceAssets.find(x=>x.id===id);if(!m)return;const date=$('#mcDate').value||new Date().toISOString().slice(0,10),by=$('#mcBy').value.trim(),type=$('#mcType').value.trim()||'Wartung / Prüfung',note=$('#mcNote').value.trim();m.history=m.history||[];m.history.unshift({id:uid('mh'),date,by,type,note,userId:state.currentUserId||''});m.lastService=date;if(m.intervalMonths)m.nextService=addMonthsISO(date,m.intervalMonths);save();closeModal();render();openMaintenance(id)};
 
 function settingsView(){
-  const admin=state.currentRole==='admin',tech=can('viewMaintenance'),calendar=can('manageCalendar'),userAdmin=can('manageUsers'),activeUsers=(state.users||[]).filter(u=>u.active!==false).length;
+  const admin=state.currentRole==='admin',tech=can('viewMaintenance'),calendar=can('manageCalendar');
   return `<div class="card" style="margin-bottom:14px"><h2>Aufgaben als Checklisten</h2><p class="meta">Alle Raumaufgaben, auch bereits erledigte, mit leeren Kästchen zum Abhaken. Nach Geschoss und Raum sortiert, jeder Raum auf einer neuen Seite.</p><button class="btn primary" onclick="exportRoomChecklist()">Alle Raumaufgaben als PDF / Drucken</button></div>${admin?`<div class="section-title"><h2>Verwaltung</h2></div>
   <div class="quick-admin">
     <div class="card" onclick="showMaintenance()"><div class="row"><div><b>🔧 Wartung & Prüfungen</b><div class="meta">Technische Anlagen, Termine und Wartungshistorie</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
     <div class="card" onclick="showLoans()"><div class="row"><div><b>📦 Ausleihe</b><div class="meta">Ausleihbares Inventar, Kautionen und Rückgaben</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
     <div class="card" onclick="showEventDocumentSettings()"><div class="row"><div><b>📄 Veranstaltungsvereinbarungen</b><div class="meta">Gebühren, Kaution, Konto, Kontakte und Hausregeln</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
-    <div class="card" onclick="showUserManagement()"><div class="row"><div><b>👥 Benutzerverwaltung</b><div class="meta">${activeUsers} aktive Benutzer · Rollen & Zugänge verwalten</div></div><div class="spacer"></div><span class="pill ok">Öffnen</span></div></div>
     <div class="card" onclick="go('calendar')"><div class="row"><div><b>📅 Kalender & Veranstaltungen</b><div class="meta">Termine und automatische Folgeaufgaben</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
     <div class="card" onclick="showTimeReport()"><div class="row"><div><b>⏱ Zeiterfassung</b><div class="meta">Eigene und freigegebene Arbeitszeiten ansehen</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>
     <div class="card" onclick="showSystemStatus()"><div class="row"><div><b>✓ Systemstatus</b><div class="meta">Datenbank, KI, E-Mail, Kalender und Organisationsschnittstelle prüfen</div></div><div class="spacer"></div><span class="pill">Prüfen</span></div></div>
   </div>`:''}
-  ${!admin?`${tech||calendar||userAdmin?`<div class="section-title"><h2>Freigegebene Bereiche</h2></div><div class="quick-admin">${tech?`<div class="card" onclick="showMaintenance()"><b>🔧 Wartung & Prüfungen</b><div class="meta">Anlagen ansehen${can('manageMaintenance')?' und bearbeiten':''}</div></div>`:''}${calendar?`<div class="card" onclick="go('calendar')"><b>📅 Kalender & Veranstaltungen</b><div class="meta">Termine, Folgeaufgaben und Abnahmelisten</div></div>`:''}${userAdmin?`<div class="card" onclick="showUserManagement()"><b>👥 Benutzerverwaltung</b><div class="meta">Benutzer, Rollen und Rechte verwalten</div></div>`:''}</div>`:''}${state.currentRole!=='technician'?`<div class="section-title"><h2>Arbeitszeit</h2></div><div class="card" onclick="showTimeReport()"><div class="row"><div><b>⏱ Zeiterfassung</b><div class="meta">Eigene Zeiten, Freigabe und Zeiten anderer Benutzer</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>`:''}<div class="section-title"><h2>Mein Benutzerkonto</h2></div><div class="card">${userSummaryCard(currentUser())}</div>`:''}
+  ${!admin?`${tech||calendar?`<div class="section-title"><h2>Freigegebene Bereiche</h2></div><div class="quick-admin">${tech?`<div class="card" onclick="showMaintenance()"><b>🔧 Wartung & Prüfungen</b><div class="meta">Anlagen ansehen${can('manageMaintenance')?' und bearbeiten':''}</div></div>`:''}${calendar?`<div class="card" onclick="go('calendar')"><b>📅 Kalender & Veranstaltungen</b><div class="meta">Termine, Folgeaufgaben und Abnahmelisten</div></div>`:''}</div>`:''}${state.currentRole!=='technician'?`<div class="section-title"><h2>Arbeitszeit</h2></div><div class="card" onclick="showTimeReport()"><div class="row"><div><b>⏱ Zeiterfassung</b><div class="meta">Eigene Zeiten, Freigabe und Zeiten anderer Benutzer</div></div><div class="spacer"></div><span class="pill">Öffnen</span></div></div>`:''}<div class="section-title"><h2>Mein Benutzerkonto</h2></div><div class="card">${userSummaryCard(currentUser())}</div>`:''}
   <div class="section-title"><h2>Infomaterial & Grundrisse</h2></div>
   <div class="floorplan-grid">${Object.entries(floorPlans).map(([name,src])=>`<div class="card floorplan-card"><div class="row"><b>${esc(name)}</b><div class="spacer"></div><button class="btn tiny" onclick="showFloorPlan('${name}')">Groß öffnen</button></div><img src="${src}" alt="Grundriss ${esc(name)}" style="margin-top:10px"></div>`).join('')}</div>
   <div class="section-title"><h2>Cloud & Daten</h2></div><div class="card"><div class="task"><div></div><div><div class="task-title">Cloud-Synchronisierung</div><small>Für gemeinsame Nutzung mit mehreren Geräten.</small></div><input type="checkbox" ${state.settings.cloudSync?'checked':''} onchange="toggleCloud(this.checked)"></div><div class="row wrap" style="margin-top:12px"><button class="btn" onclick="exportData()">JSON-Backup exportieren</button><button class="btn" onclick="importData()">Backup importieren</button><button class="btn danger" onclick="resetDemo()">Auf Ausgangsdaten zurücksetzen</button></div></div>`
@@ -1034,8 +1036,12 @@ function userSummaryCard(u){
 window.showSystemStatus=async()=>{if(state.currentRole!=='admin')return;modal('<h2>Systemstatus</h2><div id="systemStatus" class="notice">Funktionen werden geprüft …</div>');try{const r=await fetch('/api/status'),b=await r.json();if(!r.ok)throw new Error(b.error||'Status konnte nicht geladen werden.');const labels={database:'Datenbank & Cloudspeicher',passwordLogin:'E-Mail-/Kennwortanmeldung',ai:'KI-Bilderkennung',passwordResetEmail:'Kennwort-Zurücksetzung per E-Mail',calendar:'Google-Kalendersynchronisierung',organizationSync:'Übertragung zur Organisationszentrale'};$('#systemStatus').outerHTML=`<div class="card" style="box-shadow:none">${Object.entries(labels).map(([key,label])=>`<div class="user-row"><b>${esc(label)}</b><span class="pill ${b[key]?'ok':'warn'}">${b[key]?'bereit':'Einrichtung offen'}</span></div>`).join('')}</div>`}catch(e){$('#systemStatus').textContent=e.message||'Status konnte nicht geladen werden.'}};
 window.showUserManagement=()=>{
  if(!can('manageUsers')){alert('Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.');return}
+ if(new URLSearchParams(location.search).get('bereich')==='verwaltung'){render();return}
+ modal(userManagementView());
+};
+function userManagementView(){
  const users=state.users||[];
- modal(`<div class="row"><div><h2>Benutzerverwaltung</h2><div class="meta">Benutzer, Rollen und Zugänge verwalten</div></div><div class="spacer"></div><button class="btn primary" onclick="closeModal();editUser()">+ Benutzer</button></div>
+ return `<div class="row"><div><h2>Benutzerverwaltung</h2><div class="meta">Benutzer, Rollen und Zugänge verwalten</div></div><div class="spacer"></div><button class="btn primary" onclick="closeModal();editUser()">+ Benutzer</button></div>
  <div class="notice" style="margin:12px 0">Rollen bestimmen, welche Bereiche bearbeitet werden dürfen. Benutzer können deaktiviert werden, ohne ihre bisherigen Zeiterfassungen oder Zuordnungen zu verlieren.</div>
  <div class="user-admin-grid">${users.map(u=>`<div class="user-admin-card ${u.active===false?'inactive':''}">
    <div class="row"><div><b>${esc(u.name)}</b><div class="meta">${esc(u.email||'keine E-Mail hinterlegt')}</div></div><div class="spacer"></div><span class="pill ${u.active===false?'warn':'ok'}">${u.active===false?'inaktiv':'aktiv'}</span></div>
@@ -1054,8 +1060,8 @@ window.showUserManagement=()=>{
    <div class="user-row"><div><b>Ehrenamtlich</b><div class="meta">Für freiwillige Helfer mit einfachem Zugriff auf zugewiesene Aufgaben und Meldungen.</div></div></div><div class="user-row"><div><b>Technik</b><div class="meta">Technische Anlagen und Wartungen ansehen, Wartungen/Prüfungen eintragen und technische Mängel dokumentieren.</div></div></div>
  </div>
  <div class="notice" style="margin-top:12px">Benutzer melden sich mit ihrer eigenen E-Mail-Adresse und ihrem Kennwort an. Beim ersten Login muss ein vorläufiges Kennwort geändert werden.</div>
- <div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)
-};
+ ${new URLSearchParams(location.search).get('bereich')==='verwaltung'?'':'<button class="btn" onclick="closeModal()">Schließen</button>'}`
+}
 window.showFloorPlan=name=>modal(`<h2>Grundriss – ${esc(name)}</h2><img src="${floorPlans[name]}" style="width:100%;max-height:72vh;object-fit:contain;border:1px solid var(--line);border-radius:12px"><div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Schließen</button></div>`);
 function bindAuthUser(){
  const au=authSession?.user;
@@ -1228,9 +1234,10 @@ async function bootAuth(){
  const query=new URLSearchParams(location.search);
  if(query.get('reset'))return showResetGate();
  const area=query.get('bereich');
- const direct=['gebaeude','aussenanlage','kueche'].includes(area);
+ const direct=['gebaeude','aussenanlage','kueche','verwaltung'].includes(area);
  try{
-  const response=await fetch(direct?'/api/state?entry=1':'/api/auth/session',{cache:'no-store'});
+  const response=await fetch(direct?(area==='verwaltung'?'/api/state?entry=1&section=administration':'/api/state?entry=1'):'/api/auth/session',{cache:'no-store'});
+  if(response.status===403 && area==='verwaltung'){location.replace('/portal/');return;}
   if(!response.ok)return showLoginGate();
   const entry=await response.json();
   authSession={user:entry.user};
@@ -1238,7 +1245,7 @@ async function bootAuth(){
   bindAuthUser(); state.settings.cloudSync=true;
   if(direct){
    if(!entry.state?.version)return showLoginGate('Gebäudedaten konnten nicht geladen werden.');
-   state.activeTab=area==='kueche' && can('manageCalendar')?'kitchen':'building';
+   state.activeTab=area==='verwaltung'?'administration':area==='kueche' && can('manageCalendar')?'kitchen':'building';
    state.buildingSubTab=area==='aussenanlage'?'outdoor':'rooms';
    acceptCloudState(entry.state,authSession,timeChangeEpoch,issueChangeEpoch);
   }else{
@@ -1247,7 +1254,7 @@ async function bootAuth(){
   }
   if(state.timeRunning)startTimerTick();
   if(entry.user.mustChangePassword)setTimeout(()=>changePasswordDialog(true),100);
-  void maybeSyncGoogleCalendar();
+  if(area!=='verwaltung')void maybeSyncGoogleCalendar();
  }catch{showLoginGate('Anmeldung konnte nicht geprüft werden.')}
 }
 </script>

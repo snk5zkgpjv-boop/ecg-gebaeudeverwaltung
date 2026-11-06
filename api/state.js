@@ -308,6 +308,7 @@ export default async function handler(req, res) {
     }
     res.setHeader('Cache-Control', 'private, no-store');
     if (req.method === 'GET') {
+      if(req.query?.section==='administration' && !has(auth.profile,'manageUsers'))return res.status(403).json({error:'Kein Zugriff auf die Verwaltung'});
       const state = visible(auth.state, auth.profile);
       if (req.query?.entry === '1') return res.status(200).json({user:publicUser(auth.user, auth.profile),state});
       return res.status(200).json(state);
