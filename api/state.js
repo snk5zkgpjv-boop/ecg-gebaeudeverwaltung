@@ -1,4 +1,5 @@
 import { organizationExport } from '../lib/organization-export.js';
+import { applyStateChanges } from '../lib/concurrent-state.js';
 import { neon } from '@neondatabase/serverless';
 import { requireUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
@@ -348,7 +349,17 @@ export default async function handler(req, res) {
       if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
         return res.status(400).json({ error: 'Ungültige Daten' });
       }
-      const next = accepted(auth.state, req.body, auth.profile);
+      if (req.body.protocol !== 1 || !req.body.changes || typeof req.body.changes !== 'object' || Array.isArray(req.body.changes)) {
+        return res.status(428).json({error:'Bitte die App neu laden, bevor du speicherst.'});
+      }
+      let incoming;
+      try {
+        incoming = applyStateChanges(visible(auth.state, auth.profile), req.body.changes);
+      } catch (error) {
+        return res.status(409).json({error:error.message, conflict:true});
+      }
+      incoming.timeEntriesReadOnly = true;
+      const next = accepted(auth.state, incoming, auth.profile);
       next.deletedIssues = auth.state.deletedIssues || {};
       next.issues = (next.issues || []).filter(issue => !Object.hasOwn(next.deletedIssues, issue.id));
       next.issuePlanning = auth.state.issuePlanning || {};
@@ -357,7 +368,7 @@ export default async function handler(req, res) {
       const previousIssues = JSON.stringify(auth.state.issues || []);
       const previousRooms = JSON.stringify(auth.state.rooms || []);
       const previousChecklists = JSON.stringify(auth.state.eventChecklists || []);
-      const rows = await sql`UPDATE app_state SET data=jsonb_set(jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),'{eventUsageAgreements}',COALESCE(data->'eventUsageAgreements','[]'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb AND COALESCE(data->'issues','[]'::jsonb)=${previousIssues}::jsonb AND COALESCE(data->'rooms','[]'::jsonb)=${previousRooms}::jsonb AND COALESCE(data->'eventChecklists','[]'::jsonb)=${previousChecklists}::jsonb RETURNING revision,updated_at`;
+      const rows = await sql`UPDATE app_state SET data=jsonb_set(jsonb_set(${payload}::jsonb,'{timeSharing}',COALESCE(data->'timeSharing','{}'::jsonb)),'{eventUsageAgreements}',COALESCE(data->'eventUsageAgreements','[]'::jsonb)),revision=revision+1,updated_at=now() WHERE id='main' AND data=${JSON.stringify(auth.state)}::jsonb AND COALESCE(data->'timeEntries','[]'::jsonb)=${previousTimes}::jsonb AND COALESCE(data->'issues','[]'::jsonb)=${previousIssues}::jsonb AND COALESCE(data->'rooms','[]'::jsonb)=${previousRooms}::jsonb AND COALESCE(data->'eventChecklists','[]'::jsonb)=${previousChecklists}::jsonb RETURNING revision,updated_at`;
       if(!rows.length)return res.status(409).json({error:'Daten wurden gleichzeitig geändert. Bitte erneut speichern.'});
       const sync = await syncOrganizationTimes(next);
       return res.status(200).json({ ok: true, ...rows[0], sync });
