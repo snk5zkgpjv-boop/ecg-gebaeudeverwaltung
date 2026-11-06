@@ -16,7 +16,11 @@ async function refresh(){
   name.textContent=row.name;details.textContent=[row.duty,row.employment==='Offen'?'Beschäftigungsart offen':row.employment,row.hourly?'Abrechnung nach Stunden':''].filter(Boolean).join(' · ');
   const edit=document.createElement('button');edit.textContent='Bearbeiten';edit.setAttribute('aria-label',row.name+' bearbeiten');
   edit.onclick=()=>openEditor(row);
-  article.append(name,details,edit);entries.append(article);
+  const identity=document.createElement('div'),account=document.createElement('p');
+  account.className='account-state';
+  const linked=accounts.find(a=>a.id===row.account_id);
+  account.textContent=linked?'Benutzerkonto: '+linked.name:row.account_id?'Konto zugeordnet (inaktiv)':'Kein Benutzerkonto verknüpft';
+  identity.append(name,details);article.append(identity,account,edit);entries.append(article);
  }
  el('registry').hidden=false;el('status').textContent=staff.length+' Beschäftigte';
 }

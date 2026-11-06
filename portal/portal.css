@@ -13,3 +13,17 @@
 
 .outdoor-mode #areas-list.tiles{display:grid}
 #areas-list details.tile{display:block;min-height:100px;--bg:#d4e1d1;border:0}#areas-list details.tile summary{cursor:pointer}#areas-list details.tile p{font-size:var(--ecg-meta)}
+
+/* Keep the puzzle tabs outside the text column. All tiles grow with their labels. */
+.tiles .tile{
+  justify-content:flex-start;
+  gap:1.25rem;
+  padding:1.15rem clamp(1rem,2vw,1.5rem) 1.25rem;
+  overflow-wrap:anywhere;
+  hyphens:auto;
+}
+.tile > span:not(.arrow){display:grid;gap:.35rem;inline-size:100%;min-inline-size:0}
+.tile b,.tile small{display:block;line-height:1.35}
+.tile svg{flex:none}
+.tiles [data-key=personnel]{--bg:#e6dfe8}
+@media(max-width:359px){.tiles{grid-template-columns:1fr}}

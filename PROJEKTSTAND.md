@@ -2,6 +2,10 @@
 
 Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Kachelbeschriftung und Personalansicht – 06.11.2026
+
+Portal- und Bereichskacheln haben eine eigene Textspalte mit Innenabstand und Umbruch für lange Namen. Personalstamm mit einheitlicher Navigation, Personenkarten, sichtbarer Kontozuordnung und gruppiertem Formular. Chromium-Prüfung mit synthetischen Personalangaben bei 320, 390, 768 und 1280 Pixeln: Textgrenzen auf der Bereichsauswahl und in sieben Unterbereichen geprüft; Bearbeitung geöffnet und Seitenbreite kontrolliert.
+
 ## Urlaubsvertretung und Übergabe – 06.11.2026
 
 Admin verknüpft Personal über die feste Benutzer-ID mit bestehenden Konten. Der Vertretungsbereich und eine Aufgabenvorlage sind am Personalstamm hinterlegt. Für Reinigung schlägt die App andere Reinigungskräfte und Hausmeister vor. Personal ohne Gebäude-Teamzugang kann vorgemerkt werden. Hausmeister erhalten Vorschläge aus ausdrücklich als Gebäudediakonie markierten Konten mit Gebäude-Teamrecht. Eine Anfrage oder Vormerkung ist keine Zusage. Für die Übergabe gibt es pro Antrag einen eigenen Aufgabentext. Er ist für Eigentümer, angefragte Vertretung und zuständige Freigeber sichtbar. Änderungen des Falltextes prüfen die Version. Der allgemeine Teamkalender und Google-Export enthalten keine Aufgabentexte.

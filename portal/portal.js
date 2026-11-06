@@ -76,6 +76,10 @@ function setupOutdoor(user){
  document.querySelector('#areas-back').onclick=()=>{history.replaceState(null,'',location.pathname+location.search);route();document.querySelector('[data-key=outdoor]')?.focus();};
  window.addEventListener('hashchange',route);route();
 }
+function tileText(title){
+ const compounds={Personalverwaltung:'Personal­verwaltung',Mitgliederverwaltung:'Mitglieder­verwaltung',Vereinbarungsvorlagen:'Vereinbarungs­vorlagen',Gebäudepflege:'Gebäude­pflege',Gebäudemängel:'Gebäude­mängel',Datensicherung:'Daten­sicherung',Zeiterfassung:'Zeit­erfassung',Abwesenheiten:'Abwesen­heiten',Veranstaltungen:'Veranstal­tungen'};
+ return title.replace(/[\p{L}]+/gu,word=>compounds[word]||word);
+}
 function labelTile(tile,key,title,description=''){
  const panel=panels.find(([id])=>id===key);
  const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -85,7 +89,7 @@ function labelTile(tile,key,title,description=''){
  const arrow=document.createElement('span');arrow.className='arrow';
  arrow.setAttribute('aria-hidden','true');arrow.textContent=tile.tagName==='A'?'↗':'·';
  const caption=document.createElement('span'),label=document.createElement('b');
- label.textContent=title;caption.append(label);
+ label.textContent=tileText(title);caption.append(label);
  if(description){const note=document.createElement('small');note.textContent=description;caption.append(note);}
  tile.append(icon,arrow,caption);
 }

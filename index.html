@@ -148,6 +148,9 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 .modal-close:active{background:var(--accent2);color:var(--accent)}
 .portal-back{display:inline-flex;align-items:center;min-height:36px;font-weight:700;font-size:var(--ecg-meta);text-decoration:none;color:#86123e}
 .kitchen-devices{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}.kitchen-devices>.btn{min-height:52px;text-align:left;padding:12px 16px}
+@media screen{
+ .stats>.stat,.inventory-grid>.card,.maintenance-grid>.card,.loan-grid>.card,.quick-admin>*,.kitchen-devices>.btn{min-width:0;overflow-wrap:anywhere;hyphens:auto}
+}
 </style>
 <link rel="stylesheet" href="/assets/typography.css"></head>
 <body>
