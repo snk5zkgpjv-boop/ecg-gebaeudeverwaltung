@@ -8,6 +8,8 @@ Veranstaltungen → Wochenplan als PDF öffnet die Kalenderauswahl für acht Tag
 
 Prüfung: bestehende 22 Testdateien und mit Beispieldaten erzeugter einseitiger Export visuell geprüft. Die zeitweilige Urlaubsvorschau im Gebäudeteam ist ein bestätigter Einzelvorgang aus dem bisherigen Hausmeisterkalender; keine Gesamtsynchronisierung mit diesem Kalender.
 
+Veröffentlicht mit PR #44 (6896b74). Der produktive Wochenplan-Code entspricht dem geprüften Stand; der PDF-Endpunkt verweigert anonyme Abrufe mit HTTP 401.
+
 ## Personal und Abwesenheitsplanung – 06.11.2026
 
 Personal enthält Meine Abwesenheiten, Teamkalender und Freigaben & Vertretungen. Für Pastoren/Älteste und Hausmeister/Reinigung bestehen je ein Teamrecht und ein eigenes Freigaberecht, zu vergeben durch Admins in Verwaltung → Benutzer & Rechte. Admins sehen beide Teams. Es gibt keine automatische Übernahme von Personalnamen oder Vertragsdaten.
