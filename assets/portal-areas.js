@@ -12,7 +12,7 @@ const areaSections = {
   ['arbeitszeit','Zeiterfassung','personal'], ['system','Systemstatus','admin'], ['daten','Datensicherung','admin']
  ]],
  events: ['Veranstaltungen', [
-  ['termine','Terminplanung & Abnahmen','manageCalendar'], ['vereinbarungen','Vereinbarungsvorlagen','admin']
+  ['wochenplan','Wochenplan als PDF','manageCalendar'], ['termine','Terminplanung & Abnahmen','manageCalendar'], ['vereinbarungen','Vereinbarungsvorlagen','admin']
  ]],
  kitchen: ['Küche', [
   ['kuechenpflege','Reinigung','manageCalendar'], ['kuechendienst','Küchendienste','manageCalendar'],

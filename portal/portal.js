@@ -104,6 +104,7 @@ function setupSections(user){
    tile.className='tile';tile.dataset.key=key;
    labelTile(tile,key,title,planned?'Geplant':'');
    if(planned||preview)tile.onclick=()=>explain(title,planned?'Dieser Bereich ist geplant.':'Diese Funktion öffnet sich nach der Anmeldung.');
+   else if(id==='wochenplan')tile.href='/wochenplan/';
    else if(key==='personnel')tile.href='/personal/?ansicht='+id;
    else tile.href=key==='members'?'/members/?ansicht='+id:'/?bereich='+id;
    grid.append(tile);
