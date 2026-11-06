@@ -6,7 +6,7 @@ Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, K
 
 Live mit PR #46 (a11d042). Produktionsprüfung: Beide Oberflächen erreichbar, beide Datenabrufe ohne Anmeldung mit HTTP 401 gesperrt.
 
-Die Personalverwaltung speichert Beschäftigte unabhängig von Login und Abwesenheitskalender. Nur Administratoren können die Liste abrufen und Personen anlegen. Beschäftigungsart und Abrechnung nach Stunden sind getrennte Angaben. Die neue Tabelle wurde in der produktiven ECG-Datenbank eingerichtet. Private Stammdaten stehen ausschließlich in der Datenbank.
+Die Personalverwaltung speichert Beschäftigte unabhängig von Login und Abwesenheitskalender. Administratoren können Personen anlegen und über „Bearbeiten“ sämtliche fachlichen Stammdaten ändern. Der PATCH-Aufruf identifiziert den Datensatz über seine feste ID und prüft seine gelesene Revision. Konflikte und doppelte Namen werden beim Speichern angezeigt. Prüfung mit synthetischen Daten für erfolgreiche Änderung, konkurrierende Änderung, Namenskonflikt, ungültige ID und gesperrte Rolle. Private Stammdaten stehen ausschließlich in der Datenbank.
 
 Die Mitgliederverwaltung exportiert die sieben importierbaren Profilfelder aller Mitglieder als XLSX. Beim Download prüft der Server die aktuelle Sitzung, Kontozuordnung und Verwaltungsberechtigung erneut. Test mit einer Excel-Lesebibliothek: Textwerte, führende Null, Telefonnummer und formelähnlicher Name bleiben erhalten. 23 Testdateien erfolgreich.
 
