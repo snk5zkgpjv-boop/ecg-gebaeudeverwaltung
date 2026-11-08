@@ -1,6 +1,16 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 06.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 08.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Qualitätsprüfung: Kennwortschutz – 08.11.2026
+
+Implementiert im Feature-Branch, noch nicht veröffentlicht: Die gemeinsame API-Zugriffskontrolle verweigert Fachzugriffe bis zum Wechsel eines vorläufigen Kennworts. Anmeldung, Sitzungsprüfung und eigener Kennwortwechsel bleiben erreichbar. Auch bei direkten Bereichslinks führt die Oberfläche vor dem Laden von Fachdaten zum Kennwortwechsel; Abmelden bleibt möglich.
+
+Ein neues vorläufiges Kennwort widerruft bestehende Sitzungen im selben SQL-Befehl. Ein Rücksetzlink wird atomar beansprucht; Kennwortwechsel und Sitzungswiderruf gehören zu derselben Datenbankoperation. Ein konkurrierender eigener Kennwortwechsel darf ein inzwischen geändertes Kennwort nicht überschreiben. Die einmalige PIN-Umstellung ersetzt keine bereits angelegten Kennwörter mehr.
+
+Prüfung mit synthetischen Daten: 32 Testdateien bestanden, einschließlich neuer Tests für gesperrte Fachzugriffe, erlaubten Kennwortwechsel, abgelaufene Rücksetzlinks, Konfliktantwort, Sitzungswiderruf und normale Anmeldung beziehungsweise Direkteinstieg mit vorläufigem Kennwort. Die Handlerprüfungen simulieren Datenbankantworten. Unabhängig ausgeführte PGlite-Prüfungen der tatsächlichen SQL-Anweisungen bestätigen einmalige Verwendung des Rücksetzlinks, Sitzungswiderruf und vollständiges Zurückrollen bei einem künstlich ausgelösten Löschfehler. Chromium mit synthetischen API-Antworten bei 390 und 1280 px: direkter Einstieg zum Pflichtwechsel, anschließende Abmeldung und Anmeldeformular; kein horizontales Überlaufen oder JavaScript-Fehler. Keine echten Konten oder Personaldaten verändert. Produktionsprüfung steht aus.
+
+Sitzungen sind zusätzlich über HMAC-SHA-256 an Benutzer-ID, zufällige Sitzungskennung und den bei der Anmeldung geprüften Kennworthash gebunden. Die Ausgabe prüft das aktive Konto und denselben Kennworthash erneut; jeder Sitzungsabruf prüft die Bindung gegen den aktuellen Hash. Damit bleibt auch eine verspätet angelegte Sitzung nach gleichzeitigem Kennwortwechsel ungültig. Der Kennworthash verlässt die interne Prüfung nicht. Gewöhnliche Profiländerungen erhalten die Sitzung. Keine neue Datenbankspalte erforderlich. Alte ungebundene Sitzungscookies werden nach Veröffentlichung abgewiesen: bestehende Benutzer müssen sich einmal neu anmelden. Unabhängige PGlite-/Kryptografieprüfung bestätigt diese Fälle sowie manipulierte, deaktivierte und gelöschte Sitzungen. Die Prüfung ist keine vollständige Authentifizierungszertifizierung.
 
 ## Gemeindeentwicklung – 06.11.2026
 

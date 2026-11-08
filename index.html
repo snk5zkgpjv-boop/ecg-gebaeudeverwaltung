@@ -595,9 +595,13 @@ window.exportRoomQRList=()=>{
 
 function openPortalHome(user){
  const query=new URLSearchParams(location.search);
+ if(user?.mustChangePassword){
+  document.getElementById('authGate')?.remove();
+  changePasswordDialog(true);
+  return true;
+ }
  if(user?.role==='member'){
-  if(user.mustChangePassword){document.getElementById('authGate')?.remove();changePasswordDialog(true);}
-  else location.replace('/portal/');
+  location.replace('/portal/');
   return true;
  }
  if(!user || user.mustChangePassword || ['bereich','room','asset','location','reset'].some(key=>query.has(key)))return false;
@@ -1251,7 +1255,7 @@ window.forgotPassword=async()=>{const email=($('#loginEmail')?.value||prompt('E-
 window.startLegacyMigration=()=>{const g=$('#authGate .auth-card');g.innerHTML=`<h2>PIN-Zugang umstellen</h2><p>Einmalig den bisherigen E-Mail-Code anfordern und danach ein eigenes Kennwort festlegen.</p><div class="field"><label>E-Mail</label><input id="legacyEmail" type="email"></div><button class="btn primary" style="width:100%;margin-top:10px" onclick="sendLegacyCode()">PIN/Code senden</button><button class="btn" style="width:100%;margin-top:8px" onclick="showLoginGate()">Zurück</button><div class="auth-status" id="authStatus"></div>`};
 window.sendLegacyCode=async()=>{const email=$('#legacyEmail').value.trim().toLowerCase(),st=$('#authStatus');st.textContent='Code wird gesendet …';try{const r=await window.ecgAuth.emailOtp.sendVerificationOtp({email,type:'sign-in'});if(r.error)throw r.error;$('#authGate .auth-card').innerHTML=`<h2>Neues Kennwort festlegen</h2><input id="legacyEmail" type="hidden" value="${esc(email)}"><div class="field"><label>E-Mail-Code</label><input id="legacyOtp" inputmode="numeric"></div><div class="field" style="margin-top:10px"><label>Neues Kennwort</label><input id="legacyPassword" type="password" minlength="10"></div><button class="btn primary" style="width:100%;margin-top:10px" onclick="finishLegacyMigration()">Zugang umstellen</button><div class="auth-status" id="authStatus">Mindestens 10 Zeichen.</div>`}catch(e){st.textContent=e.message||'Code konnte nicht gesendet werden.'}};
 window.finishLegacyMigration=async()=>{const st=$('#authStatus');try{const email=$('#legacyEmail').value,otp=$('#legacyOtp').value,password=$('#legacyPassword').value,r=await window.ecgAuth.signIn.emailOtp({email,otp});if(r.error)throw r.error;const t=await window.ecgAuth.token();if(t.error||!t.data?.token)throw new Error('PIN-Anmeldung fehlgeschlagen.');const mr=await fetch('/api/auth/migrate',{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${t.data.token}`},body:JSON.stringify({password})}),b=await mr.json();if(!mr.ok)throw new Error(b.error);await bootAuth()}catch(e){st.textContent=e.message||'Umstellung fehlgeschlagen.'}};
-window.changePasswordDialog=forced=>modal(`<h2>${forced?'Vorläufiges Kennwort ändern':'Kennwort ändern'}</h2><p class="meta">Das neue Kennwort muss mindestens 10 Zeichen haben.</p><div class="field"><label>Bisheriges Kennwort</label><input id="oldPw" type="password"></div><div class="field" style="margin-top:10px"><label>Neues Kennwort</label><input id="newPw" type="password"></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="submitPasswordChange()">Ändern</button>${forced?'':'<button class="btn" onclick="closeModal()">Abbrechen</button>'}</div>`);
+window.changePasswordDialog=forced=>{const dialog=modal(`<h2>${forced?'Vorläufiges Kennwort ändern':'Kennwort ändern'}</h2><p class="meta">Das neue Kennwort muss mindestens 10 Zeichen haben.</p><div class="field"><label for="oldPw">Bisheriges Kennwort</label><input id="oldPw" type="password" autocomplete="current-password"></div><div class="field" style="margin-top:10px"><label for="newPw">Neues Kennwort</label><input id="newPw" type="password" autocomplete="new-password" minlength="10"></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="submitPasswordChange()">Ändern</button>${forced?'<button class="btn" onclick="signOutApp()">Abmelden</button>':'<button class="btn" onclick="closeModal()">Abbrechen</button>'}</div>`);if(forced){dialog.querySelector('.modal-close')?.remove();dialog.dataset.passwordRequired='true';}return dialog};
 window.submitPasswordChange=async()=>{const r=await fetch('/api/auth/change-password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({currentPassword:$('#oldPw').value,newPassword:$('#newPw').value})}),b=await r.json();if(!r.ok)return alert(b.error);alert(b.message);await signOutApp()};
 window.accountDialog=()=>{const u=currentUser();modal(`<h2>Mein Konto</h2><div class="card" style="box-shadow:none">${userSummaryCard(u)}</div><div class="row wrap" style="margin-top:12px">${can('manageUsers')?'<button class="btn" onclick="closeModal();showUserManagement()">Benutzerverwaltung</button>':''}<button class="btn" onclick="closeModal();changePasswordDialog(false)">Kennwort ändern</button><button class="btn danger" onclick="signOutApp()">Abmelden</button><button class="btn" onclick="closeModal()">Schließen</button></div>`)};
 window.signOutApp=async()=>{try{rememberAccountTimer();}catch{return alert('Laufenden Timer zuerst sichern oder beenden. Abmeldung abgebrochen.')}clearTimeout(syncTimer);const r=await fetch('/api/auth/logout',{method:'POST'}).catch(()=>null);if(!r?.ok)return alert('Abmeldung nicht bestätigt. Bitte erneut versuchen.');showLoginGate('Du wurdest abgemeldet.');notifyAccountChange()};
@@ -1267,7 +1271,16 @@ async function bootAuth(){
  const direct=Boolean(currentSection())||['gebaeude','aussenanlage','kueche','verwaltung'].includes(area);
  try{
   const response=await fetch(direct?(area==='benutzer'?'/api/state?entry=1&section=administration':'/api/state?entry=1'):'/api/auth/session',{cache:'no-store'});
-  if(response.status===403 && direct){location.replace('/portal/');return;}
+  if(response.status===403 && direct){
+   const denial=await response.json();
+   if(denial.code==='PASSWORD_CHANGE_REQUIRED'){
+    const session=await fetch('/api/auth/session',{cache:'no-store'});
+    if(!session.ok)return showLoginGate();
+    const entry=await session.json();authSession={user:entry.user};
+    if(openPortalHome(entry.user))return;
+   }
+   location.replace('/portal/');return;
+  }
   if(!response.ok)return showLoginGate();
   const entry=await response.json();
   authSession={user:entry.user};

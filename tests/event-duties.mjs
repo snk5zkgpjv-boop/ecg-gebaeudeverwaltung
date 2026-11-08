@@ -1,3 +1,4 @@
+import {authSessionFixture} from './fixtures/auth-session.js';
 import assert from 'node:assert/strict';
 import {eventDuties,dutyDays} from '../lib/event-duties.js';
 
@@ -6,9 +7,10 @@ const event={title:'Testveranstaltung',start:'2099-01-15T18:00:00Z',end:'2099-01
 const people=['organizer','member','other'].map(id=>({id,role:id==='organizer'?'admin':'member'}));
 let stored=null,absent=false;
 async function call(who,method,eventId,body,header=who){
+ const fixture=await authSessionFixture(who);
  const sql=async(parts,...args)=>{
   const q=parts.join('?');
-  if(q.includes('ecg_app_sessions'))return who?[{app_user_id:who}]:[];
+  if(q.includes('ecg_app_sessions'))return who?[fixture.user]:[];
   if(q.includes("revision,data->'users'"))return [{revision:12,users:people}];
   if(q.includes('jsonb_array_elements(data->\'calendarEvents\')'))return args[0]==='e1'?[event]:[];
   if(q.includes('AS unavailable FROM ecg_staff staff')){
@@ -34,7 +36,7 @@ async function call(who,method,eventId,body,header=who){
   throw Error(q);
  };
  const res={code:200,setHeader(){},status(code){this.code=code;return this;},json(body){this.body=body;return this;}};
- await eventDuties({query:{eventId},headers:{cookie:'ecg_session=fixture','x-ecg-user-id':header,'content-type':'application/json'},method,body},res,sql,(p)=>p.role==='admin');
+ await eventDuties({query:{eventId},headers:{cookie:fixture.cookie,'x-ecg-user-id':header,'content-type':'application/json'},method,body},res,sql,(p)=>p.role==='admin');
  return res;
 }
 const request={action:'request',id,assignee:'member',label:'Technik'};

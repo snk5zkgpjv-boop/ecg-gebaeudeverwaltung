@@ -1,19 +1,21 @@
+import {authSessionFixture} from './fixtures/auth-session.js';
 import assert from 'node:assert/strict';
 import {members,memberData} from '../lib/members.js';
 const sample={name:'Beispiel Person',birthDate:'2000-02-29'};
 assert.throws(()=>memberData({...sample,birthDate:'2025-02-29'}));
 assert.throws(()=>memberData({name:' '}));
 async function call({role='member',permissions={},scope='self',body,account='one',header='one'}={}){
+ const fixture=await authSessionFixture(account);
  const writes=[],reads=[];
  const sql=async(parts,...params)=>{
   const q=parts.join('?');
-  if(q.includes('ecg_app_sessions'))return [{app_user_id:account}];
+  if(q.includes('ecg_app_sessions'))return [fixture.user];
   if(q.includes("data->'users'"))return [{users:[{id:account,role,permissions}]}];
   if(q.includes('UPDATE ecg_members')||q.includes('INSERT INTO ecg_members')){writes.push({q,params});return [{id:'one',version:2}];}
   reads.push({q,params});return [];
  };
  const res={statusCode:200,status(v){this.statusCode=v;return this},setHeader(){},json(body){this.body=body;return this}};
- await members({method:body?'POST':'GET',query:{members:scope},headers:{cookie:'ecg_session=test','x-ecg-user-id':header,'content-type':'application/json'},body},res,sql);
+ await members({method:body?'POST':'GET',query:{members:scope},headers:{cookie:fixture.cookie,'x-ecg-user-id':header,'content-type':'application/json'},body},res,sql);
  return {res,writes,reads};
 }
 assert.equal((await call({scope:'list'})).res.statusCode,403);
