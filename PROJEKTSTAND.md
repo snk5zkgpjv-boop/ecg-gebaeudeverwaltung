@@ -2,15 +2,25 @@
 
 Stand: 08.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Qualitätsprüfung: Dialoge und Wiederherstellung – 08.11.2026
+
+Implementiert und lokal geprüft, noch nicht veröffentlicht: Der gemeinsame Dialogstapel hat benannte Dialogrollen, begrenzte Tabulatornavigation, gesperrte Hintergrundebenen und Fokus-Rückkehr. Escape schließt den obersten gewöhnlichen Dialog; der verpflichtende Kennwortwechsel bleibt geschützt. Die verwendeten Anmelde- und Kennwortformulare haben zugeordnete Beschriftungen.
+
+Der bisherige Browser-Backup-Knopf heißt nun „Sichtbare Daten exportieren“. Die Ansicht erklärt den unvollständigen Umfang; eine Übernahme des Teilauszugs verlangt eine ausdrückliche Bestätigung. Der Knopf zum pauschalen Zurücksetzen auf Ausgangsdaten wurde aus dieser Ansicht entfernt. Vollständige Sicherung und Wiederherstellung sind im [Betriebsablauf](docs/DATENSICHERUNG.md) beschrieben. Ein privater zusätzlicher Speicher, Verschlüsselung, Aufbewahrungsfrist und eine Betreiber-Wiederherstellungsprobe sind noch offen; keine echte Sicherung oder produktive Wiederherstellung wurde durchgeführt.
+
+Nachweis: 36 Testdateien bestanden. Unabhängiger Chromium-Test bei 390/1280 px prüft verschachtelte Dialoge, Tabulator in beide Richtungen, Escape, Fokus-Rückkehr und Abmeldung aus dem Pflichtdialog. PGlite-Labortest mit synthetischen Daten: Snapshot und Wiederherstellung aller zehn Anwendungstabellen, bytegleicher Dokumentinhalt, erhaltene Fremdschlüssel und Revisionskonflikte; alte Sitzungen und Rücksetzlinks im wiederhergestellten Testziel entfernt. Dies belegt weder pg_dump/pg_restore noch eine Wiederherstellung beim produktiven Datenbankdienst. Physisches iPhone und Screenreader bleiben ungeprüft.
+
 ## Qualitätsprüfung: lesender Kalender – 08.11.2026
 
-Implementiert und unabhängig geprüft, noch nicht veröffentlicht: Die Leseansicht zeigt Beginn und Ende, mehrtägige Zeiträume und „Fällt aus“ bei abgesagten Terminen. Uhrzeiten erscheinen in deutscher Ortszeit. Ganztägige Termine verwenden zusätzlich Datumsfelder mit exklusivem Enddatum; angezeigt wird der letzte eingeschlossene Tag. Der bisher gespeicherte inklusive ISO-Endzeitpunkt bleibt kompatibel und wird nicht nochmals um einen Tag gekürzt.
+Live mit PR #55 (7798826): Die Leseansicht zeigt Beginn und Ende, mehrtägige Zeiträume und „Fällt aus“ bei abgesagten Terminen. Uhrzeiten erscheinen in deutscher Ortszeit. Ganztägige Termine verwenden zusätzlich Datumsfelder mit exklusivem Enddatum; angezeigt wird der letzte eingeschlossene Tag. Der bisher gespeicherte inklusive ISO-Endzeitpunkt bleibt kompatibel und wird nicht nochmals um einen Tag gekürzt.
 
 Die Ansicht nennt den Zeitpunkt der letzten erfolgreichen Aktualisierung und unterscheidet gespeicherten Stand von einem Direktabruf. „Kalender aktualisieren“ liest über `/api/calendar?readOnly=1` mit bestehender Sitzung, Kontokennung und Kalenderrecht. Die Antwort enthält nur die für diese Ansicht benötigten Ereignisfelder. Sie bleibt an diese Sitzung gebunden im Arbeitsspeicher; weder gemeinsamer Kalendercache noch lokale persistente Zustandsdaten werden dadurch geändert. Auch ein Standardabruf durch ein ausschließlich leseberechtigtes Konto führt keine Datenbankänderung mehr aus. Verwaltungsrechte behalten die bestehende ausdrückliche Synchronisierung. Fehlgeschlagene Aktualisierung zeigt den bisherigen Stand mit Fehlermeldung; der letzte erfolgreiche Zeitpunkt wird nicht vorgerückt.
 
 Google-Folgeseiten werden berücksichtigt, statt nur die erste Seite zu übernehmen. Wiederholte Seitentoken oder mehr als 10000 Google-Ereignisse führen zum Fehler ohne Übernahme eines Teilstands; beim iCal-Abruf gilt entsprechend eine Grenze von 5000 Einträgen. Abgesagte Google-Datensätze ohne Anfang oder Ende können nicht mit einem erfundenen Zeitraum dargestellt werden und bleiben ausgefiltert. Keine Google-Freigaben oder echten Termine geändert.
 
 Prüfung: 34 Testdateien bestanden. Unabhängige API-Prüfung bestätigt Leserrechte, Sperre ohne Kalenderrecht, keine Datenbankänderung beim Direktabruf und weiterhin genau eine Änderung bei berechtigter Verwaltungssynchronisierung. Tatsächlicher iCal-Import und Datumsformatierung über Sommerzeit-, Jahres- und Schaltjahrgrenzen geprüft; ganztägige Daten bleiben unter UTC, Berlin und Los Angeles gleich. Chromium bei 390/1280 px und fremder Browserzeitzone: Fehler/Wiederholung, Absage, vollständiger Zeitraum, unveränderter Speicherinhalt und verworfene verspätete Kontoantwort; keine JavaScript-Fehler oder seitliches Überlaufen. Produktionsprüfung steht aus.
+
+Produktionsdeployment bereit; ausgelieferte Kalenderdarstellung entspricht dem geprüften Commit. Keine angemeldeten Produktionskonten oder echten Termine für die Prüfung verwendet.
 
 ## Qualitätsprüfung: Bereichswechsel – 08.11.2026
 
