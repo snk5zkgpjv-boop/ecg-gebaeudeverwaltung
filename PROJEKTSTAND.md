@@ -2,9 +2,17 @@
 
 Stand: 08.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Qualitätsprüfung: Automatische Prüfungen – 08.11.2026
+
+Implementiert und unabhängig lokal geprüft, noch nicht veröffentlicht: `npm test` startet alle 37 Logik- und Datenbanktests in getrennten Prozessen. Fehler, Abbruch, leere Sammlung und Zeitüberschreitung führen zu einem Fehlerstatus. Die Testumgebung reicht keine Datenbank-URLs oder API-Geheimnisse an die Kindprozesse weiter. `npm run test:browser` führt vier reproduzierbare Chromium-Abläufe mit lokalen, synthetischen Antworten bei 390 und 1280 px aus: Kennwortpflicht, Kalender, Dialoge/Teilauszug und Navigation.
+
+Vercel installiert den fixierten Abhängigkeitsstand mit Entwicklungsabhängigkeiten und verlangt `npm test` vor dem Build. Der neue GitHub-Workflow führt Logik- und Browserprüfungen bei Pull Requests und Änderungen auf main aus; Aktionen sind auf überprüfte Commits fixiert und haben nur Leserecht. Node 24 entspricht der bestehenden Laufzeit. `README.md` beschreibt Einstieg, Architektur und Prüfwege.
+
+Nachweis: unabhängig 37/37 Testdateien und 4/4 Browserabläufe bestanden, einschließlich Teststarter-Fehlerfällen. Der tatsächliche Hosting-Build und der GitHub-Workflow werden vor der Veröffentlichung geprüft. Der Zugriff auf die GitHub-Branchschutzkonfiguration wurde von der Integration mit HTTP 403 verweigert; deshalb ist eine verpflichtende Branchregel für den Browsercheck nicht bestätigt. Die Build-Sperre durch Logiktests und der Browsercheck in GitHub sind getrennte Mechanismen. Keine Fachpaket-Abnahme durch diese technische Nachbesserung.
+
 ## Qualitätsprüfung: Dialoge und Wiederherstellung – 08.11.2026
 
-Implementiert und lokal geprüft, noch nicht veröffentlicht: Der gemeinsame Dialogstapel hat benannte Dialogrollen, begrenzte Tabulatornavigation, gesperrte Hintergrundebenen und Fokus-Rückkehr. Escape schließt den obersten gewöhnlichen Dialog; der verpflichtende Kennwortwechsel bleibt geschützt. Die verwendeten Anmelde- und Kennwortformulare haben zugeordnete Beschriftungen.
+Live mit PR #56 (2d26711): Der gemeinsame Dialogstapel hat benannte Dialogrollen, begrenzte Tabulatornavigation, gesperrte Hintergrundebenen und Fokus-Rückkehr. Escape schließt den obersten gewöhnlichen Dialog; der verpflichtende Kennwortwechsel bleibt geschützt. Die verwendeten Anmelde- und Kennwortformulare haben zugeordnete Beschriftungen.
 
 Der bisherige Browser-Backup-Knopf heißt nun „Sichtbare Daten exportieren“. Die Ansicht erklärt den unvollständigen Umfang; eine Übernahme des Teilauszugs verlangt eine ausdrückliche Bestätigung. Der Knopf zum pauschalen Zurücksetzen auf Ausgangsdaten wurde aus dieser Ansicht entfernt. Vollständige Sicherung und Wiederherstellung sind im [Betriebsablauf](docs/DATENSICHERUNG.md) beschrieben. Ein privater zusätzlicher Speicher, Verschlüsselung, Aufbewahrungsfrist und eine Betreiber-Wiederherstellungsprobe sind noch offen; keine echte Sicherung oder produktive Wiederherstellung wurde durchgeführt.
 
