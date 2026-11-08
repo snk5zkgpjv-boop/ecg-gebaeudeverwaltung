@@ -1120,6 +1120,7 @@ function rememberAccountTimer(){
 }
 function notifyAccountChange(){try{localStorage.setItem('ecgAccountChanged',crypto.randomUUID());}catch{/* Server owner checks remain active when storage is unavailable. */}}
 function clearAccountView(){
+ if(typeof resetReadCalendarState==='function')resetReadCalendarState();
  if(typeof cancelWorkNavigation==='function')cancelWorkNavigation();
  clearTimeout(syncTimer);authSession=null;timeChangeEpoch++;issueChangeEpoch++;
  resetAccountData();

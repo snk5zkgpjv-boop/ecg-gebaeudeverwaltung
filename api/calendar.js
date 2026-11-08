@@ -20,6 +20,10 @@ function eventTime(value, allDayEnd = false) {
   return date.toISOString();
 }
 
+function localDateKey(date){
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
 function textValue(value) {
   if (typeof value === 'string') return value;
   if (value && typeof value === 'object' && 'val' in value) return String(value.val || '');
@@ -53,6 +57,7 @@ async function readIcalCalendar(icalUrl, rangeStart, rangeEnd) {
       const start = new Date(instance.start);
       const end = new Date(instance.end);
       if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) continue;
+      const dateFields=instance.isFullDay?{startDate:localDateKey(start),endDateExclusive:localDateKey(end)}:{};
       if (instance.isFullDay) end.setMilliseconds(end.getMilliseconds() - 1);
       const stable = createHash('sha256').update(`${original.uid || 'event'}|${start.toISOString()}`).digest('hex').slice(0, 24);
       events.push({
@@ -65,9 +70,10 @@ async function readIcalCalendar(icalUrl, rangeStart, rangeEnd) {
         description: textValue(original.description),
         cancelled: textValue(original.status).toUpperCase() === 'CANCELLED',
         allDay: Boolean(instance.isFullDay),
+        ...dateFields,
         updated: original.lastmodified instanceof Date ? original.lastmodified.toISOString() : '',
       });
-      if (events.length >= 5000) break;
+      if (events.length >= 5000) throw new Error('Der Kalender enthält zu viele Termine für diesen Abruf. Es wurde kein unvollständiger Stand übernommen.');
     }
     if (events.length >= 5000) break;
   }
@@ -89,27 +95,38 @@ async function readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigure
   const accessToken = serviceAccountConfigured ? await serviceAccountAccessToken() : null;
   const headers = { accept: 'application/json' };
   if (accessToken) headers.authorization = `Bearer ${accessToken}`;
-  const response = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
-  const body = await response.json();
-  if (!response.ok) {
-    console.error('google calendar sync error', response.status, body?.error?.status || body?.error?.message || 'unknown');
-    throw new Error(response.status === 404 || response.status === 403
-      ? 'Der Google-Kalender ist für diesen API-Zugang nicht freigegeben.'
-      : 'Google Calendar konnte nicht abgerufen werden.');
-  }
-  const events = (body.items || []).map((item) => ({
+  const items=[];let calendarName='Google Kalender';
+  const seenPages=new Set();
+  do{
+    const response = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
+    const body = await response.json();
+    if (!response.ok) {
+      console.error('google calendar sync error', response.status, body?.error?.status || 'unknown');
+      throw new Error(response.status === 404 || response.status === 403
+        ? 'Der Google-Kalender ist für diesen API-Zugang nicht freigegeben.'
+        : 'Google Calendar konnte nicht abgerufen werden.');
+    }
+    items.push(...(body.items||[]));
+    calendarName=body.summary||calendarName;
+    if(items.length>10000)throw new Error('Der Kalender enthält zu viele Termine für diesen Abruf. Es wurde kein unvollständiger Stand übernommen.');
+    if(!body.nextPageToken)break;
+    if(seenPages.has(body.nextPageToken))throw new Error('Der Kalenderabruf konnte nicht vollständig abgeschlossen werden.');
+    seenPages.add(body.nextPageToken);url.searchParams.set('pageToken',body.nextPageToken);
+  }while(true);
+  const events = items.map((item) => ({
     id: `google_${item.id}`,
     googleId: item.id,
     title: item.summary || 'Termin ohne Titel',
     start: eventTime(item.start),
     end: eventTime(item.end, Boolean(item.end?.date)),
+    ...(item.start?.date?{startDate:item.start.date,endDateExclusive:item.end?.date}:{}),
     location: item.location || '',
     description: item.description || '',
     cancelled: item.status === 'cancelled',
     allDay: Boolean(item.start?.date),
     updated: item.updated || '',
   })).filter((item) => item.start && item.end);
-  return { events, calendarName: body.summary || 'Google Kalender' };
+  return { events, calendarName };
 }
 
 export default async function handler(req, res) {
@@ -125,6 +142,8 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Kalender und Veranstaltungen sind für dieses Konto nicht freigeschaltet.' });
   }
 
+  res.setHeader('Cache-Control','private, no-store');
+  const readOnly=req.query?.readOnly==='1'||!canManageCalendar(auth.profile);
   if(pdf){
     try{const bytes=await weekPdf(req.body?.start,req.body?.items);res.setHeader('Cache-Control','private, no-store');res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition','attachment; filename="ECG-Wochenplan-'+req.body.start+'.pdf"');return res.status(200).send(Buffer.from(bytes));}
     catch{return res.status(400).json({error:'Wochenplan konnte nicht erstellt werden. Auswahl prüfen.'});}
@@ -156,6 +175,7 @@ export default async function handler(req, res) {
 
     if(week){res.setHeader('Cache-Control','private, no-store');return res.json({events:events.map(({title,start,allDay,cancelled})=>({title,start,allDay,cancelled}))});}
     const syncedAt = new Date().toISOString();
+    if(readOnly)return res.status(200).json({ok:true,events:events.map(({id,title,start,end,startDate,endDateExclusive,allDay,cancelled})=>({id,title,start,end,startDate,endDateExclusive,allDay,cancelled})),syncedAt,calendarName});
     const eventJson = JSON.stringify(events);
     const settingsJson = JSON.stringify({ calendarLastSync: syncedAt, calendarName });
     await sql`UPDATE app_state
