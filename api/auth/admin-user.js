@@ -39,11 +39,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Das vorläufige Kennwort muss mindestens 10 Zeichen haben.' });
     }
     if (password) {
-      await sql`UPDATE ecg_app_users SET email=${email},name=${name},password_hash=${hashPassword(password)},must_change_password=true,active=${active},updated_at=now() WHERE id=${rows[0].id} AND app_user_id=${id}`;
+      await sql`WITH changed AS (
+        UPDATE ecg_app_users SET email=${email},name=${name},password_hash=${hashPassword(password)},must_change_password=true,active=${active},updated_at=now()
+        WHERE id=${rows[0].id} AND app_user_id=${id} RETURNING id
+      ) DELETE FROM ecg_app_sessions WHERE user_id IN (SELECT id FROM changed)`;
     } else {
       await sql`UPDATE ecg_app_users SET email=${email},name=${name},active=${active},updated_at=now() WHERE id=${rows[0].id} AND app_user_id=${id}`;
     }
-    if (!active) await sql`DELETE FROM ecg_app_sessions WHERE user_id=${rows[0].id}`;
+    if (!active && !password) await sql`DELETE FROM ecg_app_sessions WHERE user_id=${rows[0].id}`;
     return res.status(200).json({ ok: true });
   }
 

@@ -1,3 +1,4 @@
+import {authSessionFixture} from './fixtures/auth-session.js';
 import assert from 'node:assert/strict';
 import {personnel,teamsFor} from '../lib/personnel.js';
 import {nextDay,personnelCalendarId} from '../lib/personnel-calendar.js';
@@ -8,14 +9,15 @@ assert.deepEqual(teamsFor({permissions:{approvePastoral:true}},true),['pastoral'
 delete process.env.ECG_PASTORAL_ABSENCE_CALENDAR_ID;assert.equal(personnelCalendarId(),null);
 const id='abcdefab-1234-4567-8901-123456789012';
 async function request(scope,permissions,body,header='me'){
+ const fixture=await authSessionFixture('me');
  const p={id:'me',name:'Test',role:'member',permissions};let queries=[];
  const sql=async(strings,...values)=>{
-  const q=strings.join('?');if(q.includes('ecg_app_sessions'))return [{app_user_id:'me'}];
+  const q=strings.join('?');if(q.includes('ecg_app_sessions'))return [fixture.user];
   if(q.includes("data->'users'"))return [{users:[p,{id:'other',role:'member',permissions:{staffPastoral:true}}]}];
   queries.push({q,values});return q.includes('UPDATE')?[]:[];
  };
  const res={code:200,setHeader(){},status(code){this.code=code;return this},json(body){this.body=body;return this}};
- await personnel({headers:{cookie:'ecg_session=test','x-ecg-user-id':header,'content-type':'application/json'},method:body?'POST':'GET',query:{personnel:scope,month:'2026-11'},body},res,sql);
+ await personnel({headers:{cookie:fixture.cookie,'x-ecg-user-id':header,'content-type':'application/json'},method:body?'POST':'GET',query:{personnel:scope,month:'2026-11'},body},res,sql);
  return {res,queries};
 }
 assert.equal((await request('eigene',{})).res.code,403);
