@@ -7,8 +7,8 @@ Stand: 08.11.2026. Arbeitsnachweis zur Prüfung von Nutzbarkeit, Sicherheit, Zuv
 | Schritt | Befund und Ziel | Stand |
 | --- | --- | --- |
 | 1. Zugriff und Sitzungen | Pflichtkennwortwechsel serverseitig durchsetzen; Rücksetzlink genau einmal verwenden; alte Sitzungen nach Kennwortänderung sperren. | Live mit [PR #53](https://github.com/snk5zkgpjv-boop/ecg-gebaeudeverwaltung/pull/53). 32 Testdateien, unabhängige SQL-/Kryptografieprüfung und Chromium bei 390/1280 px bestanden. |
-| 2. Laden und Bedienung | Bereichswechsel ohne wiederholtes Laden des gesamten Dokuments; aktuelle Rechte prüfen; Fehler und Wiederholung anzeigen. | Lokal implementiert, Veröffentlichung ausstehend. 33 Testdateien bestanden; synthetischer Chromium-Vergleich bei 390/1280 px: zwei Dokumentwechsel entfallen, ein aktueller Datenabruf bleibt. Echte iPhone-Messung offen. |
-| 3. Kalender | Enddatum, mehrtägige Zeiträume, Ausfälle und Aktualität in der Leseansicht darstellen. | Offen. |
+| 2. Laden und Bedienung | Bereichswechsel ohne wiederholtes Laden des gesamten Dokuments; aktuelle Rechte prüfen; Fehler und Wiederholung anzeigen. | Live mit [PR #54](https://github.com/snk5zkgpjv-boop/ecg-gebaeudeverwaltung/pull/54). 33 Testdateien bestanden; synthetischer Chromium-Vergleich bei 390/1280 px: zwei Dokumentwechsel entfallen, ein aktueller Datenabruf bleibt. Echte iPhone-Messung offen. |
+| 3. Kalender | Enddatum, mehrtägige Zeiträume, Ausfälle und Aktualität in der Leseansicht darstellen. | Lokal implementiert, Veröffentlichung ausstehend. 34 Testdateien sowie unabhängige API-, Datums- und Chromium-Prüfung bestanden. Lesender Direktabruf ohne Änderung des gemeinsamen Caches. |
 | 4. Dialoge und Wiederherstellung | Tastaturfokus und Dialogsemantik prüfen; Teil-Export klar von vollständiger Sicherung unterscheiden; Wiederherstellungsweg belegen. | Offen. |
 | 5. Automatische Prüfungen | Gemeinsamer Testbefehl und Prüfung vor Veröffentlichung. | Offen. |
 
