@@ -147,6 +147,9 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 .modal-close{position:sticky;top:0;z-index:6;float:right;width:42px;height:42px;margin:-4px -4px 8px 12px;border:1px solid var(--line);border-radius:50%;background:rgba(255,255,255,.96);color:var(--ink);box-shadow:0 3px 12px rgba(16,24,40,.16);font-size:var(--ecg-title);line-height:1;display:grid;place-items:center}
 .modal-close:active{background:var(--accent2);color:var(--accent)}
 .portal-back{display:inline-flex;align-items:center;min-height:36px;font-weight:700;font-size:var(--ecg-meta);text-decoration:none;color:#86123e}
+.shell{grid-template-columns:minmax(0,1fr)}.main{min-width:0}
+@media(max-width:600px){.topbar{flex-wrap:wrap}.brand{max-width:100%}.brand h1{white-space:normal;overflow-wrap:anywhere}.top-actions{max-width:100%;margin-left:0}.user-badge{min-width:0;overflow-wrap:anywhere}.user-badge>span{min-width:0}}
+.work-section-switch{display:block;max-width:26rem;margin-bottom:16px;font-size:var(--ecg-meta);font-weight:600}.work-section-switch select{display:block;width:100%;margin-top:6px;min-height:44px;font-size:var(--ecg-body)}.work-loading{max-width:36rem;margin:10vh auto}.work-loading .btn{margin:6px 8px 0 0}
 .kitchen-devices{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}.kitchen-devices>.btn{min-height:52px;text-align:left;padding:12px 16px}
 @media screen{
  .stats>.stat,.inventory-grid>.card,.maintenance-grid>.card,.loan-grid>.card,.quick-admin>*,.kitchen-devices>.btn{min-width:0;overflow-wrap:anywhere;hyphens:auto}
@@ -280,7 +283,7 @@ let cloudBase;
 function rememberCloudBase(session, remote) {
   cloudBase = {session, remote, local:JSON.parse(JSON.stringify(cloudPayload()))};
 }
-async function syncCloud(){
+async function syncCloud(fetcher=fetch){
   if(!state.settings.cloudSync || !authSession) return false;
   const session=authSession, base=cloudBase;
   if(!base || base.session!==session) return false;
@@ -295,7 +298,7 @@ async function syncCloud(){
   try{
     for(let attempt=0;attempt<3;attempt++){
       if(authSession!==session || cloudBase!==base) return false;
-      const r=await fetch('/api/state',{method:'PUT',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({protocol:1,changes})});
+      const r=await fetcher('/api/state',{method:'PUT',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({protocol:1,changes})});
       if(authSession!==session || cloudBase!==base) return false;
       if(r.ok){
         for(const [field,edit] of Object.entries(changes)){
@@ -418,7 +421,7 @@ async function leaveForPortal(event){
 }
 function header(){const u=currentUser();return `<header class="topbar"><div class="brand"><div class="brandmark"><img src="/assets/embedded-4-8ef55a643706.png" alt="ECG Logo"></div><div><a href="/portal/" class="portal-back" onclick="leaveForPortal(event)">← Meine Bereiche</a><h1>${typeof currentSection==='function' && currentSection()?esc(currentSection().name):new URLSearchParams(location.search).get('bereich')==='verwaltung'?'Verwaltung':'Gebäudeverwaltung'}</h1></div></div><div class="top-actions"><span class="sync">${state.settings.cloudSync?'Cloud aktiv':'Lokal gespeichert'}</span><button class="user-badge" onclick="accountDialog()"><span>👤</span><span><b>${esc(u?.name||'Nicht angemeldet')}</b><span class="email">${u?.email?` · ${esc(u.email)}`:''}</span><br><span class="meta">${esc(roleLabels[u?.role]||'')}</span></span></button></div></header>`}
 function render({calendarToday=false}={}){
- if(!authSession)return;
+ if(!authSession || (typeof workNavigationPending!=='undefined' && workNavigationPending))return;
  const previousToday=$('#calendarToday');
  const calendarOffset=previousToday?.getBoundingClientRect().top;
  if(['calendar','kitchen'].includes(state.activeTab)&&!can('manageCalendar'))state.activeTab='settings';
@@ -433,7 +436,7 @@ function render({calendarToday=false}={}){
           state.activeTab==='calendar'?calendarView():
           state.activeTab==='kitchen'?kitchenView():
           settingsView();
- $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${section?`<a class="btn" href="/portal/#${section.parent}" onclick="leaveForPortal(event)">← ${esc(section.name)}</a><h2>${esc(section.title)}</h2>`:''}${body}</main>${adminArea||section?'':nav()}</div>`;
+ $('#app').innerHTML=`<div class="shell">${header()}<main class="main">${section?`${typeof workSectionSelector==='function'?workSectionSelector(section):''}<h2>${esc(section.title)}</h2>`:''}${body}</main>${adminArea||section?'':nav()}</div>`;
  if(state.activeTab==='calendar'){
   const marker=$('#calendarToday');
   if(marker){const target=calendarToday||calendarOffset===undefined?($('.topbar')?.getBoundingClientRect().height||0)+12:calendarOffset;window.scrollBy(0,marker.getBoundingClientRect().top-target);}
@@ -1117,6 +1120,7 @@ function rememberAccountTimer(){
 }
 function notifyAccountChange(){try{localStorage.setItem('ecgAccountChanged',crypto.randomUUID());}catch{/* Server owner checks remain active when storage is unavailable. */}}
 function clearAccountView(){
+ if(typeof cancelWorkNavigation==='function')cancelWorkNavigation();
  clearTimeout(syncTimer);authSession=null;timeChangeEpoch++;issueChangeEpoch++;
  resetAccountData();
  state.timeEntries=[];state.timeRunning=null;state.myTimeSharing=false;state.sharedTimeUsers=[];state.myIssuePlanning={};
@@ -1263,6 +1267,7 @@ window.submitResetPassword=async()=>{const token=new URLSearchParams(location.se
 function showResetGate(){clearAccountView();document.body.insertAdjacentHTML('beforeend',`<div class="auth-gate" id="authGate"><div class="auth-card"><h2>Neues Kennwort</h2><div class="field"><label>Neues Kennwort (mindestens 10 Zeichen)</label><input id="resetPw" type="password"></div><button class="btn primary" style="width:100%;margin-top:12px" onclick="submitResetPassword()">Kennwort speichern</button><div id="resetStatus" class="auth-status"></div></div></div>`)}
 async function bootAuth(){
  document.getElementById('app')?.replaceChildren();
+ const load=typeof readAppResponse==='function'?readAppResponse:fetch;
  const query=new URLSearchParams(location.search);
  if(query.get('reset'))return showResetGate();
  const area=query.get('bereich');
@@ -1270,18 +1275,19 @@ async function bootAuth(){
  if(Object.hasOwn(legacy,area)){location.replace('/portal/#'+legacy[area]);return;}
  const direct=Boolean(currentSection())||['gebaeude','aussenanlage','kueche','verwaltung'].includes(area);
  try{
-  const response=await fetch(direct?(area==='benutzer'?'/api/state?entry=1&section=administration':'/api/state?entry=1'):'/api/auth/session',{cache:'no-store'});
+  const response=await load(direct?(area==='benutzer'?'/api/state?entry=1&section=administration':'/api/state?entry=1'):'/api/auth/session',{cache:'no-store'});
   if(response.status===403 && direct){
    const denial=await response.json();
    if(denial.code==='PASSWORD_CHANGE_REQUIRED'){
-    const session=await fetch('/api/auth/session',{cache:'no-store'});
+    const session=await load('/api/auth/session',{cache:'no-store'});
     if(!session.ok)return showLoginGate();
     const entry=await session.json();authSession={user:entry.user};
     if(openPortalHome(entry.user))return;
    }
    location.replace('/portal/');return;
   }
-  if(!response.ok)return showLoginGate();
+  if(response.status===401)return showLoginGate();
+  if(!response.ok)throw Error('Bereich nicht erreichbar');
   const entry=await response.json();
   authSession={user:entry.user};
   if(openPortalHome(entry.user))return;
@@ -1299,7 +1305,7 @@ async function bootAuth(){
   if(state.timeRunning)startTimerTick();
   if(entry.user.mustChangePassword)setTimeout(()=>changePasswordDialog(true),100);
   if(!direct||['termine','kalender','kuechendienst'].includes(area))void maybeSyncGoogleCalendar();
- }catch{showLoginGate('Anmeldung konnte nicht geprüft werden.')}
+ }catch{if(typeof showStartupFailure==='function')showStartupFailure();else showLoginGate('Anmeldung konnte nicht geprüft werden.')}
 }
 </script>
 <script src="/assets/kitchen-ui.js?v=2"></script>
@@ -1311,7 +1317,7 @@ async function bootAuth(){
 <script src="/assets/time-summary.js?v=4"></script>
 <script src="/assets/time-save.js?v=1"></script>
 <script src="/assets/time-voice.js?v=3"></script>
-<script src="/assets/portal-areas.js"></script><script src="/assets/work-sections.js"></script>
+<script src="/assets/portal-areas.js"></script><script src="/assets/work-sections.js"></script><script src="/assets/work-navigation.js"></script>
 <script>window.addEventListener('storage',event=>{if(event.key==='ecgAccountChanged')showLoginGate('Das Konto wurde in einem anderen Fenster gewechselt. Bitte erneut anmelden.');});bootAuth();</script>
 </body>
 </html>
