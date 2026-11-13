@@ -14,7 +14,7 @@ Im bestehenden Entwurfs-PR #59 wurde ein isolierter GitHub-Actions-Job mit Postg
 
 Lesende Prüfung zeigt elf Anwendungstabellen in `public` und neun Tabellen des verwalteten `neon_auth`-Schemas. `api/auth/login.js` benutzt eigene ECG-Konten statt des Neon-Auth-Logins; vollständige Integrationseinordnung noch offen. Vercel-Variableninventar: `DATABASE_URL` im GitHub-verknüpften Projekt sowohl für Production als auch Preview vorhanden; die Werte wurden nicht gelesen, tatsächliche Produktionsdomain und Datenbankziele noch nicht eindeutig verifiziert. Der [Backup-Betriebsplan](docs/BACKUP-BETRIEBSPLAN.md) dokumentiert zusätzliche Freigabegates und unverbindlichen EU-Objektspeicher-Kandidaten.
 
-Keine Änderung an Neon-Projekten, produktiven Daten, Vercel-Einstellungen oder Zugangsdaten. Offen: echte isolierte Frankfurt-Probe, vollständige Rechte-/Dokumenten- und Neon-Auth-Migrationsstrategie, Zuordnung der Produktion, Backupspeicher/AVV/Budget und ausdrückliche Infrastruktur-/Cutover-Freigaben.
+Zur Vorbereitung der Auth-Migration wurde der zuvor fest codierte Legacy-Neon-Auth-US-Endpunkt in lib/auth.js durch die optionale Variable NEON_AUTH_ORIGIN mit unverändertem bisherigen Standard ergänzt. Neue Zielwerte sind noch nicht konfiguriert; Auth-Migration und JWT-Abnahme sind weiterhin offen. Keine Änderung an Neon-Projekten, produktiven Daten, Vercel-Einstellungen oder Zugangsdaten. Offen: echte isolierte Frankfurt-Probe, vollständige Rechte-/Dokumenten- und Neon-Auth-Migrationsstrategie, Zuordnung der Produktion, Backupspeicher/AVV/Budget und ausdrückliche Infrastruktur-/Cutover-Freigaben.
 
 ## Qualitätsprüfung: Automatische Prüfungen – 08.11.2026
 
