@@ -63,3 +63,19 @@ Quellen:
 - Eindeutig produktives Vercel-Projekt und Datenquellen identifizieren; nur Variablennamen/Scopes dokumentieren, niemals Werte.
 - EU-Objektspeicher, AVV, Speicherung/Verarbeitung außerhalb EU, Monatsbudget und Aufbewahrung/Löschkonzept auswählen.
 - Frankfurt-Testumgebung **erst nach gesonderter Freigabe** anlegen; Testlauf messen und Abnahmeprotokoll ausfüllen.
+
+## Synthetischer Restore-Test: Bedienfolge (nicht ausgeführt)
+Fixture: `tests/fixtures/ecg-migration-synthetic.sql`. Sie enthält ausschließlich künstliche Benutzer, Räume, Buchungen und bytea-Dokumente. Voraussetzung: **zwei eigenständig eingerichtete isolierte PostgreSQL-18-Datenbanken**, deren echte Datenbanknamen `synthetic` enthalten. Ziel muss leer sein. Beide Service-Einträge dürfen ausdrücklich keine Produktivinstanzen erreichen.
+
+```bash
+# Vorher: zwei unterschiedliche lokale/isolierte PostgreSQL-Service-Einträge
+# und zugehörige nur lokal lesbare Passwortdatei einrichten.
+PGSERVICE=ecg_source_synthetic psql -X -v ON_ERROR_STOP=1 -f tests/fixtures/ecg-migration-synthetic.sql
+ECG_SYNTHETIC_SOURCE_SERVICE=ecg_source_synthetic \
+ECG_SYNTHETIC_TARGET_SERVICE=ecg_target_synthetic \
+bash tests/postgres-dump-restore.sh
+```
+
+Der Test prüft den Dump/Restore, vergleicht die Inhalte sämtlicher Benutzertabellen (einschließlich `bytea`), Sequenzzustände und validierte CHECK-/Fremdschlüssel-Constraints. **Er prüft nicht** globale Rollen, extern gespeicherte Dokumente, tatsächliche Sitzungsinvalidierung, Authentifizierungs-APIs, Drittanbieter oder den EU-Objektspeicher. Der Vergleich über MD5 ist als lokale synthetische Gleichheitsprüfung gedacht, nicht als kryptografischer Echtheitsnachweis für Backups. Vor Echtbetrieb SHA-256 und einen vollständigen isolierten Wiederherstellungsnachweis verlangen.
+
+CI prüft lediglich mit `bash -n` die Shell-Syntax. Mangels verfügbarer PostgreSQL-Testinstanzen gilt der echte PostgreSQL-18-Restore weiterhin ausdrücklich als **nicht ausgeführt**.
