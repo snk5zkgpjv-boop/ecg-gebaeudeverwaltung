@@ -1,6 +1,12 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 08.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 13.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Frankfurt-Migration und Backup: Planungsstand – 13.11.2026
+
+In PR #59 wurde der unaktivierte Sicherungs-/Migrationsplan nach Betreiberentscheidung konkretisiert: Frankfurt (aws-eu-central-1), möglichst kurze Schreibunterbrechung mit vorab gemessenem Dump/Restore, externer verschlüsselter EU-Speicher, 30 tägliche Backups, alte US-Datenbank maximal 30 Tage isoliert und nur mit gesonderter Löschfreigabe. Neue Abnahmematrix mit Dateninventar, synthetischer Restore-Prüfung, Dokument-/FK-/Sequenzkontrolle, Cutover-Abbruchkriterien und Rollback-Schranken in docs/BACKUP-BETRIEBSPLAN.md.
+
+Prüfung: GitHub PR #59 und Neon-Projektkonfiguration gelesen (PostgreSQL 18, Region aws-us-east-1, 6 h PITR, logische Replikation deaktiviert). Die neue Dokumentation ist in den PR-Branch geschrieben; es wurden keine Tests ausgeführt und weder Datenbank, Neon-Projekte, Vercel-Konfiguration noch Zugangsdaten verändert. Noch offen: synthetische Testimplementierung und Ausführung, exakter Vercel-/Dateninventar-Nachweis, Kosten/AVV EU-Objektspeicher, Betreiberfreigabe für Testinfrastruktur und separat für produktiven Cutover.
 
 ## Qualitätsprüfung: Automatische Prüfungen – 08.11.2026
 
