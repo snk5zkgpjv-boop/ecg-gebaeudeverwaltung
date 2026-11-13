@@ -37,3 +37,29 @@ Quellen:
 - https://neon.com/docs/import/migrate-neon-to-another-region
 - https://www.postgresql.org/docs/current/app-pgdump.html
 - https://www.postgresql.org/docs/current/app-pgrestore.html
+
+## Betreiberentscheidung vom 13.11.2026 (Planung, keine Produktivfreigabe)
+- Ziel ist ein dauerhaftes Neon-Projekt in `aws-eu-central-1` (Frankfurt), PostgreSQL 18.
+- Möglichst kurze Unterbrechung; zunächst Dump/Restore mit vorab bereitgestelltem Ziel und gemessener Schreibsperre. Logische Replikation nur nach gesonderter Eignungs-/Tarifprüfung.
+- Separater EU-Objektspeicher, `age`-Verschlüsselung vor Upload, Schlüssel außerhalb von Neon/Vercel verwahren.
+- 30 tägliche Sicherungen als Mindestkonzept; längere Aufbewahrung und DSGVO-Löschfristen vor Aktivierung festlegen.
+- US-Projekt nach erfolgreichem Wechsel höchstens 30 Tage isoliert und ohne Schreibzugriffe als Rückfallstand behalten; Löschen nur nach eigener Freigabe.
+- Wegen derzeit zwei Nutzern kann ein abgestimmtes kurzes Wartungsfenster statt komplexer kontinuierlicher Replikation bevorzugt werden. Das ist keine Messung der Ausfallzeit.
+- Jede Änderung an Neon-Projekten, Produktivdaten, Vercel-Variablen oder Zugangsdaten benötigt eine gesonderte ausdrückliche Betreiberfreigabe.
+
+## Verbindliche Abnahmematrix vor Produktivwechsel
+1. **Inventar:** Sämtliche Datenbank-Schemata und Tabellen, Views, Funktionen, Trigger, Erweiterungen, Sequenzen, FKs, Rollen und Berechtigungen inventarisieren. Externe Dateiablagen (PDF/Blob), Authentifizierungs-/Sitzungsspeicher, Hintergrundjobs, Webhooks und alle Preview-/Production-DB-Verbindungen gesondert erfassen.
+2. **Synthetische Testfixture:** Mindestens zwei Benutzer mit unterschiedlichen Rollen, zugeordnete Räume, Kalendertermine, Arbeitszeiten, Dateiinhalte und relationale Abhängigkeiten erzeugen; niemals echte Kunden- oder Gemeindedaten in CI-Artefakte übernehmen.
+3. **Restore:** PostgreSQL 18 zu PostgreSQL 18 mit `pg_dump -Fc` / `pg_restore --single-transaction --exit-on-error` in leere isolierte Zieldatenbank. Nach Restore Tabellen-/Schema-Inventar, Zeilenwerte, Primär- und Fremdschlüssel, Sequenzfortschritt, PDF-Bytes/Hashes, Rollen-/Rechtemodell und die App-Endpunkte prüfen. Extern gespeicherte Dokumente benötigen einen separaten gesicherten Kopier- und Vergleichsweg.
+4. **Backup-Nachweis:** Remote-Archiv erneut herunterladen, SHA-256 mit separatem, vertrauenswürdigem Manifest vergleichen, mit getrennt verwahrtem Schlüssel entschlüsseln und testweise restaurieren. Nur Objektname/Archivliste genügt nicht. Monitoring und Alarmzustellung simulieren.
+5. **Sicherheitsgrenzen:** Niemals produktive Verbindungszeichenfolgen protokollieren. Getrennte Dienstkonten und DNS/Host-Whitelist für Quelle und Ziel; die bloße Zeichenfolge `synthetic` im Servicenamen ist kein Sicherheitsnachweis. Keine externen Netzwerk-/E-Mail-/Push-Aktionen aus der isolierten Testinstanz.
+6. **Cutover:** Vorab Restore-Dauer messen, Verantwortliche und Wartungsfenster festlegen. Schreibzugriffe inklusive Cronjobs/parallel aktiver Deployments anhalten; letzte Transaktion abwarten; konsistenten Endstand exportieren; verschlüsselt übertragen und restaurieren; Integritätsbericht prüfen; alle Vercel-Umgebungen/Connection-Pools und ggf. Drittanbieter umstellen; Neudeployment und Anwendungs-Smoke-Test; erst danach Schreibbetrieb freigeben.
+7. **Abbruch:** Bei fehlendem Backup-Restore, Abweichungen in Datenintegrität, unklarem Speicherort von Nutzerdokumenten, nicht kontrollierbaren Schreibern oder nicht bestandenen Auth-/Rechtetests keine Umschaltung.
+8. **Rollback:** Vor Freigabe von Frankfurt-Schreibzugriffen US-Projekt unter kontrollierten Bedingungen reaktivierbar halten. Danach *nicht blind zurückschalten*: erst Frankfurt-Schreibzugriffe stoppen und seit Cutover entstandene Änderungen konsistent sichern/abgleichen, sonst droht Datenverlust.
+9. **Nachlauf:** 30 Tage schriftlicher Nachweis zu Monitoring, erfolgreichen Sicherungen, Restore-Probe und zu verbliebenen US-Verbindungen/Backups. Getrennte Löschfreigabe am Ende.
+
+## Nächste Schritte ohne produktive Änderungen
+- Technische Fixture und vollständigere automatisierte Prüfungen im bestehenden PR implementieren; Ergebnisse der *tatsächlich ausgeführten* Tests festhalten.
+- Eindeutig produktives Vercel-Projekt und Datenquellen identifizieren; nur Variablennamen/Scopes dokumentieren, niemals Werte.
+- EU-Objektspeicher, AVV, Speicherung/Verarbeitung außerhalb EU, Monatsbudget und Aufbewahrung/Löschkonzept auswählen.
+- Frankfurt-Testumgebung **erst nach gesonderter Freigabe** anlegen; Testlauf messen und Abnahmeprotokoll ausfüllen.
