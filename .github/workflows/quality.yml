@@ -20,7 +20,62 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+      - name: Validate backup and restore shell syntax (no database access)
+        run: bash -n scripts/backup-postgres-encrypted.sh scripts/check-backup-freshness.sh tests/postgres-dump-restore.sh
       - run: npm ci --include=dev
       - run: npm test
       - run: npx --no-install playwright install --with-deps chromium
       - run: npm run test:browser
+
+  synthetic-postgres-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: synthetic_source
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-only-ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d synthetic_source"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test pg_dump / pg_restore on two isolated PostgreSQL 18 databases
+        run: |
+          docker run --rm --network host \
+            -e PGPASSWORD=synthetic-only-ci-password postgres:18 \
+            psql -h 127.0.0.1 -U postgres -d synthetic_source -v ON_ERROR_STOP=1 \
+            -c 'CREATE DATABASE synthetic_target'
+          docker run --rm --network host -v "$PWD:/work:ro" -w /work \
+            -e PGPASSWORD=synthetic-only-ci-password \
+            postgres:18 bash -Eeuo pipefail -c '
+              cat > /tmp/pg_service.conf <<"SERVICES"
+          [ecg_source_synthetic]
+          host=127.0.0.1
+          port=5432
+          user=postgres
+          dbname=synthetic_source
+          [ecg_target_synthetic]
+          host=127.0.0.1
+          port=5432
+          user=postgres
+          dbname=synthetic_target
+          SERVICES
+              chmod 600 /tmp/pg_service.conf
+              export PGSERVICEFILE=/tmp/pg_service.conf
+              PGSERVICE=ecg_source_synthetic psql -X -v ON_ERROR_STOP=1 \
+                -f tests/fixtures/ecg-migration-synthetic.sql
+              ECG_SYNTHETIC_SOURCE_SERVICE=ecg_source_synthetic \
+              ECG_SYNTHETIC_TARGET_SERVICE=ecg_target_synthetic \
+                bash tests/postgres-dump-restore.sh
+            '
