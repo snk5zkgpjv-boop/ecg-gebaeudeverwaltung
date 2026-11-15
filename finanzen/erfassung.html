@@ -10,6 +10,7 @@
 <p>Ein Foto kann bereits ausgefüllte Felder automatisch übernehmen. Bitte alle Angaben vor dem Einreichen prüfen – besonders handschriftliche Beträge und Kontodaten.</p>
 <label for="scan">Foto auswählen oder Kamera öffnen</label>
 <input id="scan" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+<label class="confirm"><input id="scan-consent" type="checkbox"> Ich bin damit einverstanden, dass das Foto zur automatischen Texterkennung an den konfigurierten KI-Dienst übertragen wird. Ohne Einwilligung kann ich die Daten manuell erfassen.</label>
 <button id="recognize" type="button" disabled>Angaben aus Foto erkennen</button>
 <p id="scan-status" role="status"></p>
 </div>
