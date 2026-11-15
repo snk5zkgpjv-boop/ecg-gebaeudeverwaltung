@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Auslagen einreichen · ECG</title><link rel="stylesheet" href="/assets/typography.css"><link rel="stylesheet" href="/portal/portal.css"><link rel="stylesheet" href="/finanzen/erfassung.css"></head>
+<body><main class="expenses">
+<a class="parent-link" href="/portal/#finance">← Finanzen</a>
+<h1>Auslagen einreichen</h1>
+<p id="status" role="status">Anmeldung wird geprüft …</p>
+<section id="app" hidden>
+<div class="scan-panel no-print"><h2>Papierformular oder Beleg fotografieren</h2>
+<p>Ein Foto kann bereits ausgefüllte Felder automatisch übernehmen. Bitte alle Angaben vor dem Einreichen prüfen – besonders handschriftliche Beträge und Kontodaten.</p>
+<label for="scan">Foto auswählen oder Kamera öffnen</label>
+<input id="scan" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+<button id="recognize" type="button" disabled>Angaben aus Foto erkennen</button>
+<p id="scan-status" role="status"></p>
+</div>
+<form id="form">
+<h2>Antragsteller</h2><p id="applicant"></p>
+<h2>Ausgaben</h2><div id="positions"></div>
+<button id="add" type="button">Weitere Position</button>
+<p class="total">Gesamtsumme: <strong id="total">0,00 €</strong></p>
+<h2>Auszahlung</h2>
+<label><input type="radio" name="kind" value="refund" checked> Erstattung auf mein Konto</label>
+<label><input type="radio" name="kind" value="waiver"> Ich verzichte auf die Erstattung (gesonderte Prüfung)</label>
+<div id="bank"><label for="bank-owner">Kontoinhaber</label><input id="bank-owner" autocomplete="name" maxlength="160">
+<label for="iban">IBAN</label><input id="iban" autocomplete="off" maxlength="34" placeholder="DE..."></div>
+<h2>Originalbeleg(e)</h2>
+<label for="files">JPG, PNG oder PDF (bis zu 6 Dateien, zusammen rund 2,4 MB)</label>
+<input id="files" type="file" accept="image/jpeg,image/png,application/pdf" multiple required>
+<label class="confirm"><input id="confirm" type="checkbox" required> Ich habe alle erkannten und eingegebenen Daten geprüft. Die Belege gehören zu den Ausgaben.</label>
+<div class="actions no-print"><button type="submit" id="send">Verbindlich einreichen</button><button type="button" id="print">Antrag drucken / als PDF speichern</button></div>
+</form>
+<section id="claims" class="no-print"><h2>Meine Auslagen</h2><div id="mine"></div></section>
+<section id="finance" class="no-print" hidden><h2>Finanzteam – eingereichte Anträge</h2><div id="team"></div></section>
+</section>
+<div id="paper" aria-hidden="true"></div>
+</main><script type="module" src="/finanzen/erfassung.js"></script></body></html>
