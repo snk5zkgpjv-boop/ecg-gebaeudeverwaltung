@@ -111,6 +111,7 @@ function setupSections(user){
    else if(id==='wochenplan')tile.href='/wochenplan/';
    else if(id==='auslagen-neu'&&key==='finance')tile.href='/finanzen/erfassung.html';
    else if(id==='auslagen'&&key==='finance')tile.href='/finanzen/';
+   else if(id==='kontodaten'&&key==='finance')tile.href='/finanzen/kontodaten.html';
    else if(key==='personnel')tile.href=id==='stamm'?'/personal/stamm.html':'/personal/?ansicht='+id;
    else tile.href=key==='members'?'/members/?ansicht='+id:'/?bereich='+id;
    grid.append(tile);
