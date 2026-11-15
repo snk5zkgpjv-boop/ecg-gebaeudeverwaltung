@@ -8,7 +8,7 @@ Die Gemeindekontodaten wurden anhand zweier bestehender Nutzungsvereinbarungen a
 
 Neuer Bereich `/finanzen/kontodaten.html` über Finanzen → Kontodaten: für jedes aktive, angemeldete Gemeindemitglied lesbar, IBAN kopierbar, A4-Browserdruck. Administratoren können Kontoinhaber, IBAN, BIC und optional Banknamen mit serverseitiger Validierung und Revisionserkennung ändern. Das bestehende Finanz-Auslagen-Testjournal bleibt für Mitglieder gesperrt. Der Serverzweig `/api/state?bankAccount=1` liefert ausschließlich die nötigen Kontoangaben aus den bereits vorhandenen Veranstaltungsdokument-Einstellungen; kein separater Datenbestand und keine zusätzliche Vercel-Funktion.
 
-Code als separater Pull Request zu prüfen. Ein erfolgreicher Build ist keine echte Geräteabnahme; produktive Veröffentlichung wird separat dokumentiert.
+Produktiv veröffentlicht über PR #61 (Squash-Commit b2ff2299) am 15.11.2026. GitHub-Tests und Browserprüfungen mit synthetischen Kontoangaben bei 390 und 1280 Pixeln bestanden; Vercel-Produktionsdeployment des Merge-Commits READY. Eine Anmeldung auf einem realen iPhone wurde nicht separat nachgewiesen. Kein produktiver Auslagen-Antragsworkflow mit diesem PR freigeschaltet.
 
 ## Qualitätsprüfung: Automatische Prüfungen – 08.11.2026
 
