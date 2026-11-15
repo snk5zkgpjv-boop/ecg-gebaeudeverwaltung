@@ -3,6 +3,8 @@
 CREATE TABLE IF NOT EXISTS ecg_expense_claims (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   applicant_id text NOT NULL,
+  submission_key uuid NOT NULL,
+  UNIQUE(applicant_id,submission_key),
   applicant_name text NOT NULL,
   items jsonb NOT NULL CHECK (jsonb_typeof(items) = 'array'),
   bank_iban text NOT NULL DEFAULT '',
