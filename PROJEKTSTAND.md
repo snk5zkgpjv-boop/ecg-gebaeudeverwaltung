@@ -1,6 +1,14 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 08.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 15.11.2026 (Kontodaten-Erweiterung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Finanzbereich: zentrale Gemeindekontodaten – 15.11.2026
+
+Die Gemeindekontodaten wurden anhand zweier bestehender Nutzungsvereinbarungen auf Übereinstimmung geprüft und unter `app_state.eventDocumentSettings` in der produktiven Datenbank hinterlegt. Aus Datenschutz- und Organisationsgründen werden im Repository keine echten Kontoangaben wiedergegeben. Neue Nutzungsvereinbarungen verwenden dieselben Einstellungen; vorhandene Dokumente bleiben unverändert.
+
+Neuer Bereich `/finanzen/kontodaten.html` über Finanzen → Kontodaten: für jedes aktive, angemeldete Gemeindemitglied lesbar, IBAN kopierbar, A4-Browserdruck. Administratoren können Kontoinhaber, IBAN, BIC und optional Banknamen mit serverseitiger Validierung und Revisionserkennung ändern. Das bestehende Finanz-Auslagen-Testjournal bleibt für Mitglieder gesperrt. Der Serverzweig `/api/state?bankAccount=1` liefert ausschließlich die nötigen Kontoangaben aus den bereits vorhandenen Veranstaltungsdokument-Einstellungen; kein separater Datenbestand und keine zusätzliche Vercel-Funktion.
+
+Code als separater Pull Request zu prüfen. Ein erfolgreicher Build ist keine echte Geräteabnahme; produktive Veröffentlichung wird separat dokumentiert.
 
 ## Qualitätsprüfung: Automatische Prüfungen – 08.11.2026
 

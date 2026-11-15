@@ -19,7 +19,7 @@ const areaSections = {
   ['kuechenordnung','Kontakte, Bestand & Regeln','manageCalendar'], ['kuechengeraete','Geräte & Anleitungen','kitchenMaintenance']
  ]],
  finance: ['Finanzen', [
-  ['auslagen','Auslagen testen','viewFinance'], ['kontodaten','Kontodaten','planned'], ['spenden','Spenden','planned']
+  ['auslagen','Auslagen testen','viewFinance'], ['kontodaten','Kontodaten','bankAccount'], ['spenden','Spenden','planned']
  ]]
 };
 function sectionAllowed(right,user) {
@@ -27,9 +27,9 @@ function sectionAllowed(right,user) {
   const keys=right==='staff'?['staffPastoral','staffBuilding','approvePastoral','approveBuilding']:['approvePastoral','approveBuilding'];
   return user.role==='admin'||keys.some(key=>user.permissions?.[key]===true);
  }
- if(right==='profile')return true;
+ if(right==='profile'||right==='bankAccount')return true;
  if(right==='manageMembers')return user.role==='admin'||user.permissions?.manageMembers===true;
- if(user.role==='member')return false;
+ if(user.role==='member')return right==='bankAccount';
  if(user.role==='admin')return true;
  if(right==='planned')return user.permissions?.viewFinance===true;
  if(right==='admin')return false;
