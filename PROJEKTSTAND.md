@@ -1,6 +1,22 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 08.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 15.11.2026 (Finanzmodul in Feature-Branch; produktive historische Nachweise siehe unten). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Entwicklung: digitale Auslagen mit Papierfoto und Druck – 15.11.2026
+
+**Status:** PR #60 im Entwicklungsbranch, Vercel-Vorschau bereit, nicht produktiv zusammengeführt. Die produktive ECG-Datenbank wurde nicht um die neuen Auslagentabellen erweitert. Der vorhandene synthetische Finanzpilot bleibt erhalten.
+
+**Fachlicher Umfang:** Eigenes Auslagenformular für aktive Benutzer einschließlich `member`, Mehrfachpositionen, automatische Summen, Originalbelege, Bankerstattung oder Erstattungsverzicht mit separater Prüfung, A4-Browserdruck/PDF-Speichern, eigener Status und geschützter Belegdownload. `financeDeacon` und `admin` können fremde Anträge prüfen, Rückfragen stellen, freigeben und Auszahlungen dokumentieren. Die Freigabe eigener Anträge ist serverseitig untersagt; eine Auszahlung darf nicht von derselben Person bestätigt werden, die freigegeben hat. Rückfragen und Antworten werden mit Notizen protokolliert. Wiederholte Einreichungen mit derselben Kennung erzeugen keinen neuen Vorgang; SQL-Statusübergänge prüfen den Ausgangsstatus.
+
+**Fotoeinlesung:** Bild wird auf dem Gerät vorverarbeitet und nach ausdrücklicher Zustimmung an die serverseitig konfigurierte OpenAI Responses API übertragen; feste JSON-Struktur für Felder und Warnungen, sämtliche Ergebnisse bleiben prüfpflichtige Entwürfe. Kein funktionierender API-Zugang im geprüften ECG-Vercel-Projekt nachgewiesen; die Auslesung echter Handschriften wurde noch nicht praktisch getestet. Maximal fünf Einleseaufrufe je Konto und Tag im Datenbankschema.
+
+**Datenschutz und Betrieb:** Finanzfelder und Belegbytes werden mit AES-256-GCM vor Speicherung verschlüsselt. Verschlüsselungsschlüssel als geheime Hosting-Variable `ECG_EXPENSES_DATA_KEY`, keine Geheimnisse im Repository. Zum Testen wurde ein getrennter Neon-Branch angelegt, migrationsseitig mit vier Auslagentabellen, und nur für den entsprechenden Vercel-Preview-Branch eine eigene Datenbankverbindung und ein eigener Testschlüssel eingerichtet. Dieser Branch ist eine Kopie des bisherigen Bestands und enthält deshalb sensible Betriebsdaten; nicht öffentlich oder als dauerhaftes Archiv verwenden. Region der bisherigen Neon-Instanz ist USA. Kein Echtbetrieb genehmigt, kein produktiver Backup/Restore für die zusätzlichen Tabellen erbracht. Hinweise in `docs/DATENSICHERUNG.md`.
+
+**Testmodus:** Admin-only `/finanzen/erfassung.html?test=1` verwendet ausschließlich synthetische Datensätze im lokalen Browser; kein echter Auslagen-Datenbankeintrag. API-Funktionen laufen innerhalb der bestehenden Vercel-Endpunkte `/api/state?expenses=1` und `/api/ai?expensesScan=1`, um das Hobby-Limit für Serverless-Funktionen einzuhalten.
+
+**Nachweise:** GitHub-Testlauf für Commit `6358b7900dc2cd2b0743c20a50a39605b7f0da49` erfolgreich, einschließlich PGlite-Schema-/Quota-/Dublettenschutz-/Verschlüsselungstests und Chromium-Tests bei 390/1280 px für Mitglied, Admin und Finanzdiakon mit synthetischen API-Antworten. Vercel-Preview baut den Branch erfolgreich; echter iPhone-Test, Live-OCR und Fachabnahme stehen noch aus.
+
+**Vor Produktionsstart:** EU-Datenregion und KI-Datenverarbeitung klären, Betriebs- und Finanzfreigabe, Schlüsselverwahrung/Rotation, Aufbewahrungs- und Löschregelung, Backup und Restore mit verschlüsselten Belegen, Test der echten Datenbank-Endpunkte mit freigegebenen Testkonten, Ersteinrichtung der Anmeldezugänge von Manuel und Eduard, Dietrichs fehlende E-Mail. Ohne Erfüllung dieser Punkte nicht als live markieren.
 
 ## Qualitätsprüfung: Automatische Prüfungen – 08.11.2026
 

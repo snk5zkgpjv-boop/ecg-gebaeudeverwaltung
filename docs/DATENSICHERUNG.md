@@ -2,6 +2,16 @@
 
 Stand: 08.11.2026. Technische Anleitung; keine Zugangsdaten oder Betriebsinhalte.
 
+## Auslagenmodul (Entwicklungsstand 15.11.2026)
+
+Im Finanzmodul liegen Antrag, Positionen und Änderungsverlauf in `ecg_expense_claims` und `ecg_expense_audit`. Originalbelege liegen als begrenzte verschlüsselte Bytefolgen in `ecg_expense_receipts`; tägliche KI-Nutzungsgrenzen in `ecg_expense_scan_quota`. Alle vier Tabellen sind beim vollständigen PostgreSQL-Backup und Wiederherstellungstest zu berücksichtigen. Die alten Musterbelege in `ecg_demo_expenses` bleiben getrennt. Der Browser-PDF-Ausdruck ist kein eigenständiges Belegarchiv.
+
+IBAN, Kontoinhaber und Originalbelege werden vor der Speicherung mit AES-256-GCM verschlüsselt. Der 32-Byte-Schlüssel `ECG_EXPENSES_DATA_KEY` wird als Base64-Schlüssel ausschließlich in der Hosting-Konfiguration geführt; er darf nicht in Git, Logdateien, Bildschirmfotos, öffentlichen Dokumenten oder E-Mails abgelegt werden. **Ohne diesen Schlüssel sind die verschlüsselten Datensätze selbst aus vollständigen Backups nicht wiederherstellbar.** Verantwortliche müssen den Schlüssel gesondert, zugriffsbeschränkt und redundant sichern. Rotation erfordert einen kontrollierten Neuverschlüsselungsprozess; eine Änderung des Werts allein macht Altbestände unlesbar.
+
+Der Entwicklungsbranch verwendet eine isolierte Neon-Testbranche. Diese wurde als Datenbankzweig von der vorhandenen ECG-Datenbank erzeugt; Berechtigungen und Aufbewahrung der Kopie sind entsprechend zu behandeln. Sie darf nicht als dauerhaftes Archiv oder als Produktionsersatz genutzt werden. Der Branch verwendet einen eigenen Finanzschlüssel, der nicht für Produktion wiederverwendet werden soll.
+
+**Produktivfreigabevoraussetzungen:** dokumentierter vollständiger Backup-/Restore mit allen vier Auslagentabellen und Belegbytes, gesonderte Sicherung des Schlüssels, Datenschutzprüfung der KI-Bildübertragung und Speicherregion, konkrete Löschfristen und Verantwortlichkeiten, Freigabe durch das Finanzteam. Derzeit kein bestätigter produktiver Restore-Nachweis.
+
 ## Drei getrennte Sicherungsarten
 
 - Git sichert Code und technische Dokumentation, nicht die Betriebsdaten.
