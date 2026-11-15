@@ -1,7 +1,7 @@
 const $=s=>document.querySelector(s);
 const fmt=c=>(c/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const api='/api/expenses';
+const api='/api/state?expenses=1';
 let user=null,scanData=null,scanName=null,finance=false;
 const info=(msg)=>{$('#status').textContent=msg};
 function position(entry={}){
@@ -69,14 +69,14 @@ async function refresh(){
   div.append(print);if(claim.status==='question'){const respond=document.createElement('button');respond.textContent='Rückfrage beantworten / erneut vorlegen';respond.onclick=async()=>{if(!confirm('Antrag erneut zur Prüfung vorlegen?'))return;try{await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reply',id:claim.id})});await refresh()}catch(e){alert(e.message)}};div.append(respond)}container.append(div);
  }
  if(!finance)return;
- const all=await json(api+'?scope=team');const box=$('#team');box.replaceChildren();
+ const all=await json(api+'&scope=team');const box=$('#team');box.replaceChildren();
  if(!all.claims.length)box.textContent='Keine eingereichten Anträge.';
  for(const claim of all.claims){
   const div=document.createElement('article');div.className='claim-card';
   div.innerHTML=`<strong>${esc(claim.applicant_name)}</strong> · ${fmt(claim.total_cents)}<p>Status: ${esc(claim.status)}</p><p>${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
   const print=document.createElement('button');print.textContent='Drucken / PDF';print.onclick=()=>printPaper(claim,true);div.append(print);
   for(const id of claim.receipts||[]){
-   const link=document.createElement('a');link.href=api+'?receipt='+encodeURIComponent(id.id);link.textContent='Beleg: '+id.name;link.rel='noopener';link.style.display='block';div.append(link);
+   const link=document.createElement('a');link.href=api+'&receipt='+encodeURIComponent(id.id);link.textContent='Beleg: '+id.name;link.rel='noopener';link.style.display='block';div.append(link);
   }
   const actions={submitted:[['approve','Freigeben'],['question','Rückfrage'],['reject','Ablehnen']],approved:[['pay','Auszahlung dokumentieren']]};
   for(const [action,label] of actions[claim.status]||[]){
@@ -108,7 +108,7 @@ $('#recognize').onclick=async()=>{
  if(!scanData)return;
  $('#recognize').disabled=true;$('#scan-status').textContent='Foto wird ausgewertet …';
  try{
- const result=await json('/api/expenses-scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:scanData})});
+ const result=await json('/api/ai?expensesScan=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:scanData})});
  const draft=result.draft;
  $('#positions').replaceChildren();
  for(const item of draft.items||[])position(item);
