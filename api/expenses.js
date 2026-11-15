@@ -35,8 +35,9 @@ export default async function handler(req,res){
       const files=req.body?.files;
       if(!Array.isArray(files)||files.length<1||files.length>6)return res.status(400).json({error:'Mindestens ein Beleg, höchstens sechs.'});
       const acceptable=new Set(['image/jpeg','image/png','application/pdf']);
+      const signatures={'image/jpeg':'/9j/','image/png':'iVBORw0KGgo','application/pdf':'JVBERi0'};
       let size=0;
-      for(const f of files){if(!f||typeof f.data!=='string'||typeof f.type!=='string'||!acceptable.has(f.type)||typeof f.name!=='string'||f.name.length>120||!/^[A-Za-z0-9+/]+={0,2}$/.test(f.data))return res.status(400).json({error:'Ungültiges Belegformat.'});size+=f.data.length;}
+      for(const f of files){if(!f||typeof f.data!=='string'||typeof f.type!=='string'||!acceptable.has(f.type)||typeof f.name!=='string'||f.name.length>120||!/^[A-Za-z0-9+/]+={0,2}$/.test(f.data))return res.status(400).json({error:'Ungültiges Belegformat.'});if(!f.data.startsWith(signatures[f.type]))return res.status(400).json({error:'Dateiinhalt passt nicht zum Belegformat.'});size+=f.data.length;}
       if(size>3300000)return res.status(413).json({error:'Belege sind zu groß. Bitte Bilder verkleinern.'});
       // Insert claim and receipts via a single SQL statement with a CTE to avoid partial uploads.
       const payload=JSON.stringify(files);
@@ -53,6 +54,13 @@ export default async function handler(req,res){
         SELECT id,${profile.id},'submitted' FROM claim RETURNING id
       ) SELECT claim.id,(SELECT count(*) FROM receipts) AS receipt_count FROM claim`;
       return res.status(201).json({ok:true,id:rows[0].id,receiptCount:Number(rows[0].receipt_count)});
+    }
+    if(action==='reply'){
+      const id=String(req.body?.id||'');if(!UUID.test(id))return res.status(400).json({error:'Ungültiger Vorgang.'});
+      const rows=await sql`UPDATE ecg_expense_claims SET status='submitted',updated_at=now() WHERE id=${id}::uuid AND applicant_id=${profile.id} AND status='question' RETURNING id`;
+      if(!rows.length)return res.status(409).json({error:'Keine offene Rückfrage.'});
+      await sql`INSERT INTO ecg_expense_audit(claim_id,actor_id,event) VALUES(${id}::uuid,${profile.id},'reply')`;
+      return res.json({ok:true});
     }
     if(!isFinance)return res.status(403).json({error:'Finanzrecht erforderlich.'});
     const id=String(req.body?.id||'');
