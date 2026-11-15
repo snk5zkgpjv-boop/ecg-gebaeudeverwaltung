@@ -17,6 +17,10 @@ Ein Paket endet mit einem nachvollziehbaren Testweg. Statusfolge: geplant → in
 
 Querschnitt: Berichtswesen und Statistik jeweils beim zugehörigen Modul ergänzen. Änderungen an Zugriffsrechten, Empfängern, externen Anbindungen und Ausgaben werden gesondert geprüft. Keine produktiven Personen- oder Veranstaltungseinträge für Testzwecke verwenden.
 
+### Entwicklung 15.11.2026 – Auslagenerfassung
+
+In einem separaten Feature-Branch wurde ein neuer Entwurf für Mitglieder-Einreichung, Fotoauslese (optional über vorhandene serverseitige KI-Konfiguration), Originalbelege, Finanzteam-Aktionen und A4-Druckansicht angelegt. Der bisherige synthetische Pilot bleibt unverändert. Nicht als live oder fachlich abgenommen werten. Offene Punkte: Scannerqualitätsprüfung mit handschriftlichen Formularen, Hochladesicherheit und Dateispeicherkonzept, Bankdatenschutz, Nachweis der Doppelbuchungsvermeidung, robuste Rückfragen mit Änderungen und Freigabeablauf, produktive Migration und vollständiger Test.
+
 ### Aktueller Lieferumfang
 
 - Paket 1: Ablaufplan pro Termin veröffentlicht (PR #50).
