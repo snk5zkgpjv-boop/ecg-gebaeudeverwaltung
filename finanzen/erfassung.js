@@ -147,10 +147,22 @@ async function start(){
  if(user.role==='admin'){
   const link=document.createElement('a');link.href='/finanzen/erfassung.html?test=1';link.textContent='Admin-Testmodus (Musteranträge)';link.className='parent-link';$('#applicant').before(link);
   if(new URLSearchParams(location.search).get('test')==='1'){
-   $('#app').hidden=false;$('#form').hidden=true;$('#claims').hidden=true;$('#finance').hidden=false;
+   $('#app').hidden=false;$('#form').hidden=false;$('#claims').hidden=true;$('#finance').hidden=false;
    $('#finance').querySelector('h2').textContent='Admin-Test: Finanzablauf';
-   const {initAdminTest}=await import('./admin-test.js');initAdminTest($('#team'),printPaper);
-   info('Testmodus mit fiktiven Daten. Keine Speicherung in der ECG-Datenbank.');return;
+   const {initAdminTest}=await import('./admin-test.js');
+   const demo=initAdminTest($('#team'),printPaper);
+   position();
+   $('#form').onsubmit=ev=>{
+    ev.preventDefault();
+    try{
+     const items=itemsFromForm(),total_cents=items.reduce((s,x)=>s+x.cents,0);
+     const reimbursement_type=$('input[name=kind]:checked').value;
+     const claim={id:'DEMO-'+crypto.randomUUID().slice(0,8).toUpperCase(),applicant_name:'Testperson (Admin-Vorschau)',applicant_id:'demo-new',items,total_cents,reimbursement_type,status:'submitted',receipts:[],created_at:new Date().toISOString()};
+     demo.add(claim);info('Demo-Antrag lokal erstellt. Keine Übertragung an ECG oder Finanzteam.');
+     $('#form').reset();$('#positions').replaceChildren();position();
+    }catch(e){info('Demo-Antrag nicht erstellt: '+e.message);}
+   };
+   info('Testmodus mit fiktiven Daten. Formulareingaben bleiben nur in dieser Browseransicht.');return;
   }
  }
  $('#applicant').textContent=user.name;$('#finance').hidden=!finance;$('#app').hidden=false;info('');
