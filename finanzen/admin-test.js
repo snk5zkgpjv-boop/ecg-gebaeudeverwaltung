@@ -27,4 +27,5 @@ export function initAdminTest(container,print) {
   }
  };
  render();
+ return {add(claim){claims.unshift(claim);render();}};
 }
