@@ -2,6 +2,7 @@ const $=s=>document.querySelector(s);
 const fmt=c=>(c/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const api='/api/state?expenses=1';
+const statusName={submitted:'Eingereicht',question:'Rückfrage offen',approved:'Freigegeben',rejected:'Abgelehnt',paid:'Ausgezahlt'};
 let user=null,scanData=null,scanName=null,finance=false;
 let submissionKey=crypto.randomUUID();
 const info=(msg)=>{$('#status').textContent=msg};
@@ -56,7 +57,7 @@ async function compressImage(file){
 function printPaper(claim,includeBank=false){
  const items=claim.items||[];
  const total=claim.total_cents??items.reduce((a,x)=>a+x.cents,0);
- $('#paper').innerHTML=`<h1>Auslagenerstattung – Evangeliums-Christengemeinde</h1><p>ECG Hussenhofen · Hauptstraße 20 · 73527 Schwäbisch Gmünd</p><p><b>Antragsteller:</b> ${esc(claim.applicant_name||user?.name||'')}<br><b>Vorgang:</b> ${esc(claim.id||'Entwurf')}<br><b>Status:</b> ${esc(claim.status||'Entwurf')}</p><table><thead><tr><th>Datum</th><th>Ausgabe</th><th>Projekt / Anlass</th><th>Betrag</th></tr></thead><tbody>${items.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.description)}</td><td>${esc(x.project)}</td><td>${fmt(x.cents)}</td></tr>`).join('')}</tbody></table><p style="text-align:right"><strong>Gesamtsumme: ${fmt(total)}</strong></p><p>Erstattungsart: ${claim.reimbursement_type==='waiver'?'Verzicht auf Kostenerstattung – gesonderte Prüfung':'Banküberweisung'}</p>${includeBank&&claim.reimbursement_type!=='waiver'?`<p>Kontoinhaber: ${esc(claim.bank_owner||'')}<br>IBAN: ${esc(claim.bank_iban||'')}</p>`:''}<p class="print-note">Eingereichte Belege: ${(claim.receipts||[]).length}. Das Original und die Belege werden elektronisch verwaltet. Diese Druckansicht ist keine Spendenbescheinigung.</p><p>Ausgedruckt am ${new Date().toLocaleDateString('de-DE')}.</p>`;
+ $('#paper').innerHTML=`<h1>Auslagenerstattung – Evangeliums-Christengemeinde</h1><p>ECG Hussenhofen · Hauptstraße 20 · 73527 Schwäbisch Gmünd</p><p><b>Antragsteller:</b> ${esc(claim.applicant_name||user?.name||'')}<br><b>Vorgang:</b> ${esc(claim.id||'Entwurf')}<br><b>Status:</b> ${esc(statusName[claim.status]||claim.status||'Entwurf')}</p><table><thead><tr><th>Datum</th><th>Ausgabe</th><th>Projekt / Anlass</th><th>Betrag</th></tr></thead><tbody>${items.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.description)}</td><td>${esc(x.project)}</td><td>${fmt(x.cents)}</td></tr>`).join('')}</tbody></table><p style="text-align:right"><strong>Gesamtsumme: ${fmt(total)}</strong></p><p>Erstattungsart: ${claim.reimbursement_type==='waiver'?'Verzicht auf Kostenerstattung – gesonderte Prüfung':'Banküberweisung'}</p>${includeBank&&claim.reimbursement_type!=='waiver'?`<p>Kontoinhaber: ${esc(claim.bank_owner||'')}<br>IBAN: ${esc(claim.bank_iban||'')}</p>`:''}<p class="print-note">Eingereichte Belege: ${(claim.receipts||[]).length}. Das Original und die Belege werden elektronisch verwaltet. Diese Druckansicht ist keine Spendenbescheinigung.</p><p>Ausgedruckt am ${new Date().toLocaleDateString('de-DE')}.</p>`;
  window.print();
 }
 async function refresh(){
@@ -65,16 +66,16 @@ async function refresh(){
  if(!mine.claims.length)container.textContent='Noch keine Anträge.';
  for(const claim of mine.claims){
   const div=document.createElement('article');div.className='claim-card';
-  div.innerHTML=`<strong>${fmt(claim.total_cents)}</strong> · ${esc(claim.status)}<p>${new Date(claim.created_at).toLocaleDateString('de-DE')} · ${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
+  div.innerHTML=`<strong>${fmt(claim.total_cents)}</strong> · ${esc(statusName[claim.status]||claim.status)}<p>${new Date(claim.created_at).toLocaleDateString('de-DE')} · ${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
   const print=document.createElement('button');print.textContent='Antrag drucken / PDF';print.onclick=()=>printPaper(claim);
-  if(claim.note){const message=document.createElement('p');message.textContent='Rückmeldung des Finanzteams: '+claim.note;div.append(message);}for(const event of claim.history||[]){if(!event.note)continue;const msg=document.createElement('p');msg.textContent=(event.event==='reply'?'Antwort: ':'Hinweis: ')+event.note;div.append(msg);}div.append(print);if(claim.status==='question'){const respond=document.createElement('button');respond.textContent='Rückfrage beantworten / erneut vorlegen';respond.onclick=async()=>{const answer=prompt('Antwort auf die Rückfrage (max. 500 Zeichen):');if(!answer?.trim())return;try{await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reply',id:claim.id,answer:answer.trim()})});await refresh()}catch(e){alert(e.message)}};div.append(respond)}container.append(div);
+  for(const event of claim.history||[]){if(!event.note)continue;const msg=document.createElement('p');msg.textContent=(event.event==='reply'?'Antwort: ':'Hinweis: ')+event.note;div.append(msg);}div.append(print);if(claim.status==='question'){const respond=document.createElement('button');respond.textContent='Rückfrage beantworten / erneut vorlegen';respond.onclick=async()=>{const answer=prompt('Antwort auf die Rückfrage (max. 500 Zeichen):');if(!answer?.trim())return;try{await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reply',id:claim.id,answer:answer.trim()})});await refresh()}catch(e){alert(e.message)}};div.append(respond)}for(const file of claim.receipts||[]){const link=document.createElement('a');link.href=api+'&receipt='+encodeURIComponent(file.id);link.textContent='Beleg ansehen: '+file.name;link.style.display='block';div.append(link)}container.append(div);
  }
  if(!finance)return;
  const all=await json(api+'&scope=team');const box=$('#team');box.replaceChildren();
  if(!all.claims.length)box.textContent='Keine eingereichten Anträge.';
  for(const claim of all.claims){
   const div=document.createElement('article');div.className='claim-card';
-  div.innerHTML=`<strong>${esc(claim.applicant_name)}</strong> · ${fmt(claim.total_cents)}<p>Status: ${esc(claim.status)}</p><p>${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
+  div.innerHTML=`<strong>${esc(claim.applicant_name)}</strong> · ${fmt(claim.total_cents)}<p>Status: ${esc(statusName[claim.status]||claim.status)}</p><p>${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
   const print=document.createElement('button');print.textContent='Drucken / PDF';print.onclick=()=>printPaper(claim,true);div.append(print);
   for(const event of claim.history||[]){if(!event.note)continue;const line=document.createElement('p');line.textContent=(event.event==='reply'?'Antwort des Antragstellers: ':'Bearbeitungsvermerk: ')+event.note;div.append(line)}
   for(const id of claim.receipts||[]){
