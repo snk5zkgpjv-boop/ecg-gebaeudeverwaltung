@@ -34,5 +34,6 @@ CREATE TABLE IF NOT EXISTS ecg_expense_audit (
   claim_id uuid NOT NULL REFERENCES ecg_expense_claims(id) ON DELETE CASCADE,
   actor_id text NOT NULL,
   event text NOT NULL,
+  note text NOT NULL DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
