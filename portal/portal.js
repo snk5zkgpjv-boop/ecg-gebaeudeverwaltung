@@ -12,8 +12,8 @@ const panels=[
 function available(key,user){
  if(preview || user.role==='admin')return true;
  if(areaSections[key])return areaSections[key][1].some(([, ,right])=>sectionAllowed(right,user));
- if(user.role==='member')return false;
- if(['finance','members'].includes(key))return false;
+ if(user.role==='member')return key==='finance';
+ if(['finance','members'].includes(key))return key==='finance';
  if(key==='groups')return true;
  if(key==='kitchen')return user.role!=='technician' && (user.permissions?.manageCalendar ?? user.role==='coordinator');
  return ['elder','deacon','coordinator','technician','cleaner','backup','volunteer'].includes(user.role) || user.permissions?.manageRooms===true;
@@ -110,6 +110,7 @@ function setupSections(user){
    if(planned||preview)tile.onclick=()=>explain(title,planned?'Dieser Bereich ist geplant.':'Diese Funktion öffnet sich nach der Anmeldung.');
    else if(id==='wochenplan')tile.href='/wochenplan/';
    else if(id==='auslagen'&&key==='finance')tile.href='/finanzen/';
+   else if(id==='kontodaten'&&key==='finance')tile.href='/finanzen/kontodaten.html';
    else if(key==='personnel')tile.href=id==='stamm'?'/personal/stamm.html':'/personal/?ansicht='+id;
    else tile.href=key==='members'?'/members/?ansicht='+id:'/?bereich='+id;
    grid.append(tile);
