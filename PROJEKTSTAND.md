@@ -1,6 +1,12 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 08.11.2026. Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 15.11.2026 (Finanzmodul in Feature-Branch; produktive historische Nachweise siehe unten). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Entwicklung: digitale Auslagen mit Papierfoto und Druck – 15.11.2026
+
+Nur Feature-Branch \`feature/finanzen-auslagen-papierimport-20261115\`, keine Veröffentlichung. Getrennter neuer Antragsendpunkt mit Mitgliedszugang über Sitzung und aktiviertes Profil; Teamansicht für \`financeDeacon\` und Administratoren; Freigabe eigener Anträge serverseitig ausgeschlossen. Vorgesehene Tabellen in \`scripts/expenses-schema.sql\` mit Belegen und Auditverlauf, nicht automatisch produktiv migriert. Erfassungsseite \`/finanzen/erfassung.html\` einschließlich Fotovorverarbeitung, optionaler KI-Erkennung als überprüfbarem Entwurf, mehreren Positionen, Beleganhängen und browserbasierter A4-Druck-/PDF-Ansicht. KI-Anbindung setzt den bereits vorgesehenen, serverseitigen \`OPENAI_API_KEY\` voraus; Funktion und Qualität bei echten Handschriften nicht nachgewiesen. Keine produktiven Auslagen eingereicht, keine Belege versandt, kein echter OCR-Test. Die Druckansicht ist ein Browserdruck, kein revisionssicherer Archivexport.
+
+Vor Produktivsetzung: automatisierte und manuelle Tests sowie Fachabnahme; Datenschutz/AVV und Aufbewahrung für KI-Bildübertragung klären; Upload-Sicherheitsprüfung, Schwachstellenkontrolle, getrennte Sicherung sowie Wiederherstellung mit Belegen prüfen; Mandanten- und Freigaberechte nachweisen; Finanzrollen und Erstzugänge abnehmen. Der alte synthetische Testbetrieb bleibt bestehen.
 
 ## Qualitätsprüfung: Automatische Prüfungen – 08.11.2026
 
