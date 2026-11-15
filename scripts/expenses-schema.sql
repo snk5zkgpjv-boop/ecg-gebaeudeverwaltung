@@ -37,3 +37,10 @@ CREATE TABLE IF NOT EXISTS ecg_expense_audit (
   note text NOT NULL DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
+-- Limit paid document recognition requests per member and calendar day.
+CREATE TABLE IF NOT EXISTS ecg_expense_scan_quota (
+ applicant_id text NOT NULL,
+ day date NOT NULL DEFAULT CURRENT_DATE,
+ requests integer NOT NULL DEFAULT 1 CHECK(requests BETWEEN 1 AND 10),
+ PRIMARY KEY(applicant_id,day)
+);
