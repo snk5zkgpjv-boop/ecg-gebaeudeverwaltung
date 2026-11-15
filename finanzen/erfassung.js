@@ -111,7 +111,7 @@ $('#recognize').onclick=async()=>{
  if(!$('#scan-consent').checked){$('#scan-status').textContent='Bitte der KI-Bildübertragung zustimmen oder die Angaben manuell eintragen.';return;}
  $('#recognize').disabled=true;$('#scan-status').textContent='Foto wird ausgewertet …';
  try{
- const result=await json('/api/ai?expensesScan=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:scanData})});
+ const result=await json('/api/ai?expensesScan=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:scanData,consent:true})});
  const draft=result.draft;
  $('#positions').replaceChildren();
  for(const item of draft.items||[])position(item);
