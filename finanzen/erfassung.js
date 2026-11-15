@@ -67,7 +67,7 @@ async function refresh(){
   const div=document.createElement('article');div.className='claim-card';
   div.innerHTML=`<strong>${fmt(claim.total_cents)}</strong> · ${esc(claim.status)}<p>${new Date(claim.created_at).toLocaleDateString('de-DE')} · ${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
   const print=document.createElement('button');print.textContent='Antrag drucken / PDF';print.onclick=()=>printPaper(claim);
-  if(claim.note){const message=document.createElement('p');message.textContent='Rückmeldung des Finanzteams: '+claim.note;div.append(message);}div.append(print);if(claim.status==='question'){const respond=document.createElement('button');respond.textContent='Rückfrage beantworten / erneut vorlegen';respond.onclick=async()=>{if(!confirm('Antrag erneut zur Prüfung vorlegen?'))return;try{await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reply',id:claim.id})});await refresh()}catch(e){alert(e.message)}};div.append(respond)}container.append(div);
+  if(claim.note){const message=document.createElement('p');message.textContent='Rückmeldung des Finanzteams: '+claim.note;div.append(message);}for(const event of claim.history||[]){if(!event.note)continue;const msg=document.createElement('p');msg.textContent=(event.event==='reply'?'Antwort: ':'Hinweis: ')+event.note;div.append(msg);}div.append(print);if(claim.status==='question'){const respond=document.createElement('button');respond.textContent='Rückfrage beantworten / erneut vorlegen';respond.onclick=async()=>{const answer=prompt('Antwort auf die Rückfrage (max. 500 Zeichen):');if(!answer?.trim())return;try{await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reply',id:claim.id,answer:answer.trim()})});await refresh()}catch(e){alert(e.message)}};div.append(respond)}container.append(div);
  }
  if(!finance)return;
  const all=await json(api+'&scope=team');const box=$('#team');box.replaceChildren();
@@ -76,12 +76,13 @@ async function refresh(){
   const div=document.createElement('article');div.className='claim-card';
   div.innerHTML=`<strong>${esc(claim.applicant_name)}</strong> · ${fmt(claim.total_cents)}<p>Status: ${esc(claim.status)}</p><p>${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
   const print=document.createElement('button');print.textContent='Drucken / PDF';print.onclick=()=>printPaper(claim,true);div.append(print);
+  for(const event of claim.history||[]){if(!event.note)continue;const line=document.createElement('p');line.textContent=(event.event==='reply'?'Antwort des Antragstellers: ':'Bearbeitungsvermerk: ')+event.note;div.append(line)}
   for(const id of claim.receipts||[]){
    const link=document.createElement('a');link.href=api+'&receipt='+encodeURIComponent(id.id);link.textContent='Beleg: '+id.name;link.rel='noopener';link.style.display='block';div.append(link);
   }
-  const actions={submitted:[['approve','Freigeben'],['question','Rückfrage'],['reject','Ablehnen']],approved:[['pay','Auszahlung dokumentieren']]};
+  const actions={submitted:[['approve','Freigeben'],['question','Rückfrage'],['reject','Ablehnen']],approved:claim.reimbursement_type==='refund'?[['pay','Auszahlung dokumentieren']]:[]};
   for(const [action,label] of actions[claim.status]||[]){
-   if(claim.applicant_id===user.appUserId)continue;
+   if(claim.applicant_id===user.appUserId||(action==='pay'&&claim.reviewer_id===user.appUserId))continue;
    const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{
     const note=action==='question'||action==='reject'?prompt('Begründung / Rückfrage:'):'';
     if((action==='question'||action==='reject')&&note===null)return;
