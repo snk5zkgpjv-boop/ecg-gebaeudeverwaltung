@@ -11,13 +11,15 @@ CREATE TABLE IF NOT EXISTS ecg_expense_claims (
   bank_owner text NOT NULL DEFAULT '',
   reimbursement_type text NOT NULL DEFAULT 'refund' CHECK (reimbursement_type IN ('refund','waiver')),
   total_cents integer NOT NULL CHECK (total_cents > 0),
+  CONSTRAINT ecg_expense_bank_consistency CHECK (reimbursement_type='refund' OR (bank_iban='' AND bank_owner='')),
   status text NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted','question','approved','rejected','paid')),
   note text NOT NULL DEFAULT '',
   reviewer_id text,
   approved_at timestamptz,
   paid_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT ecg_expense_payment_consistency CHECK (status<>'paid' OR (approved_at IS NOT NULL AND paid_at IS NOT NULL AND reimbursement_type='refund'))
 );
 CREATE INDEX IF NOT EXISTS ecg_expenses_applicant_idx ON ecg_expense_claims(applicant_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS ecg_expenses_status_idx ON ecg_expense_claims(status,created_at DESC);
