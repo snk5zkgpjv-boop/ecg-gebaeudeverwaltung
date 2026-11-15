@@ -67,7 +67,7 @@ async function refresh(){
   const div=document.createElement('article');div.className='claim-card';
   div.innerHTML=`<strong>${fmt(claim.total_cents)}</strong> · ${esc(claim.status)}<p>${new Date(claim.created_at).toLocaleDateString('de-DE')} · ${esc(claim.items.map(x=>x.description).join(', '))}</p>`;
   const print=document.createElement('button');print.textContent='Antrag drucken / PDF';print.onclick=()=>printPaper(claim);
-  div.append(print);if(claim.status==='question'){const respond=document.createElement('button');respond.textContent='Rückfrage beantworten / erneut vorlegen';respond.onclick=async()=>{if(!confirm('Antrag erneut zur Prüfung vorlegen?'))return;try{await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reply',id:claim.id})});await refresh()}catch(e){alert(e.message)}};div.append(respond)}container.append(div);
+  if(claim.note){const message=document.createElement('p');message.textContent='Rückmeldung des Finanzteams: '+claim.note;div.append(message);}div.append(print);if(claim.status==='question'){const respond=document.createElement('button');respond.textContent='Rückfrage beantworten / erneut vorlegen';respond.onclick=async()=>{if(!confirm('Antrag erneut zur Prüfung vorlegen?'))return;try{await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reply',id:claim.id})});await refresh()}catch(e){alert(e.message)}};div.append(respond)}container.append(div);
  }
  if(!finance)return;
  const all=await json(api+'&scope=team');const box=$('#team');box.replaceChildren();
