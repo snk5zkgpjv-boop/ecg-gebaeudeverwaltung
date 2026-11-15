@@ -3,6 +3,7 @@ const fmt=c=>(c/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const api='/api/state?expenses=1';
 let user=null,scanData=null,scanName=null,finance=false;
+let submissionKey=crypto.randomUUID();
 const info=(msg)=>{$('#status').textContent=msg};
 function position(entry={}){
  const section=document.createElement('section');section.className='position';
@@ -130,8 +131,8 @@ $('#form').onsubmit=async ev=>{
  if(scanData&&!files.some(f=>f.name===scanName)&&files.length<6)files.push({name:scanName,type:scanData.split(';')[0].slice(5),data:scanData.split(',')[1]});
  if(!files.length)throw Error('Mindestens einen Beleg hinzufügen.');
  const type=$('input[name=kind]:checked').value;
- const result=await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit',items,files,reimbursementType:type,iban:$('#iban').value,bankOwner:$('#bank-owner').value})});
- info('Antrag erfolgreich eingereicht. Vorgang '+result.id);
+ const result=await json(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit',submissionKey,items,files,reimbursementType:type,iban:$('#iban').value,bankOwner:$('#bank-owner').value})});
+ info('Antrag erfolgreich eingereicht. Vorgang '+result.id);submissionKey=crypto.randomUUID();
  $('#form').reset();$('#positions').replaceChildren();position();scanData=null;scanName=null;await refresh();
  }catch(e){info('Nicht eingereicht: '+e.message);}finally{btn.disabled=false;}
 };
