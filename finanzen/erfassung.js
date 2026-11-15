@@ -142,6 +142,15 @@ async function start(){
  const body=await res.json();user=body.user;
  if(!user||user.mustChangePassword)throw Error('Bitte zuerst die Anmeldung abschließen.');
  finance=user.role==='admin'||user.role==='financeDeacon';
+ if(user.role==='admin'){
+  const link=document.createElement('a');link.href='/finanzen/erfassung.html?test=1';link.textContent='Admin-Testmodus (Musteranträge)';link.className='parent-link';$('#applicant').before(link);
+  if(new URLSearchParams(location.search).get('test')==='1'){
+   $('#app').hidden=false;$('#form').hidden=true;$('#claims').hidden=true;$('#finance').hidden=false;
+   $('#finance').querySelector('h2').textContent='Admin-Test: Finanzablauf';
+   const {initAdminTest}=await import('./admin-test.js');initAdminTest($('#team'),printPaper);
+   info('Testmodus mit fiktiven Daten. Keine Speicherung in der ECG-Datenbank.');return;
+  }
+ }
  $('#applicant').textContent=user.name;$('#finance').hidden=!finance;$('#app').hidden=false;info('');
  position();await refresh();
  }catch(e){info(e.message);}
