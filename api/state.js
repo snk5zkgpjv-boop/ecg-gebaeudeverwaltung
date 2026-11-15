@@ -1,3 +1,4 @@
+import {financeBankAccount} from '../lib/finance-bank-account.js';
 import expenseHandler from '../lib/expenses-handler.js';
 import { personnel } from '../lib/personnel.js';
 import { members } from '../lib/members.js';
@@ -280,6 +281,7 @@ function accepted(current, incoming, profile) {
 }
 
 export default async function handler(req, res) {
+  if(req.query?.bankAccount==='1')return financeBankAccount(req,res);
   if(req.query?.expenses==='1')return expenseHandler(req,res);
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
   const sql = neon(process.env.DATABASE_URL);
