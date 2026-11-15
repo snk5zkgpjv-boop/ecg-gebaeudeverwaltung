@@ -32,7 +32,7 @@ try{
   role='member';await page.goto(origin+'/finanzen/erfassung.html');
   await page.locator('#app').waitFor({state:'visible'});
   assert.equal(await page.locator('#finance').isVisible(),false,'member must not see finance-team records');
-  await page.locator('#scan').setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from('89504e470d0a1a0a','hex')});
+  await page.locator('#scan').setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO8HT3sAAAAASUVORK5CYII=','base64')});
   await page.getByRole('button',{name:'Angaben aus Foto erkennen'}).click();
   await page.getByText(/Bitte der KI-Bildübertragung zustimmen/).waitFor();
   await page.locator('#scan-consent').check();
