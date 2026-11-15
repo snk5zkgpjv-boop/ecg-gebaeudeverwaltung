@@ -27,6 +27,13 @@ try{
   await page.getByRole('button',{name:'Erneut vorlegen'}).waitFor();
   await page.getByRole('button',{name:'Antrag drucken (Demo)'}).first().click();
   assert.equal(await page.evaluate(()=>window.__printed),true);
+  await page.locator('.date').first().fill('2026-11-15');
+  await page.locator('.description').first().fill('Fiktive Seife');
+  await page.locator('.amount').first().fill('9,90');
+  await page.locator('#confirm').check();
+  await page.getByRole('button',{name:'Verbindlich einreichen'}).click();
+  await page.getByText(/Demo-Antrag lokal erstellt/).waitFor();
+  await page.getByText(/Fiktive Seife/).waitFor();
   assert.equal(posts.length,0,'admin demo must never submit real data');
 
   role='member';await page.goto(origin+'/finanzen/erfassung.html');
