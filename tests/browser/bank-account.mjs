@@ -24,7 +24,7 @@ try{
    throw Error('Unexpected API '+u.pathname);
   });
   await page.goto(origin+'/finanzen/kontodaten.html');
-  await page.locator('#iban').getByText(/DE89/).waitFor();
+  await page.waitForFunction(()=>document.querySelector('#iban')?.textContent.includes('DE89'));
   assert.equal(await page.locator('#editor').isVisible(),false);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   admin=true;await page.goto(origin+'/finanzen/kontodaten.html');
