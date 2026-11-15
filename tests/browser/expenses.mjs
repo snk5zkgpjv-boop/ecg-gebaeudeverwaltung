@@ -22,7 +22,7 @@ try{
    throw Error('Unexpected API route: '+u);
   });
   await page.goto(origin+'/finanzen/erfassung.html?test=1');
-  await page.getByText('ADMIN-TESTMODUS').waitFor();
+  await page.locator('p').filter({hasText:'ADMIN-TESTMODUS ·'}).waitFor();
   await page.getByRole('button',{name:'Rückfrage stellen'}).click();
   await page.getByRole('button',{name:'Erneut vorlegen'}).waitFor();
   await page.getByRole('button',{name:'Antrag drucken (Demo)'}).first().click();
