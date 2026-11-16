@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (unaufdringlicher Bereichswechsel in Prüfung; historische technische Nachweise nachfolgend).
+Stand: 16.11.2026 (alter PIN-/E-Mail-Code-Zugang entfernt, Prüfung vor Freigabe; historische Nachweise nachfolgend).
+
+## Alter PIN-/E-Mail-Code-Zugang: Entfernung vorbereitet – 16.11.2026
+
+Vor der Codeänderung ergab die rein lesende Produktionsprüfung drei aktive Profile ohne Passwortkonto. Nach ausdrücklicher Betreiberfreigabe wurden ausschließlich diese drei ungenutzten Profile nach Verknüpfungs- und Revisionsprüfung entfernt. Die erneute rein lesende Freigabeabfrage ergab **0** aktive Profile ohne zugeordnetes Kennwortkonto. Die Anmeldung verwendet nun ausschließlich den bestehenden Kennwort-Login und unveränderte Sitzungen sowie Kennwort-Rücksetzung. Der externe Neon-Auth-Importscriptblock, alte OTP-/PIN-Dialoge und Funktionen, der Legacy-JWT-Code sowie die Route `api/auth/migrate.js` wurden entfernt. Der separat verwaltete `neon_auth`-Datenbankbereich wurde nicht verändert. Synthetische Tests prüfen importierbare API-Routen und Login/Logout/Passwort-vergessen im Browser, inklusive fehlender Fremdhost-Anfragen und 404 der alten Route. Veröffentlichung erst nach vollständig erfolgreichen CI- und Vercel-Prüfungen.
 
 ## Bereichswechsel: Startseite nur noch bei Ladeausfall – 16.11.2026
 
