@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'E-Mail-Adresse oder Kennwort ist falsch.' });
   }
 
-  const state = await appState(sql);
+  const state = await appState(sql, { usersOnly: true });
   const profile = profileFor(state, user);
   if (!profile || profile.active === false) {
     return res.status(403).json({ error: 'Dieses Konto ist nicht freigeschaltet.' });
