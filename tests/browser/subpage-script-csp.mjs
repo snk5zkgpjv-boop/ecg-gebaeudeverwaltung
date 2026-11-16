@@ -4,7 +4,7 @@ import {browserFixture} from './helpers/fixture.js';
 
 // Match Vercel header rules exactly once; ordinary index.html must retain
 // the original policy while only static subpages gain script-src 'self'.
-const config=JSON.parse(await fs.readFile(new URL('../vercel.json',import.meta.url),'utf8'));
+const config=JSON.parse(await fs.readFile(new URL('../../vercel.json',import.meta.url),'utf8'));
 function appliedPolicy(path){
  const matching=config.headers.filter(entry=>new RegExp('^'+entry.source+'$').test(path));
  const csp=matching.flatMap(entry=>entry.headers.filter(h=>h.key.toLowerCase()==='content-security-policy'));
