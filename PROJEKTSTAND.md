@@ -2,6 +2,10 @@
 
 Stand: 16.11.2026 (Anmeldeschutz in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Datenbankzugriff zentralisiert – 16.11.2026
+
+Die direkten Provider-Imports der API und zweier Datenbank-Handler wurden zu einem gemeinsamen `lib/db.js` verschoben. Der Adapter exportiert zunächst dieselbe Neon-Funktion und ändert weder SQL noch Daten. Damit ist die Abhängigkeit an einer Stelle dokumentiert; ein künftiger Wechsel zu einem klassischen PostgreSQL-Server erfordert dennoch einen geprüften Adapter und eine geeignete Node.js-Laufzeit. Die isolierte Adapterprüfung benutzt keine produktive Datenbank. Eine vollständige All-Inkl-Migration ist damit nicht durchgeführt.
+
 ## Datenbankschema als Bootstrap-Datei – 16.11.2026
 
 Ein konsolidiertes `scripts/schema.sql` bildet die bislang verstreuten SQL-Tabellen einschließlich `app_state`, Authentifizierung, Reparaturjournal, Wartungsdokumenten, Mitarbeitenden, Abwesenheiten, Mitgliedern, Diensten und Testjournal ab. Das reale Produktionsschema wurde ausschließlich lesend mit den erwarteten Tabellen verglichen. Der synthetische PGlite-Test erstellt die Tabellen aus einer leeren Datenbank und prüft die Wiederholbarkeit. Diese Datei ist **keine** vollständige Produktionsmigration und kein Datenbackup. Für eine reale Migration sind `pg_dump`, `pg_restore` und eine Betreiber-Abnahme weiterhin notwendig.

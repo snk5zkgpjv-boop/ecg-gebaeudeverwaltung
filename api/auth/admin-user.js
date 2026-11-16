@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+import { neon } from '../../lib/db.js';
 import { ensureAuthSchema, hashPassword, requireUser } from '../../lib/auth.js';
 
 function canManageUsers(profile) {

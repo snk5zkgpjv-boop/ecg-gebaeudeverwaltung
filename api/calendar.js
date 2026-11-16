@@ -1,6 +1,6 @@
 import {weekPdf,validateWeek} from '../lib/week-pdf.js';
 import publicProgram from '../lib/public-program-handler.js';
-import { neon } from '@neondatabase/serverless';
+import { neon } from '../lib/db.js';
 import {serviceAccountAccessToken} from '../lib/google-calendar-token.js';
 import { createHash } from 'node:crypto';
 import ical from 'node-ical';

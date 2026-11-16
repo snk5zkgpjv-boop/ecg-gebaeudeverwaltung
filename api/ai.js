@@ -1,4 +1,4 @@
-import {neon} from '@neondatabase/serverless';import {requireUser} from '../lib/auth.js';
+import {neon} from '../lib/db.js';import {requireUser} from '../lib/auth.js';
 import timeVoiceHandler from '../lib/time-voice-handler.js';
 const can=p=>p.role!=='technician'&&(p.role==='admin'||(p.permissions?.useAI??p.role==='coordinator'));
 export default async function handler(req,res){if(req.query?.timeVoice==='1')return timeVoiceHandler(req,res);if(req.method!=='POST')return res.status(405).json({error:'Methode nicht erlaubt'});
