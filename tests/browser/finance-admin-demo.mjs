@@ -42,6 +42,7 @@ try{
       const sheet=document.querySelector('.expense-sheet'),sig=document.querySelector('.expense-signature-line'),footer=document.querySelector('.expense-footer');
       return {sheet:sheet.getBoundingClientRect().height,signatureBottom:sig.getBoundingClientRect().bottom,footerTop:footer.getBoundingClientRect().top,paperDisplay:getComputedStyle(document.querySelector('#paper')).display};
     });
+    console.log('PRINT A4 METRICS '+JSON.stringify(layout));
     assert.equal(layout.paperDisplay,'block');
     assert(layout.sheet>1100&&layout.sheet<1130,'A4 height in CSS pixels');
     assert(layout.signatureBottom<layout.footerTop,'signature must remain above the footer');
