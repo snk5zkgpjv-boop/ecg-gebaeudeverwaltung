@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (Hotfix für Sessionroute; historische technische Nachweise nachfolgend).
+Stand: 16.11.2026 (unaufdringlicher Bereichswechsel in Prüfung; historische technische Nachweise nachfolgend).
+
+## Bereichswechsel: Startseite nur noch bei Ladeausfall – 16.11.2026
+
+Die bisher sofort sichtbare HTML-Start-/Rettungsansicht in `index.html` („Die App wird geöffnet …“) wird beim normalen Aufruf nicht mehr eingeblendet. Sie bleibt verborgen, auch wenn das Rendern kurz den App-Container leert, und wird nur als Rückfallanzeige aktiviert, wenn nach 20 Sekunden noch keine reguläre App- oder Anmeldeansicht vorhanden ist. Bei tatsächlichem API-Ladefehler zeigt `assets/work-navigation.js` weiterhin seine bestehende Fehlermeldung mit Wiederholungsfunktion. Keine Änderungen an Login, Datenbank oder Bereichsrechten. Neuer synthetischer Test `tests/quiet-startup.mjs` prüft normale und verzögerte Initialisierung sowie den Rückfall. Tests müssen vor Live-Status bestanden sein. Kein physischer iPhone-Test ausgeführt.
 
 ## Hotfix: Anmeldung über Portal – 16.11.2026
 
