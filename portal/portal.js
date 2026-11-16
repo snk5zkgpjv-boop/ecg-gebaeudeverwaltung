@@ -110,6 +110,7 @@ function setupSections(user){
    if(planned||preview)tile.onclick=()=>explain(title,planned?'Dieser Bereich ist geplant.':'Diese Funktion öffnet sich nach der Anmeldung.');
    else if(id==='wochenplan')tile.href='/wochenplan/';
    else if(id==='auslagen'&&key==='finance')tile.href='/finanzen/';
+   else if(id==='auslagen-demo'&&key==='finance')tile.href='/finanzen/admin-test-live.html';
    else if(id==='kontodaten'&&key==='finance')tile.href='/finanzen/kontodaten.html';
    else if(key==='personnel')tile.href=id==='stamm'?'/personal/stamm.html':'/personal/?ansicht='+id;
    else tile.href=key==='members'?'/members/?ansicht='+id:'/?bereich='+id;

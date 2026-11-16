@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Auslagen – Testbereich · ECG Hussenhofen</title>
+<link rel="stylesheet" href="/assets/typography.css"><link rel="stylesheet" href="/portal/portal.css">
+<style>
+main{max-width:850px;margin:0 auto;padding:1rem 1rem 3rem}h1{margin:1rem 0}
+.notice{background:#f5f1eb;color:#222;border:1px solid #d2c9bd;border-radius:12px;padding:1rem}
+.card{border:1px solid #bbb;border-radius:12px;padding:1rem;margin:1rem 0}label{display:block;margin:.7rem 0 .2rem}
+input,textarea{font:inherit;max-width:100%;width:100%;box-sizing:border-box;padding:.65rem;border-radius:7px;border:1px solid #999}
+button{font:inherit;min-height:42px;padding:.5rem .9rem;margin:.4rem .4rem .4rem 0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}.actions{display:flex;flex-wrap:wrap}
+#paper{display:none}#status{min-height:1.5rem}.amount{font-variant-numeric:tabular-nums}
+@media(max-width:500px){.row{grid-template-columns:1fr}.actions{display:block}.actions button{width:100%}}
+@media print{@page{size:A4;margin:15mm}body{background:#fff!important;color:#111!important}main>*:not(#paper){display:none!important}#paper{display:block!important;font:11pt Arial,sans-serif}#paper table{width:100%;border-collapse:collapse}#paper th,#paper td{border:1px solid #999;padding:8px}#paper h1{font-size:18pt}}
+</style></head>
+<body><main>
+<a class="parent-link" href="/portal/#finance">← Finanzen</a>
+<h1>Auslagen – Testbereich</h1><p id="status" role="status">Anmeldung wird geprüft …</p>
+<div id="app" hidden>
+<p class="notice"><strong>Testbetrieb – keine echte Einreichung.</strong> Alle Angaben bleiben nur in diesem Browserfenster. Es werden keine Belege, Bankdaten oder Auslagen an die Gemeinde übertragen. Bitte ausschließlich erfundene Daten verwenden.</p>
+<section class="card"><h2>Neuen Musterantrag anlegen</h2>
+<form id="form">
+<label for="description">Ausgabe / Artikel</label><input id="description" required maxlength="200" placeholder="z. B. Reinigungsmittel (Muster)">
+<div class="row"><div><label for="date">Ausgabedatum</label><input id="date" type="date" required></div>
+<div><label for="amount">Betrag in €</label><input id="amount" inputmode="decimal" required placeholder="12,50"></div></div>
+<label for="project">Anlass / Projekt</label><input id="project" maxlength="120" placeholder="z. B. Gebäudepflege">
+<label><input id="confirmed" type="checkbox" required style="width:auto"> Ich verwende ausschließlich fiktive Beispieldaten.</label>
+<button type="submit">Musterantrag erstellen</button></form></section>
+<section><h2>Musteranträge und Bearbeitung</h2><div id="claims"></div><button id="reset" type="button">Alle Musteranträge zurücksetzen</button></section>
+</div><div id="paper"></div>
+<script type="module" src="/finanzen/admin-test-live.js"></script>
+</main></body></html>
