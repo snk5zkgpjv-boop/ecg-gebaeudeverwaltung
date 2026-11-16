@@ -39,6 +39,16 @@ const clone = (value) => structuredClone(value || {});
 function visible(state, profile) {
   const output = clone(state);
   delete output.kitchenPhotos;
+  // Transport metadata without potentially megabytes of inline issue photos.
+  // The original images remain stored and can be requested individually
+  // through a separately authenticated media endpoint.
+  output.issues = (state.issues || []).map(issue => {
+    if (typeof issue?.photo === 'string' && /^data:image\/(?:jpeg|png|webp);base64,/.test(issue.photo)) {
+      const {photo, ...metadata} = issue;
+      return {...metadata, hasPhoto:true};
+    }
+    return issue;
+  });
   // Private agreement snapshots are fetched only through their authorized event route.
   delete output.eventUsageAgreements;
   delete output.eventRunSheets;
@@ -283,6 +293,24 @@ export default async function handler(req, res) {
   if(req.query?.bankAccount==='1')return financeBankAccount(req,res);
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
   const sql = neon(process.env.DATABASE_URL);
+  if (req.method === 'GET' && req.query?.issuePhoto != null) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    const issueId=String(req.query.issuePhoto||'');
+    if(!/^[-_a-zA-Z0-9]{1,160}$/.test(issueId))return res.status(400).json({error:'Ungültiger Mangel.'});
+    const auth=await requireUser(req,res,sql,{profileOnly:true});
+    if(!auth)return;
+    if(auth.profile.role==='financeDeacon' && !has(auth.profile,'manageRooms') && !has(auth.profile,'manageIssues'))return res.status(403).json({error:'Keine Berechtigung für Mängelfotos.'});
+    const rows=await sql`SELECT item->>'photo' AS photo FROM app_state a
+      CROSS JOIN LATERAL jsonb_array_elements(COALESCE(a.data->'issues','[]'::jsonb)) item
+      WHERE a.id='main' AND item->>'id'=${issueId} LIMIT 1`;
+    const photo=rows[0]?.photo;
+    const match=/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(photo||'');
+    if(!match)return res.status(404).json({error:'Mängelfoto nicht gefunden.'});
+    const mime=match[1]==='png'?'image/png':match[1]==='webp'?'image/webp':'image/jpeg';
+    res.setHeader('Content-Type',mime);
+    return res.status(200).send(Buffer.from(match[2],'base64'));
+  }
   if(req.method==='GET' && req.query?.organizationExport==='1'){
     res.setHeader('Cache-Control','private, no-store');
     // Authenticate before reading private application state.
@@ -407,6 +435,16 @@ export default async function handler(req, res) {
       const next = accepted(auth.state, incoming, auth.profile);
       next.deletedIssues = auth.state.deletedIssues || {};
       next.issues = (next.issues || []).filter(issue => !Object.hasOwn(next.deletedIssues, issue.id));
+      // A photo omitted from the list response is *not* a deletion.
+      // Preserve its bytes unless the editor explicitly uploads replacement bytes.
+      const originals=new Map((auth.state.issues||[]).map(issue=>[issue.id,issue]));
+      next.issues=(next.issues||[]).map(issue=>{
+        const {hasPhoto,...clean}=issue;
+        const previous=originals.get(issue.id);
+        if(hasPhoto===true && !clean.photo && typeof previous?.photo==='string')clean.photo=previous.photo;
+        return clean;
+      });
+
       next.issuePlanning = auth.state.issuePlanning || {};
       const payload = JSON.stringify(next);
       const previousTimes = JSON.stringify(auth.state.timeEntries || []);
