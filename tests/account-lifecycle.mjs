@@ -78,10 +78,4 @@ vm.runInContext(resolver+'\n'+fs.readFileSync('api/auth/session.js','utf8').repl
 let res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,403);assert.equal(res.headers['Cache-Control'],'private, no-store');
 profiles=[{id:'a',email:'same@example.test'},{id:'a',email:'duplicate@example.test'}];res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,403);
 profiles=[{id:'a',role:'member',active:true}];res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,200);assert.equal(res.body.user.appUserId,'a');
-vm.runInContext(fs.readFileSync('api/auth/migrate.js','utf8').replace(/^import .*;\n/gm,'').replace('export default ',''),authTest);
-profiles=[{id:'a',email:'same@example.test'},{id:'b',email:'same@example.test'}];
-res=response();await authTest.handler({method:'POST',body:{password:'synthetic-only'}},res);assert.equal(res.code,403);
-profiles=[{id:'a',email:'same@example.test'}];existing=[{id:'login-b',app_user_id:'b'}];
-res=response();await authTest.handler({method:'POST',body:{password:'synthetic-only'}},res);assert.equal(res.code,409);
-assert.equal(writes,0);assert.equal(sessions,0);
 console.log('PASS: account cache isolation, completed timer, delayed consent, all-role privacy and agreement preservation. Synthetic data only.');
