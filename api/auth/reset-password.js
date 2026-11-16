@@ -1,5 +1,6 @@
 import {neon} from '../../lib/db.js';
 import {ensureAuthSchema,tokenHash,hashPassword} from '../../lib/auth.js';
+import {ensureAuthRateLimitSchema,clearLoginAttempts} from '../../lib/auth-rate-limit.js';
 
 export default async function handler(req,res){
   if(req.method!=='POST')return res.status(405).json({error:'Methode nicht erlaubt'});
@@ -16,10 +17,12 @@ export default async function handler(req,res){
     RETURNING user_id
   ), changed AS (
     UPDATE ecg_app_users SET password_hash=${hashPassword(pw)},must_change_password=false,updated_at=now()
-    WHERE id IN (SELECT user_id FROM claimed) RETURNING id
+    WHERE id IN (SELECT user_id FROM claimed) RETURNING id,email
   ), revoked AS (
     DELETE FROM ecg_app_sessions WHERE user_id IN (SELECT id FROM changed)
-  ) SELECT id FROM changed`;
+  ) SELECT id,email FROM changed`;
   if(!rows[0])return res.status(400).json({error:'Der Link ist ungültig oder abgelaufen.'});
+  await ensureAuthRateLimitSchema(sql);
+  await clearLoginAttempts(sql,rows[0].email);
   return res.status(200).json({ok:true});
 }
