@@ -22,6 +22,8 @@ Auf einer frischen Linux-CI-Umgebung installiert `playwright install --with-deps
 
 Ein statischer Dateiserver allein ersetzt die serverseitigen API-Funktionen nicht. Die Browserprüfungen verwenden deshalb ihre eigenen isolierten Server und simulierten API-Antworten. Sie belegen keine fachliche Abnahme oder Geräteprüfung auf einem tatsächlichen iPhone.
 
+Eine kompakte Übersicht zu Architektur, Tabellen, externen Schnittstellen und Betreibergrenzen steht in [Architektur und Datenmodell](docs/ARCHITEKTUR.md).
+
 ## Orientierung im Code
 
 | Bereich | Aufgabe |
