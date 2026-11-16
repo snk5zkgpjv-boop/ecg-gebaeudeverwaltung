@@ -40,6 +40,8 @@ try {
   assert.equal(issueRows[1].payload.photo,null,'null photo semantics preserved');
   assert.equal((await get('SELECT image_data_url FROM ecg_issue_photos'))[0].image_data_url,source.issues[0].photo);
   await assert.rejects(db.exec(migrate),/Shadow tables are not empty/,'re-running the migration must not overwrite shadow data');
+  // A raised SQL exception leaves an explicit transaction aborted until rollback.
+  await db.exec('ROLLBACK');
   assert.equal((await get('SELECT count(*)::integer AS n FROM ecg_issue_records'))[0].n,2);
   console.log('PASS: non-destructive split-state shadow snapshot, original unchanged, media separation, count and equality checks, and rerun refusal. Synthetic database only.');
 } finally {
