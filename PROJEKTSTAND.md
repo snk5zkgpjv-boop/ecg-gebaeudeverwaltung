@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (serverseitige Sitzungswiderrufung beim Logout in Prüfung; historische Nachweise nachfolgend).
+Stand: 16.11.2026 (CSP-Skriptbegrenzung für Unterseiten in Prüfung; historische Nachweise nachfolgend).
+
+## CSP für die Unterseiten – 16.11.2026
+
+`vercel.json` enthält für `/portal`, `/personal`, `/members`, `/finanzen`, `/wochenplan` und `/willkommen` eine strengere Content-Security-Policy mit `script-src 'self'`. Die allgemeine CSP bleibt für `index.html` und andere Pfade unverändert, weil die Hauptoberfläche noch Inline-Skripte nutzt. Die CSP-Regeln für Unterseiten und sonstige Pfade sind disjunkt; zusammen mit gemeinsamen Sicherheitsheadern wird pro Pfad genau ein CSP-Header ausgeliefert. Ein isolierter Playwright-Test öffnet acht Unterseiten mit synthetischer Anmeldung, prüft Header und Kernaktionen sowie CSP-Verletzungen. Vercel-Vorschau und vollständige Tests sind vor dem Merge nachzuweisen. Keine Anmelde-, Datenbank- oder Fachlogik geändert.
 
 ## Abmeldung: Sitzungsdatensatz sofort widerrufen – 16.11.2026
 
