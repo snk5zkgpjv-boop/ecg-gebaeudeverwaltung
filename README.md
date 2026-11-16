@@ -24,7 +24,7 @@ Ein statischer Dateiserver allein ersetzt die serverseitigen API-Funktionen nich
 
 Eine kompakte Übersicht zu Architektur, Tabellen, externen Schnittstellen und Betreibergrenzen steht in [Architektur und Datenmodell](docs/ARCHITEKTUR.md).
 
-## Orientierung im Code
+Die Anmeldung erfolgt ausschließlich über E-Mail-Adresse und Kennwort. Der frühere PIN-/E-Mail-Code-Zugang und seine Umstellungsroute wurden entfernt. Kennwort-Rücksetzung und bestehende Sitzungscookies bleiben erhalten.\n\n## Orientierung im Code
 
 | Bereich | Aufgabe |
 | --- | --- |
