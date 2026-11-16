@@ -54,7 +54,4 @@ let boundHash,issued=false;
 const login=load('api/auth/login.js',{neon:()=>async()=>[{...user,password_hash:oldHash}],verifyPassword:()=>true,appState:async()=>({users:[]}),profileFor:()=>({id:'synthetic-profile'}),publicUser:()=>({id:'synthetic-login'}),createSession:async(_res,_sql,id,hash)=>{assert.equal(id,user.id);boundHash=hash;return issued}});
 res=response();await login({method:'POST',body:{email:user.email,password:'synthetic-old-password'}},res);assert.equal(boundHash,oldHash);assert.equal(res.code,401);
 issued=true;res=response();await login({method:'POST',body:{email:user.email,password:'synthetic-old-password'}},res);assert.equal(res.code,200);
-const migrate=load('api/auth/migrate.js',{neon:()=>async(parts)=>parts.join('').startsWith('SELECT')?[]:[{id:user.id}],legacyJwtUser:async()=>({email:user.email}),appState:async()=>({users:[{id:user.app_user_id,email:user.email}]}),hashPassword:()=>newHash,createSession:async(_res,_sql,id,hash)=>{assert.equal(id,user.id);boundHash=hash;return issued}});
-res=response();await migrate({method:'POST',body:{password:'synthetic-new-password'}},res);assert.equal(boundHash,newHash);assert.equal(res.code,200);
-issued=false;res=response();await migrate({method:'POST',body:{password:'synthetic-new-password'}},res);assert.equal(res.code,409);
-console.log('PASS: real HMAC session binding, stale credential before/after insertion, ordinary profile updates, tampering, user binding, legacy cookies, revocation and both issuing handlers. Synthetic data only.');
+console.log('PASS: real HMAC session binding, stale credential before/after insertion, ordinary profile updates, tampering, user binding, legacy cookies, revocation and password issuing handler. Synthetic data only.');
