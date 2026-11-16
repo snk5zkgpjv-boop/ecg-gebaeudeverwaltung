@@ -2,6 +2,10 @@
 
 Stand: 16.11.2026 (Anmeldeschutz in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Schlankere Authentifizierungsabfragen – 16.11.2026
+
+Anmeldung, Verwaltungsstatus und Bildanalyse-Zugriff fragen für die Benutzerprofilprüfung gezielt nur `data->'users'` aus dem zentralen `app_state` ab. `requireUser` unterstützt dazu `profileOnly`; Aufrufe, die fachliche Daten benötigen, erhalten unverändert den Gesamtzustand. Ein isolierter PGlite-Test prüft, dass große Mängeldaten nicht in die Antwort der schlanken Abfrage gelangen und die unveränderte Vollabfrage weiterhin funktioniert. Keine produktiven Datensätze verändert. Die SQL-Projektion reduziert übertragene Antwortdaten, ersetzt aber keine generelle Auslagerung des großen JSON-Dokuments. Weitere Endpunkte und die Gesamtzustands-Speicherung bleiben als Performance-Aufgaben offen.
+
 ## Datenbankzugriff zentralisiert – 16.11.2026
 
 Die direkten Provider-Imports der API und zweier Datenbank-Handler wurden zu einem gemeinsamen `lib/db.js` verschoben. Der Adapter exportiert zunächst dieselbe Neon-Funktion und ändert weder SQL noch Daten. Damit ist die Abhängigkeit an einer Stelle dokumentiert; ein künftiger Wechsel zu einem klassischen PostgreSQL-Server erfordert dennoch einen geprüften Adapter und eine geeignete Node.js-Laufzeit. Die isolierte Adapterprüfung benutzt keine produktive Datenbank. Eine vollständige All-Inkl-Migration ist damit nicht durchgeführt.
