@@ -2,12 +2,10 @@ import {neon} from '../../lib/db.js';
 import {ensureAuthSchema,tokenHash,hashPassword} from '../../lib/auth.js';
 import {ensureAuthRateLimitSchema,clearLoginAttempts} from '../../lib/auth-rate-limit.js';
 
-export default async function handler(req,res){
+export async function resetPasswordWithSql(req,res,sql){
   if(req.method!=='POST')return res.status(405).json({error:'Methode nicht erlaubt'});
-  if(!process.env.DATABASE_URL)return res.status(500).json({error:'DATABASE_URL fehlt'});
   const token=String(req.body?.token||''),pw=String(req.body?.newPassword||'');
   if(pw.length<10)return res.status(400).json({error:'Das Kennwort muss mindestens 10 Zeichen haben.'});
-  const sql=neon(process.env.DATABASE_URL);
   await ensureAuthSchema(sql);
   // One statement claims the token, changes the password and revokes sessions.
   // A concurrent request waits on the token row and rechecks used_at afterwards.
@@ -25,4 +23,9 @@ export default async function handler(req,res){
   await ensureAuthRateLimitSchema(sql);
   await clearLoginAttempts(sql,rows[0].email);
   return res.status(200).json({ok:true});
+}
+
+export default async function handler(req,res){
+  if(!process.env.DATABASE_URL)return res.status(500).json({error:'DATABASE_URL fehlt'});
+  return resetPasswordWithSql(req,res,neon(process.env.DATABASE_URL));
 }
