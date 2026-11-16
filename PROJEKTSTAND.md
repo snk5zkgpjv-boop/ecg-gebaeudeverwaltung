@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (verifizierter produktiver Schattenschnappschuss; Cutover offen; historische Nachweise nachfolgend).
+Stand: 16.11.2026 (Hotfix für Sessionroute; historische technische Nachweise nachfolgend).
+
+## Hotfix: Anmeldung über Portal – 16.11.2026
+
+Nach Nutzerfehlermeldung auf der Portalstartseite wurde ein falscher relativer Importpfad in `api/auth/session.js` bestätigt: `../lib/db.js` statt `../../lib/db.js`. Dieser Fehler stammt aus der Datenbanktreiber-Zentralisierung (#66) und verhindert das Laden der Authentifizierungsroute. Der Hotfix korrigiert nur den Pfad; Datenbankdaten und Anmeldesitzungen werden nicht verändert. Neuer Regressionstest `tests/api-import-paths.mjs` prüft API-Modulauflösung. Erst nach erfolgreicher CI, Vercel-Produktivdeployment und anonymem API-Smoketest als produktiv behoben markieren. Ein echter angemeldeter iPhone-Test bleibt separat.
 
 ## Fachbereichs-Aufteilung: Konsistenter produktiver Schattenschnappschuss – 16.11.2026
 
