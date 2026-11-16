@@ -23,10 +23,24 @@
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=31536000"
-        },
+        }
+      ]
+    },
+    {
+      "source": "/((?!portal(?:/|$)|personal(?:/|$)|members(?:/|$)|finanzen(?:/|$)|wochenplan(?:/|$)|willkommen(?:/|$)).*)",
+      "headers": [
         {
           "key": "Content-Security-Policy",
           "value": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/(portal|personal|members|finanzen|wochenplan|willkommen)(/.*)?",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; script-src 'self'"
         }
       ]
     }
