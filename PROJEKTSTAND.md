@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (aufteilbare JSONB-Fachbereiche in isolierter Vorbereitung; historische technische Nachweise nachfolgend).
+Stand: 16.11.2026 (lazy Mängelfotos in Umsetzung; historische technische Nachweise nachfolgend).
+
+## Mängelbilder bei Bedarf statt als Teil der Fachliste – 16.11.2026
+
+Der Browser lädt Mängelfotos nach der Anmeldung über `GET /api/state?issuePhoto=<id>` einzeln nach, statt die Bildinhalte mit jedem `GET /api/state` an den Browser zu senden. Der neue Zugriff prüft die bestehende Sitzung, Kennwortpflicht, den Benutzerstatus, rollenabhängige Sichtbarkeit und die Bildkennung; Cache-Control bleibt privat/no-store. Beim Bearbeiten von Mängelmetadaten bleibt ein nicht neu hochgeladenes vorhandenes Foto serverseitig erhalten. Die bestehenden Fotos sind weiterhin in `app_state` gespeichert, weil die atomare Umstellung auf die getrennten Fach-/Medientabellen erst nach isoliertem Restore erfolgt. Damit wird zunächst **die Größe normaler HTTP-Zustandsantworten reduziert, nicht der physische JSONB-Speicherumfang**. Die HTML-Änderung umfasst ausschließlich die drei Mängelfoto-Anzeigen. Synthetische Tests prüfen Schutz der Einzelbildroute und den UI-Verweis. Ohne einen realen Browser- und Produktivtest ist noch keine konkrete Geschwindigkeitsverbesserung nachgewiesen.
 
 ## JSONB-Aufteilung: reversible Fachdatentabellen – 16.11.2026
 
