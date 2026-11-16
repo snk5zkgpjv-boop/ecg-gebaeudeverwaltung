@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (alter PIN-/E-Mail-Code-Zugang entfernt, Prüfung vor Freigabe; historische Nachweise nachfolgend).
+Stand: 16.11.2026 (Anmeldesperre mit zweistufigen Fehlversuchszählern in Prüfung; historische Nachweise nachfolgend).
+
+## Anmeldesperre: gültiges Kennwort nicht durch fremde Fehlversuche blockieren – 16.11.2026
+
+Anmeldefehler werden künftig in zwei gehashten, PostgreSQL-basierten Zählern nach der Kennwortprüfung erfasst: E-Mail-Adresse + Client-IP (5 Fehlversuche/15 Minuten) und Adresse über alle IPs (30 Fehlversuche/15 Minuten). Die Client-IP wird aus dem ersten `x-forwarded-for`-Eintrag, sonst `x-real-ip`, sonst `unknown` ermittelt; Forwarding-Header müssen vom vertrauenswürdigen Proxy bereinigt werden. Ein korrektes Kennwort wird unabhängig von fremdverursachten Fehlversuchen geprüft und kann eine Sitzung eröffnen; die Sperrantwort 429 greift nur bei ungültigen Anmeldungen. Unbekannte Konten durchlaufen eine Schein-Scrypt-Prüfung. Erfolgreiche Kennwort-Rücksetzungen und die Vergabe vorläufiger Kennwörter löschen die Login-Zähler. Veraltete Zählerzeilen (älter als 24 Stunden) werden gelegentlich bereinigt. Zusätzliche synthetische PGlite-Tests verwenden den echten Login- und Reset-Handler für beide Grenzen, Entsperrung und Speicherpflege. Kein produktiver Datenbankeingriff in diesem PR; Veröffentlichungsstand ist bis zum CI-/Vercel-Nachweis offen.
 
 ## Alter PIN-/E-Mail-Code-Zugang: Entfernung vorbereitet – 16.11.2026
 

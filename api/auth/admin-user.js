@@ -1,5 +1,6 @@
 import { neon } from '../../lib/db.js';
 import { ensureAuthSchema, hashPassword, requireUser } from '../../lib/auth.js';
+import { ensureAuthRateLimitSchema, clearLoginAttempts } from '../../lib/auth-rate-limit.js';
 
 function canManageUsers(profile) {
   return profile.role !== 'technician' && (profile.role === 'admin' || profile.permissions?.manageUsers === true);
@@ -47,6 +48,11 @@ export default async function handler(req, res) {
       await sql`UPDATE ecg_app_users SET email=${email},name=${name},active=${active},updated_at=now() WHERE id=${rows[0].id} AND app_user_id=${id}`;
     }
     if (!active && !password) await sql`DELETE FROM ecg_app_sessions WHERE user_id=${rows[0].id}`;
+    if (password) {
+      await ensureAuthRateLimitSchema(sql);
+      await clearLoginAttempts(sql, email);
+      if (rows[0].email.toLowerCase() !== email) await clearLoginAttempts(sql, rows[0].email);
+    }
     return res.status(200).json({ ok: true });
   }
 
@@ -54,5 +60,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Für neue Benutzer ist ein vorläufiges Kennwort mit mindestens 10 Zeichen nötig.' });
   }
   await sql`INSERT INTO ecg_app_users(app_user_id,email,name,password_hash,must_change_password,active) VALUES(${id},${email},${name},${hashPassword(password)},true,${active})`;
+  await ensureAuthRateLimitSchema(sql);
+  await clearLoginAttempts(sql, email);
   return res.status(201).json({ ok: true });
 }

@@ -14,8 +14,8 @@ let res=response();assert.equal(await gate.requireUser({headers:{}},res,{}),null
 mandatory=false;res=response();assert.equal((await gate.requireUser({headers:{}},res,{})).profile.role,'admin');
 
 function handler(path,sql,extras={}){
- const ctx=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},neon:()=>sql,ensureAuthSchema:async()=>{},hashPassword:value=>'hashed:'+value,tokenHash:value=>'token:'+value,...extras});
- vm.runInContext(read(path).replace(/^import .*;\n/gm,'').replace('export default ',''),ctx);
+ const ctx=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},neon:()=>sql,ensureAuthSchema:async()=>{},hashPassword:value=>'hashed:'+value,tokenHash:value=>'token:'+value,ensureAuthRateLimitSchema:async()=>{},clearLoginAttempts:async()=>{},...extras});
+ vm.runInContext(read(path).replace(/^import .*;\n/gm,'').replace('export default ','').replace('export async function ','async function '),ctx);
  return ctx.handler;
 }
 let queries=[],result=[{id:'synthetic-user'}];
@@ -29,7 +29,7 @@ queries=[];res=response();await reset({method:'POST',body:{newPassword:'short'}}
 
 const adminProfile={id:'test-admin',role:'admin'};
 let adminQueries=[];
-const adminSql=async(parts,...values)=>{const text=parts.join('?');adminQueries.push({text,values});return text.startsWith('SELECT')?[{id:'synthetic-user',app_user_id:'test-target'}]:[]};
+const adminSql=async(parts,...values)=>{const text=parts.join('?');adminQueries.push({text,values});return text.startsWith('SELECT')?[{id:'synthetic-user',app_user_id:'test-target',email:'synthetic@example.test'}]:[]};
 const admin=handler('api/auth/admin-user.js',adminSql,{requireUser:async()=>({profile:adminProfile,state:{users:[adminProfile,{id:'test-target',email:'synthetic@example.test'}]}})});
 res=response();await admin({method:'POST',body:{appUserId:'test-target',email:'synthetic@example.test',name:'Synthetic',temporaryPassword:'valid-synthetic-password'}},res);
 assert.equal(res.code,200);assert.equal(adminQueries.length,2);assert.match(adminQueries[1].text,/WITH changed AS/);assert.match(adminQueries[1].text,/DELETE FROM ecg_app_sessions/);
