@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+const script=await readFile(new URL('../scripts/migration-preflight.sh',import.meta.url),'utf8');
+const sql=await readFile(new URL('../scripts/migration-preflight.sql',import.meta.url),'utf8');
+assert.match(script,/default_transaction_read_only=on/);
+assert.match(sql,/BEGIN TRANSACTION READ ONLY/);
+assert.match(sql,/pg_total_relation_size/);
+assert.match(sql,/pg_column_size/);
+assert.doesNotMatch(sql,/\b(?:INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|GRANT|REVOKE|COPY)\b\s+(?:INTO|FROM|TABLE|DATABASE|SCHEMA|ROLE|TO)?/i);
+assert.doesNotMatch(sql,/SELECT\s+(?:data|\*)\s+FROM\s+(?:public\.)?app_state/i);
+assert.match(script,/\$\{PGSERVICE:\?/);
+console.log('PASS: migration preflight is structured as a read-only metadata inventory; no database accessed.');
