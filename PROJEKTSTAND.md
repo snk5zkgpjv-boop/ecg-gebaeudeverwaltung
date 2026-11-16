@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (Anmeldeschutz in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 16.11.2026 (Migration-Preflight in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Frankfurt-Vorbereitung: lesender Migrations-Preflight – 16.11.2026
+
+Die unaktivierten Dateien `scripts/migration-preflight.sh`, `scripts/migration-preflight.sql` und `docs/MIGRATION-PREFLIGHT.md` ergänzen den bestehenden Backup-/Restore-Entwurf in PR #59 um eine Metadaten-Bestandsaufnahme. Die Abfrage nutzt `default_transaction_read_only=on`, listet Schemata, Tabelle-/Indexumfang, Erweiterungen, Constraints und JSON-Feldgrößen ohne eigentliche Datensätze. Der statische Sicherheitstest prüft die Lesebeschränkungen des Skripts; er führt keine Verbindung zur Produktionsdatenbank aus. Region, Sicherheitskopie und tatsächlicher Frankfurt-Restore bleiben offen. Das Repository wurde nicht privat gestellt und die öffentliche WebApp nicht verändert.
 
 ## Architekturkarte für Entwickler – 16.11.2026
 
