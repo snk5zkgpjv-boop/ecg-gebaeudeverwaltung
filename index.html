@@ -157,22 +157,30 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 </style>
 <link rel="stylesheet" href="/assets/typography.css"></head>
 <body>
-  <section id="startup" style="max-width:32rem;margin:12vh auto;padding:24px">
+  <section id="startup" hidden style="max-width:32rem;margin:12vh auto;padding:24px">
     <h1>ECG Gebäudeverwaltung</h1>
-    <p id="startup-status" role="status">Die App wird geöffnet …</p>
+    <p id="startup-status" role="alert">Der Bereich konnte nicht geöffnet werden. Bitte versuche es erneut.</p>
     <a href="/portal/">← Meine Bereiche</a> · <a href="" onclick="location.reload();return false">Erneut laden</a> · <a href="/willkommen/">Zur Gästeseite</a>
   </section>
   <div id="app"></div><div id="modalRoot"></div>
   <script>
   (function(){
     const startup=document.getElementById('startup');
+    const app=document.getElementById('app');
+    // Normal navigation stays quiet: a transient empty root during render
+    // must never bring back the whole-page startup notice.
+    const hasView=()=>Boolean(document.getElementById('authGate') || app.childElementCount);
     const observer=new MutationObserver(()=>{
-      if(document.getElementById('authGate') || document.getElementById('app').childElementCount){
-        startup.hidden=true;
-      } else {startup.hidden=false;}
+      if(hasView())startup.hidden=true;
     });
     observer.observe(document.body,{childList:true,subtree:true});
-    setTimeout(()=>{document.getElementById('startup-status').textContent='Das Öffnen dauert länger. Du kannst die App erneut laden oder die Gästeseite öffnen.';},12000);
+    // Fallback only when initialization has not produced any view.
+    setTimeout(()=>{
+      if(!hasView()){
+        document.getElementById('startup-status').textContent='Der Bereich konnte nicht geöffnet werden. Bitte erneut laden oder zu „Meine Bereiche“ zurückkehren.';
+        startup.hidden=false;
+      }
+    },20000);
   })();
   </script>
   <input id="fileImport" type="file" accept="application/json" hidden />
