@@ -36,6 +36,6 @@ outer.node.dataset.passwordRequired='false';key('Escape');assert.equal(nodes.len
 // Restore original inert state after direct account-clearing removal as well.
 app.inert=true;dialog();nodes.length=0;observer();assert.equal(app.inert,true);assert.equal(startup.inert,false);
 const html=fs.readFileSync('index.html','utf8');
-for(const id of ['loginEmail','loginPassword','oldPw','newPw','legacyEmail','legacyOtp','legacyPassword','resetPw'])assert.match(html,new RegExp('<label for="'+id+'">'));
+for(const id of ['loginEmail','loginPassword','oldPw','newPw','resetPw'])assert.match(html,new RegExp('<label for="'+id+'">'));
 assert.match(html,/assets\/dialog-accessibility\.js/);
 console.log('PASS: dialog name/semantics, focus entry, Tab/Shift-Tab trap, nested focus restoration, background inertness, forced-password Escape guard, asynchronous lower-layer update, account clear and auth labels. Synthetic DOM only.');

@@ -31,6 +31,9 @@ Das konsolidierte leere Bootstrap-Schema steht in `scripts/schema.sql`. Es erset
 
 ## Authentifizierung und Rechte
 
+- Nur ECG-Kennwortanmeldung (`/api/auth/login`), Kennwortwechsel und Rücksetzung bleiben aktiv. Die alte PIN-/E-Mail-Code-Anmeldung und `/api/auth/migrate` existieren nicht mehr. Das verwaltete Neon-Auth-Schema in der Datenbank bleibt technisch unverändert; es ist kein aktiver App-Loginpfad.
+
+
 - `lib/auth.js` prüft sitzungsgebundene Konten und Anwendungsprofile. Kennwörter sind gesalzen und gehasht; Sitzungen werden beim Kennwortwechsel widerrufen.
 - `api/state.js` filtert Fachinformationen und Änderungen serverseitig nach Rolle und Berechtigungen.
 - Profilprüfungen ohne Fachdatennutzung können mit `profileOnly` ausschließlich `data->'users'` lesen. Für normale fachliche `requireUser`-Aufrufe wird der vollständige Zustand weiterhin geladen.
