@@ -24,7 +24,11 @@ Ein statischer Dateiserver allein ersetzt die serverseitigen API-Funktionen nich
 
 Eine kompakte Übersicht zu Architektur, Tabellen, externen Schnittstellen und Betreibergrenzen steht in [Architektur und Datenmodell](docs/ARCHITEKTUR.md).
 
-Die Anmeldung erfolgt ausschließlich über E-Mail-Adresse und Kennwort. Der frühere PIN-/E-Mail-Code-Zugang und seine Umstellungsroute wurden entfernt. Kennwort-Rücksetzung und bestehende Sitzungscookies bleiben erhalten.\n\n## Orientierung im Code
+Die Anmeldung erfolgt ausschließlich über E-Mail-Adresse und Kennwort. Der frühere PIN-/E-Mail-Code-Zugang und seine Umstellungsroute wurden entfernt. Kennwort-Rücksetzung und bestehende Sitzungscookies bleiben erhalten.\n\n## Pflichtkonfiguration für Kennwort-Rücksetzung
+
+Die Umgebungsvariable **`PUBLIC_APP_URL` ist Pflicht** (in Vercel für **Production** setzen), z. B. `https://ecg-gebaeudeverwaltung-jn5h.vercel.app`. Nur aus dieser HTTPS-Adresse wird der Link in der Reset-Mail gebildet. Der Host-Header einer Anfrage wird nicht verwendet. Fehlt die Variable oder enthält sie keine gültige HTTPS-Adresse, werden keine Reset-Mails versendet; der Server protokolliert den Konfigurationsfehler, die Antwort an den Browser bleibt neutral. Vor der Veröffentlichung dieser Änderung muss der Betreiber die gesetzte Produktionsvariable bestätigen. Siehe `.env.example`.
+
+## Orientierung im Code
 
 | Bereich | Aufgabe |
 | --- | --- |
