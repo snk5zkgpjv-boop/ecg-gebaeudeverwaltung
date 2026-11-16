@@ -46,7 +46,7 @@ END $$;
 
 INSERT INTO ecg_issue_records(id,sort_order,room_id,status,payload,source_revision)
 SELECT item->>'id', (n-1)::integer, coalesce(item->>'roomId',''),
-  coalesce(item->>'status',''), item-'photo', a.revision
+  coalesce(item->>'status',''), CASE WHEN jsonb_typeof(item->'photo')='string' AND item->>'photo'<>'' THEN item-'photo' ELSE item END, a.revision
 FROM app_state a CROSS JOIN LATERAL jsonb_array_elements(a.data->'issues') WITH ORDINALITY x(item,n)
 WHERE a.id='main';
 
