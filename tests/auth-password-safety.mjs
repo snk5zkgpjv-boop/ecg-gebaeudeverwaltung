@@ -14,8 +14,8 @@ let res=response();assert.equal(await gate.requireUser({headers:{}},res,{}),null
 mandatory=false;res=response();assert.equal((await gate.requireUser({headers:{}},res,{})).profile.role,'admin');
 
 function handler(path,sql,extras={}){
- const ctx=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},neon:()=>sql,ensureAuthSchema:async()=>{},hashPassword:value=>'hashed:'+value,tokenHash:value=>'token:'+value,...extras});
- vm.runInContext(read(path).replace(/^import .*;\n/gm,'').replace('export default ',''),ctx);
+ const ctx=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},neon:()=>sql,ensureAuthSchema:async()=>{},hashPassword:value=>'hashed:'+value,tokenHash:value=>'token:'+value,ensureAuthRateLimitSchema:async()=>{},clearLoginAttempts:async()=>{},...extras});
+ vm.runInContext(read(path).replace(/^import .*;\n/gm,'').replace('export default ','').replace('export async function ','async function '),ctx);
  return ctx.handler;
 }
 let queries=[],result=[{id:'synthetic-user'}];
