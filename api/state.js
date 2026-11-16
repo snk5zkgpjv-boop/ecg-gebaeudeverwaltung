@@ -300,7 +300,7 @@ export default async function handler(req, res) {
     if(!/^[-_a-zA-Z0-9]{1,160}$/.test(issueId))return res.status(400).json({error:'Ungültiger Mangel.'});
     const auth=await requireUser(req,res,sql,{profileOnly:true});
     if(!auth)return;
-    if(auth.profile.role==='financeDeacon' && !has(auth.profile,'manageIssues'))return res.status(403).json({error:'Keine Berechtigung für Mängelfotos.'});
+    if(auth.profile.role==='financeDeacon' && !has(auth.profile,'manageRooms') && !has(auth.profile,'manageIssues'))return res.status(403).json({error:'Keine Berechtigung für Mängelfotos.'});
     const rows=await sql`SELECT item->>'photo' AS photo FROM app_state a
       CROSS JOIN LATERAL jsonb_array_elements(COALESCE(a.data->'issues','[]'::jsonb)) item
       WHERE a.id='main' AND item->>'id'=${issueId} LIMIT 1`;
