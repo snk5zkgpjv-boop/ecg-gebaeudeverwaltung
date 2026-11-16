@@ -30,6 +30,22 @@ try{
     await page.getByText(/Rein synthetische Ausgabe/).waitFor();
     await page.getByRole('button',{name:'Antrag drucken / PDF'}).first().click();
     assert.equal(await page.evaluate(()=>window.__printed),true);
+    const table=page.locator('#paper .expense-table');
+    assert.equal(await table.locator('thead th').count(),5);
+    assert.equal(await table.locator('tbody tr').count(),10);
+    for(const label of ['Auslagenerstattung','Empfänger/in:','Entstandene Kosten:','Summe der Ausgaben:','Bitte überweisen Sie den Betrag an:','Ich möchte den Betrag spenden','Unterschrift des/der Sachkostenempfängers/in']){
+      assert((await page.locator('#paper').innerText()).includes(label),'Missing original form field: '+label);
+    }
+    assert((await page.locator('#paper').innerText()).includes('Rein synthetische Ausgabe'));
+    await page.emulateMedia({media:'print'});
+    const layout=await page.evaluate(()=>{
+      const sheet=document.querySelector('.expense-sheet'),sig=document.querySelector('.expense-signature-line'),footer=document.querySelector('.expense-footer');
+      return {sheet:sheet.getBoundingClientRect().height,signatureBottom:sig.getBoundingClientRect().bottom,footerTop:footer.getBoundingClientRect().top,paperDisplay:getComputedStyle(document.querySelector('#paper')).display};
+    });
+    assert.equal(layout.paperDisplay,'block');
+    assert(layout.sheet>1100&&layout.sheet<1130,'A4 height in CSS pixels');
+    assert(layout.signatureBottom<layout.footerTop,'signature must remain above the footer');
+    await page.emulateMedia({media:'screen'});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
    }
    assert.deepEqual(calls,['/api/auth/session GET'],'no finance/data API request permitted in local demo');
