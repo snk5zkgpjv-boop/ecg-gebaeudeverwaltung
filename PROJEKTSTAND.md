@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (Migration-Preflight in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 16.11.2026 (aufteilbare JSONB-Fachbereiche in isolierter Vorbereitung; historische technische Nachweise nachfolgend).
+
+## JSONB-Aufteilung: reversible Fachdatentabellen – 16.11.2026
+
+Eine lesende Analyse hat gezeigt, dass im großen gemeinsamen `app_state` die Mängelmeldungen samt eingebetteter Bilder einen besonders großen Anteil ausmachen. Neue Skripte `scripts/split-state-schema.sql` und `scripts/split-state-snapshot.sql` bereiten separate Tabellen für Mängelmetadaten, Mängelfotos, Räume, Zeiteinträge und Küchenfotos vor. Die Übertragung ist als additiver Schatten-Schnappschuss mit SQL-Inhaltsvergleich und Abbruch bei Wiederholungen geplant. Der synthetische Test `tests/split-state-snapshot.mjs` prüft die Übertragungs- und Erhaltungslogik. Dokumentation: `docs/SPLIT-STATE-MIGRATION.md`. **Kein produktiver Datentransfer, keine automatische Aktivierung, kein Löschen des bisherigen JSONB-Dokuments und noch keine Umstellung der API-Lese- und Schreibpfade.** Der eigentliche Performance- und Konfliktgewinn erfordert die nachgelagerte atomare Fachbereichs-Umstellung und einen erfolgreichen Restore-Nachweis.
 
 ## Frankfurt-Vorbereitung: lesender Migrations-Preflight – 16.11.2026
 
