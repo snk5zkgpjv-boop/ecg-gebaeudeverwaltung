@@ -2,6 +2,10 @@
 
 Stand: 16.11.2026 (Anmeldeschutz in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Datenbankschema als Bootstrap-Datei – 16.11.2026
+
+Ein konsolidiertes `scripts/schema.sql` bildet die bislang verstreuten SQL-Tabellen einschließlich `app_state`, Authentifizierung, Reparaturjournal, Wartungsdokumenten, Mitarbeitenden, Abwesenheiten, Mitgliedern, Diensten und Testjournal ab. Das reale Produktionsschema wurde ausschließlich lesend mit den erwarteten Tabellen verglichen. Der synthetische PGlite-Test erstellt die Tabellen aus einer leeren Datenbank und prüft die Wiederholbarkeit. Diese Datei ist **keine** vollständige Produktionsmigration und kein Datenbackup. Für eine reale Migration sind `pg_dump`, `pg_restore` und eine Betreiber-Abnahme weiterhin notwendig.
+
 ## Schutz vor automatisierten Anmeldeversuchen – 16.11.2026
 
 Der Entwurfs-PR #64 ergänzt eine serverübergreifende, datenbankgestützte Begrenzung für Kennwortanmeldung und E-Mail-Rücksetzanforderungen. Für normalisierte Kontokennungen werden nur SHA-256-Schlüssel gespeichert; Login ist auf fünf Versuche in 15 Minuten begrenzt (erfolgreiche Anmeldung räumt den Zähler ab), Rücksetzung auf drei Anfragen pro Stunde. Wiederholte Anforderungen erhalten HTTP 429 mit Retry-After. Eine neue Tabelle `ecg_auth_rate_limits` wird zur Laufzeit angelegt. PGlite-Tests prüfen Ablauf der Zeitfenster, Trennung der Buckets und die Sperre des sechsten Loginversuchs; die gewohnten Browser-Regressionsprüfungen laufen zusätzlich.
