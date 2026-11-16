@@ -74,7 +74,7 @@ const sql=async parts=>{if(parts.join('').includes('AS profile'))return profiles
 const authSource=fs.readFileSync('lib/auth.js','utf8');
 const resolver=authSource.slice(authSource.indexOf('export function profileFor'),authSource.indexOf('export async function requireUser')).replaceAll('export ','');
 const authTest=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},neon:()=>sql,sessionUser:async()=>({id:'login',app_user_id:'a'}),appState:async()=>({users:profiles}),ensureAuthSchema:async()=>{},legacyJwtUser:async()=>({email:'same@example.test'}),hashPassword:()=>'',createSession:async()=>{sessions++}});
-vm.runInContext(resolver+'\n'+fs.readFileSync('api/auth/session.js','utf8').replace(/^import .*;\n/gm,'').replace('export default ',''),authTest);
+vm.runInContext(resolver+'\n'+fs.readFileSync('api/auth/session.js','utf8').replace(/^import .*;\n/gm,'').replace('export async function ','async function ').replace('export default ',''),authTest);
 let res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,403);assert.equal(res.headers['Cache-Control'],'private, no-store');
 profiles=[{id:'a',email:'same@example.test'},{id:'a',email:'duplicate@example.test'}];res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,403);
 profiles=[{id:'a',role:'member',active:true}];res=response();await authTest.handler({method:'GET'},res);assert.equal(res.code,200);assert.equal(res.body.user.appUserId,'a');
