@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (CSP-Skriptbegrenzung für Unterseiten in Prüfung; historische Nachweise nachfolgend).
+Stand: 16.11.2026 (PUBLIC_APP_URL für Reset-Mail in Prüfung; historische Nachweise nachfolgend).
+
+## Kennwort-Reset: ausschließlich konfigurierte öffentliche HTTPS-Adresse – 16.11.2026
+
+Die Linkbildung im Mailhandler `api/auth/forgot-password.js` akzeptiert ausschließlich eine gültige HTTPS-`PUBLIC_APP_URL`; Rückgriff auf einen anfrageseitig gelieferten Host-Header ist entfernt. Bei fehlender oder ungültiger Konfiguration wird kein Mailversand ausgelöst, ein serverseitiger Konfigurationsfehler protokolliert und unabhängig von der Existenz der Adresse neutral geantwortet. `tests/forgot-password-public-url.mjs` prüft den echten Handler mit isolierter PostgreSQL-Testdatenbank und simuliertem Maildienst für gültige URL, fremden Host-Header, fehlende/ungültige Konfiguration und identische Antworten für bekannte/unbekannte Konten. **Merge-Gate:** Betreiberbestätigung, dass `PUBLIC_APP_URL` in Vercel Production gesetzt ist. Bei letzter Bestandsprüfung war diese Variable nicht vorhanden. Bis zur Bestätigung bleibt der PR ungemergt; die bisherige Produktivversion wird nicht geändert.
 
 ## CSP für die Unterseiten – 16.11.2026
 
