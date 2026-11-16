@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+import { neon } from '../../lib/db.js';
 import {
   ensureAuthSchema, verifyPassword, createSession, appState, profileFor, publicUser,
 } from '../../lib/auth.js';

@@ -3,7 +3,7 @@ import { personnel } from '../lib/personnel.js';
 import { members } from '../lib/members.js';
 import { organizationExport } from '../lib/organization-export.js';
 import { applyStateChanges } from '../lib/concurrent-state.js';
-import { neon } from '@neondatabase/serverless';
+import { neon } from '../lib/db.js';
 import { profileFor, publicUser, requireUser, sessionUser } from '../lib/auth.js';
 import { syncOrganizationTimes } from '../lib/organization-sync.js';
 import { handleTimeChange } from '../lib/time-change.js';
