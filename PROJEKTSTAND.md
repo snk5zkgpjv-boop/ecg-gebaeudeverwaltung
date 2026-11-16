@@ -1,6 +1,12 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (lazy Mängelfotos in Umsetzung; historische technische Nachweise nachfolgend).
+Stand: 16.11.2026 (verifizierter produktiver Schattenschnappschuss; Cutover offen; historische Nachweise nachfolgend).
+
+## Fachbereichs-Aufteilung: Konsistenter produktiver Schattenschnappschuss – 16.11.2026
+
+Nach erfolgreichem synthetischem PGlite-Test wurden die additiven Tabellen `ecg_issue_records`, `ecg_issue_photos`, `ecg_room_records`, `ecg_time_records`, `ecg_kitchen_photos` und `ecg_split_migration_checks` auf der produktiven Neon-Instanz angelegt und mit einer transaktionalen Schattenkopie aus `app_state` befüllt. Vorher wurde ein manuell begrenzter Neon-Snapshot erstellt; dieser ist **kein** unabhängiges, dauerhaftes externes Backup. Ein direkt anschließender ausschließlich lesender JSONB-Inhaltsvergleich ergab für alle vier Bereiche Gleichheit bei derselben Quellrevision. Die ursprüngliche `app_state`-Zeile blieb unverändert. **Die Tabellen sind noch nicht autoritative Schreib- oder Lesequelle; weitere Änderungen am bisherigen JSONB werden in der Schattenkopie nicht automatisch aktualisiert.** Weder JSONB-Felder entfernt noch SQL-Lesepfade umgestellt; eine produktive Datenreduktion oder unabhängige Bereichsrevisionen sind damit noch nicht erreicht.
+
+PR #72 (Mängelfotos lazy laden) wurde zuvor mit erfolgreichem CI und produktivem Vercel-Deployment (`READY`) veröffentlicht. Die Bilddaten bleiben aber noch im JSONB und werden nur auf HTTP-Ebene einzeln ausgeliefert. Vor einer späteren Umschaltung: vollständig verifizierbares externes Backup, isolierte Wiederherstellung, echte Deltamigration, atomare Lese-/Schreibpfade sowie Bedien-/Rechtetests. Keine Personen- oder Mediendaten im Repository.
 
 ## Mängelbilder bei Bedarf statt als Teil der Fachliste – 16.11.2026
 
