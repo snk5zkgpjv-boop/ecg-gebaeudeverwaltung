@@ -41,17 +41,19 @@ export async function forgotPasswordWithDependencies(req,res,{sql,env=process.en
     const token=randomBytes(32).toString('base64url');
     await sql`INSERT INTO ecg_password_resets(user_id,token_hash,expires_at) VALUES(${rows[0].id},${tokenHash(token)},now()+interval '30 minutes')`;
     const link=base+'/?reset='+encodeURIComponent(token);
-    const r=await send('https://api.resend.com/emails',{
-      method:'POST',
-      headers:{authorization:`Bearer ${env.RESEND_API_KEY}`,'content-type':'application/json'},
-      body:JSON.stringify({
-        from:env.AUTH_FROM_EMAIL,to:[rows[0].email],
-        subject:'ECG Gebäudeverwaltung – Kennwort zurücksetzen',
-        html:`<p>Hallo ${escapeHtml(rows[0].name)},</p><p><a href="${link}">Kennwort zurücksetzen</a></p><p>Der Link gilt 30 Minuten.</p>`
-      })
-    });
-    if(!r.ok){
-      logger.error('ECG Kennwort-Reset: E-Mail-Dienst hat den Versand abgelehnt.');
+    try{
+      const r=await send('https://api.resend.com/emails',{
+        method:'POST',
+        headers:{authorization:`Bearer ${env.RESEND_API_KEY}`,'content-type':'application/json'},
+        body:JSON.stringify({
+          from:env.AUTH_FROM_EMAIL,to:[rows[0].email],
+          subject:'ECG Gebäudeverwaltung – Kennwort zurücksetzen',
+          html:`<p>Hallo ${escapeHtml(rows[0].name)},</p><p><a href="${link}">Kennwort zurücksetzen</a></p><p>Der Link gilt 30 Minuten.</p>`
+        })
+      });
+      if(!r.ok)logger.error('ECG Kennwort-Reset: E-Mail-Dienst hat den Versand abgelehnt.');
+    }catch{
+      logger.error('ECG Kennwort-Reset: E-Mail-Dienst ist nicht erreichbar.');
     }
   }
   return res.status(200).json(NEUTRAL_RESPONSE);
