@@ -1,6 +1,10 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (Anmeldesperre mit zweistufigen Fehlversuchszählern in Prüfung; historische Nachweise nachfolgend).
+Stand: 16.11.2026 (serverseitige Sitzungswiderrufung beim Logout in Prüfung; historische Nachweise nachfolgend).
+
+## Abmeldung: Sitzungsdatensatz sofort widerrufen – 16.11.2026
+
+Der Logout-Endpunkt `api/auth/logout.js` löscht bei übermitteltem Sitzungscookie dessen SHA-256-Hash aus `ecg_app_sessions` und entfernt danach das Cookie im Browser. Ohne Cookie bleibt `POST /api/auth/logout` erfolgreich (`200`). Bei einem Datenbankfehler wird ein Widerruf nicht fälschlich bestätigt. Die bestehende GET-Sitzungsprüfung ist für einen integrierten Test mit isoliertem PostgreSQL-Adapter zusätzlich exportiert; ihr HTTP-Verhalten bleibt erhalten. `tests/logout-session-revocation.mjs` prüft mit synthetischen Daten den echten Sitzungs- und Logout-Code: gültige Sitzung, Abmeldung, danach HTTP 401 mit dem alten Cookie, zweite unabhängige Sitzung und Abmeldung ohne Cookie. Keine produktiven Sitzungen verändert; Codeänderung erst nach erfolgreichen Tests und Deployment veröffentlichen.
 
 ## Anmeldesperre: gültiges Kennwort nicht durch fremde Fehlversuche blockieren – 16.11.2026
 
