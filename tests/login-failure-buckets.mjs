@@ -40,6 +40,7 @@ try{
  assert.equal(otherIp.code,200,'correct password from another IP still works');
  assert.ok(otherIp.headers['Set-Cookie'],'valid login must issue a session');
  assert.equal((await signIn('203.0.113.10','wrong-password')).code,401,'successful login clears all old counters');
+ assert.equal((await signIn('203.0.113.11',original)).code,200,'clear the one new failure before checking the independent global threshold');
 
  for(let i=0;i<30;i++){
   const result=await signIn('198.51.100.'+(i+1),'invalid-password');
