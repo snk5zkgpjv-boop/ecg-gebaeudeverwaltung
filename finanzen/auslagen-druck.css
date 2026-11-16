@@ -1,0 +1,57 @@
+/* Druckvorlage nach dem bestehenden ECG-Papierformular. */
+@page { size: A4 portrait; margin: 0; }
+@media screen {
+  #paper { display: none; }
+}
+@media print {
+  html, body { width: 210mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; color: #111 !important; }
+  body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+  main > :not(#paper) { display: none !important; }
+  #paper { display: block !important; width: 210mm; padding: 0; margin: 0; }
+  .expense-sheet { break-after: page; page-break-after: always; }
+  .expense-sheet:last-child { break-after: auto; page-break-after: auto; }
+}
+.expense-sheet {
+  position: relative;
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 25mm 21mm 23mm 24mm;
+  background: #fff;
+  color: #151515;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 10.7pt;
+  line-height: 1.2;
+}
+.expense-sheet, .expense-sheet * { box-sizing: border-box; }
+.expense-sheet .expense-head { height: 14mm; display:flex; align-items: flex-start; justify-content: space-between; }
+.expense-sheet .expense-logo { width: 47mm; max-height: 15mm; object-fit: contain; object-position: right top; }
+.expense-sheet h1 { font-family: "Times New Roman", Times, serif !important; font-size: 14pt !important; line-height: 1.1; margin: 6mm 0 2mm !important; font-weight: 700; }
+.expense-sheet .expense-heading { font-size: 10.5pt; font-weight:700; margin: 3.3mm 0 2.5mm; }
+.expense-sheet .expense-field { display: flex; align-items: flex-end; gap: 1.5mm; min-height: 7.2mm; }
+.expense-sheet .expense-field .label { flex: 0 0 auto; white-space: nowrap; }
+.expense-sheet .expense-line { display: block; border-bottom: 0.2mm solid #333; flex: 1 1 auto; min-width: 0; padding: 0 1mm 0.7mm; overflow-wrap: anywhere; }
+.expense-sheet .expense-field-pair { display:flex; gap: 0; }
+.expense-sheet .expense-field-pair > .expense-field { flex:1; min-width:0; }
+.expense-sheet .expense-field-pair .expense-field:nth-child(1) { flex:1.1; }
+.expense-sheet .expense-field-pair .expense-field:nth-child(2) { flex:0.95; }
+.expense-sheet .expense-table { border-collapse: collapse; width:100%; table-layout: fixed; font-size:9.7pt; margin-top: 2mm; }
+.expense-sheet .expense-table th, .expense-sheet .expense-table td { border: 0.22mm solid #333; padding: 0.6mm 1.5mm; text-align:left; vertical-align: middle; height: 5.75mm; overflow-wrap: anywhere; }
+.expense-sheet .expense-table th { height:6.6mm; font-weight:700; white-space:nowrap; }
+.expense-sheet .expense-table th:nth-child(1) { width:15%; }
+.expense-sheet .expense-table th:nth-child(2) { width:13%; }
+.expense-sheet .expense-table th:nth-child(3) { width:29%; }
+.expense-sheet .expense-table th:nth-child(4) { width:28%; }
+.expense-sheet .expense-table th:nth-child(5) { width:15%; }
+.expense-sheet .expense-table td.amount { text-align:right; font-variant-numeric:tabular-nums; }
+.expense-sheet .expense-total { display:flex; justify-content:flex-end; align-items:flex-end; margin:1.5mm 0 3.5mm; gap:0; font-size: 10pt; }
+.expense-sheet .expense-total strong { white-space: nowrap; }
+.expense-sheet .expense-total .expense-total-value { display:inline-block; min-width:20mm; border-bottom:0.2mm solid #333; text-align:right; font-weight:400; }
+.expense-sheet .expense-choice { display:flex; align-items: baseline; gap: 1.5mm; margin: 3.7mm 0 2mm; }
+.expense-sheet .expense-choice-mark { display:inline-block; flex:none; font-size: 11pt; width: 5mm; }
+.expense-sheet .expense-certification { font-size:10pt; margin: 4mm 0 2.4mm; }
+.expense-sheet .expense-signature { margin:4mm 0 0; }
+.expense-sheet .expense-signature-line { margin-top:5mm; border-bottom:0.25mm solid #333; min-height: 2mm; }
+.expense-sheet .expense-footer { display:flex; justify-content:space-between; position:absolute; left:24mm; right:21mm; bottom:19mm; border-top:0.2mm solid #444; padding-top:2mm; font-size:8pt; }
+.expense-sheet .expense-watermark { position:absolute; top:12mm; left:24mm; font:bold 8.5pt Arial,sans-serif; color:#666; }
