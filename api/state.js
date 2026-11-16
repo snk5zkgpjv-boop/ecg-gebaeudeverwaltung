@@ -43,7 +43,7 @@ function visible(state, profile) {
   // The original images remain stored and can be requested individually
   // through a separately authenticated media endpoint.
   output.issues = (state.issues || []).map(issue => {
-    if (typeof issue?.photo === 'string' && /^data:image\\/(?:jpeg|png|webp);base64,/.test(issue.photo)) {
+    if (typeof issue?.photo === 'string' && /^data:image\/(?:jpeg|png|webp);base64,/.test(issue.photo)) {
       const {photo, ...metadata} = issue;
       return {...metadata, hasPhoto:true};
     }
@@ -305,7 +305,7 @@ export default async function handler(req, res) {
       CROSS JOIN LATERAL jsonb_array_elements(COALESCE(a.data->'issues','[]'::jsonb)) item
       WHERE a.id='main' AND item->>'id'=${issueId} LIMIT 1`;
     const photo=rows[0]?.photo;
-    const match=/^data:image\\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(photo||'');
+    const match=/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(photo||'');
     if(!match)return res.status(404).json({error:'Mängelfoto nicht gefunden.'});
     const mime=match[1]==='png'?'image/png':match[1]==='webp'?'image/webp':'image/jpeg';
     res.setHeader('Content-Type',mime);
