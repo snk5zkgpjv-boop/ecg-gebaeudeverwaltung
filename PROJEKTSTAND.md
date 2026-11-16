@@ -2,6 +2,10 @@
 
 Stand: 16.11.2026 (Anmeldeschutz in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
 
+## Architekturkarte für Entwickler – 16.11.2026
+
+`docs/ARCHITEKTUR.md` beschreibt Oberflächen, API, Datenmodell, Berechtigungsablauf, externe Schnittstellen, Migrationsgrenzen und dokumentierte Risiken. Der README-Einstieg verweist auf die Übersicht. Keine Änderung am Laufzeitverhalten oder an Betriebsdaten; technische Dokumentation ersetzt keine Betreiberabnahme.
+
 ## Schlankere Authentifizierungsabfragen – 16.11.2026
 
 Anmeldung, Verwaltungsstatus und Bildanalyse-Zugriff fragen für die Benutzerprofilprüfung gezielt nur `data->'users'` aus dem zentralen `app_state` ab. `requireUser` unterstützt dazu `profileOnly`; Aufrufe, die fachliche Daten benötigen, erhalten unverändert den Gesamtzustand. Ein isolierter PGlite-Test prüft, dass große Mängeldaten nicht in die Antwort der schlanken Abfrage gelangen und die unveränderte Vollabfrage weiterhin funktioniert. Keine produktiven Datensätze verändert. Die SQL-Projektion reduziert übertragene Antwortdaten, ersetzt aber keine generelle Auslagerung des großen JSON-Dokuments. Weitere Endpunkte und die Gesamtzustands-Speicherung bleiben als Performance-Aufgaben offen.
