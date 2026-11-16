@@ -1,6 +1,14 @@
 # ECG – schrittweise Aufteilung des zentralen JSONB-Dokuments
 
-Stand: 16.11.2026. Vorbereitete **Schattenkopie**, noch kein produktiver Datenmodellwechsel.
+Stand: 16.11.2026. Produktiver Schattenschnappschuss verifiziert, aber **kein** produktiver Datenmodellwechsel.
+
+## Nachgewiesener Stand vom 16.11.2026
+
+- Ein manueller Neon-Snapshot wurde vor den ausschließlich additiven Änderungen erstellt. Er hat eine begrenzte Aufbewahrung und ersetzt keinen externen, vollständig getesteten Backup-/Restore-Prozess.
+- Die zusätzlichen Tabellen und der SQL-Schnappschuss wurden transaktional in der produktiven Datenbank angelegt; sämtliche vier JSONB-Fachbereiche wurden nach dem Kopieren im SQL-Inhaltsvergleich unverändert wiederhergestellt.
+- Die Quelle und der Schattenbestand entsprachen zum Prüfzeitpunkt derselben Revision. Die ursprünglichen JSONB-Felder wurden weder gelöscht noch geändert.
+- **Jede nachfolgende Änderung in der laufenden WebApp kann den Schattenbestand veralten lassen.** Vor einer Umschaltung ist die Kopie daher erneut synchron und mit Schreibstopp zu erstellen; das vorhandene Snapshotskript verweigert absichtlich das Überschreiben nichtleerer Tabellen.
+- API-Reads/Writes und Berechtigungen verwenden vorläufig unverändert die zentrale JSONB-Quelle. Das separate Nachladen von Mängelfotos ist ein eigenständiger HTTP-Performance-Schritt; kein abgeschlossener Datenbank-Cutover.
 
 ## Ausgangszustand
 
