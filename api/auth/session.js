@@ -1,4 +1,4 @@
-import {neon} from '../lib/db.js';
+import {neon} from '../../lib/db.js';
 import {sessionUser,profileFor,publicUser} from '../../lib/auth.js';
 
 export default async function handler(req,res){
