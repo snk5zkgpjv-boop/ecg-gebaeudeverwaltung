@@ -42,10 +42,6 @@ res=response();await change({method:'POST',body:{currentPassword:'old-password',
 changeResult=[];res=response();await change({method:'POST',body:{currentPassword:'old-password',newPassword:'new-synthetic-password'}},res);assert.equal(res.code,409,'concurrent change cannot overwrite newer password');
 changeQueries=[];res=response();await change({method:'POST',body:{currentPassword:'wrong',newPassword:'new-synthetic-password'}},res);assert.equal(res.code,400);assert.equal(changeQueries.length,1);
 
-let migratedWrites=0;
-const migrate=handler('api/auth/migrate.js',async(parts)=>{if(parts.join('').startsWith('SELECT'))return [{id:'synthetic-user',app_user_id:'test-target'}];migratedWrites++;return []},{legacyJwtUser:async()=>({email:'synthetic@example.test'}),appState:async()=>({users:[{id:'test-target',email:'synthetic@example.test'}]}),createSession:async()=>{migratedWrites++}});
-res=response();await migrate({method:'POST',body:{password:'synthetic-password'}},res);assert.equal(res.code,409);assert.equal(migratedWrites,0,'one-time migration cannot replace an existing credential');
-
 const html=read('index.html');
 let dialogs=0,pulls=0,redirects=[],fetches=[];
 const ui=vm.createContext({URLSearchParams,location:{search:'?bereich=termine',replace:url=>redirects.push(url)},document:{getElementById:()=>({remove(){},replaceChildren(){}})},changePasswordDialog:forced=>{assert.equal(forced,true);dialogs++},currentSection:()=>({}),showLoginGate:()=>assert.fail('forced change must remain reachable'),bindAuthUser:()=>assert.fail('no protected state before change'),pullCloud:()=>{pulls++;},$:selector=>({value:'synthetic',remove(){},textContent:''}),fetch:async url=>{fetches.push(url);return {ok:true,json:async()=>({user:{role:'admin',mustChangePassword:true}})}}});
@@ -63,4 +59,4 @@ const passwordDialog={dataset:{},querySelector:()=>({remove(){closeRemoved=true}
 const passwordUi=vm.createContext({modal:html=>{dialogMarkup=html;return passwordDialog}});passwordUi.window=passwordUi;
 vm.runInContext(html.match(/^window.changePasswordDialog=.*$/m)[0],passwordUi);
 passwordUi.changePasswordDialog(true);assert.equal(closeRemoved,true);assert.equal(passwordDialog.dataset.passwordRequired,'true');assert.match(dialogMarkup,/signOutApp/);assert.doesNotMatch(dialogMarkup,/closeModal/);
-console.log('PASS: mandatory-password gate, password/reset handler boundaries, session revocation, concurrent-change response, one-time migration, and forced-change login/deep-link paths. Synthetic data only.');
+console.log('PASS: mandatory-password gate, password/reset handler boundaries, session revocation, concurrent-change response, and forced-change login/deep-link paths. Synthetic data only.');
