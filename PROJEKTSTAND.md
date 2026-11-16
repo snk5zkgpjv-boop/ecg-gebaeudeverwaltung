@@ -1,6 +1,12 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 15.11.2026 (Kontodaten-Erweiterung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+Stand: 16.11.2026 (Anmeldeschutz in Vorbereitung; historische technische Nachweise nachfolgend). Technische, öffentlich geeignete Übergabe; keine Kunden-, Kontakt- oder Zugangsdaten.
+
+## Schutz vor automatisierten Anmeldeversuchen – 16.11.2026
+
+Der Entwurfs-PR #64 ergänzt eine serverübergreifende, datenbankgestützte Begrenzung für Kennwortanmeldung und E-Mail-Rücksetzanforderungen. Für normalisierte Kontokennungen werden nur SHA-256-Schlüssel gespeichert; Login ist auf fünf Versuche in 15 Minuten begrenzt (erfolgreiche Anmeldung räumt den Zähler ab), Rücksetzung auf drei Anfragen pro Stunde. Wiederholte Anforderungen erhalten HTTP 429 mit Retry-After. Eine neue Tabelle `ecg_auth_rate_limits` wird zur Laufzeit angelegt. PGlite-Tests prüfen Ablauf der Zeitfenster, Trennung der Buckets und die Sperre des sechsten Loginversuchs; die gewohnten Browser-Regressionsprüfungen laufen zusätzlich.
+
+Der Schutz ist kontobezogen, keine vollständige Abwehr verteilter Angriffe aus vielen IP-Adressen. Die Tabelle benötigt künftig eine regelmäßige Retention-Bereinigung. Änderungen an echten Konten oder Fehlversuche gegen die Live-Anmeldung sind nicht Teil der synthetischen Tests. Die fachliche Live-Abnahme erfolgt separat von CI und Vercel-Build.
 
 ## Finanzbereich: zentrale Gemeindekontodaten – 15.11.2026
 
