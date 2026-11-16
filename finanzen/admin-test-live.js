@@ -1,3 +1,4 @@
+import {renderExpensePaper} from './auslagen-druck.js';
 const $=id=>document.getElementById(id);
 const fmt=c=>(c/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const labels={submitted:'Eingereicht',question:'Rückfrage offen',approved:'Freigegeben',paid:'Ausgezahlt',rejected:'Abgelehnt'};
@@ -11,20 +12,18 @@ function reset(){
  render();
 }
 function printClaim(c){
- const sheet=$('paper');sheet.replaceChildren();
- const title=document.createElement('h1');title.textContent='Auslagenerstattung – TESTDRUCK';
- const sub=document.createElement('p');sub.textContent='Evangeliums Christengemeinde e.V. · Nur Musterbeleg · KEINE AUSZAHLUNG';
- const ident=document.createElement('p');ident.textContent='Vorgang: '+c.id+' · Status: '+labels[c.state];
- const table=document.createElement('table');
- const head=document.createElement('tr');
- for(const str of ['Datum','Artikel','Projekt','Betrag']){const td=document.createElement('th');td.textContent=str;head.append(td)}
- const row=document.createElement('tr');
- for(const value of [c.date,c.description,c.project,fmt(c.cents)]){const td=document.createElement('td');td.textContent=value;row.append(td)}
- table.append(head,row);
- const sum=document.createElement('p');sum.textContent='Gesamtsumme: '+fmt(c.cents);
- sheet.append(title,sub,ident,table,sum);
+ renderExpensePaper($('paper'),{
+  items:[{date:c.date,description:c.description,project:c.project,cents:c.cents}],
+  reimbursementType:'refund',
+  // In der Demo grundsätzlich keine echten personenbezogenen Bankangaben.
+  lastName:'Musterperson',
+  firstName:'Test',
+  city:'Musterort',
+  bankOwner:'Musterperson Test'
+ },{demo:true});
  window.print();
 }
+
 function render(){
  const list=$('claims');list.replaceChildren();
  for(const c of claims){
