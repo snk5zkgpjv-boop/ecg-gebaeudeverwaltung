@@ -47,8 +47,8 @@ sessions.delete(tokenHash(token));assert.equal(await sessionUser(request(res),sq
 // Exercise both real issuing handlers: they pass the verified credential and
 // reject issuance failure instead of claiming successful authentication.
 function load(path,extras){
- const ctx=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},ensureAuthSchema:async()=>{},...extras});
- vm.runInContext(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace('export default ',''),ctx);return ctx.handler;
+ const ctx=vm.createContext({process:{env:{DATABASE_URL:'synthetic'}},ensureAuthSchema:async()=>{},ensureAuthRateLimitSchema:async()=>{},consumeAuthAttempt:async()=>true,clearAuthAttempts:async()=>{},...extras});
+ vm.runInContext(fs.readFileSync(path,'utf8').replace(/^import\s+[\s\S]*?\s+from\s+['\"][^'\"]+['\"];\s*/gm,'').replace('export default ',''),ctx);return ctx.handler;
 }
 let boundHash,issued=false;
 const login=load('api/auth/login.js',{neon:()=>async()=>[{...user,password_hash:oldHash}],verifyPassword:()=>true,appState:async()=>({users:[]}),profileFor:()=>({id:'synthetic-profile'}),publicUser:()=>({id:'synthetic-login'}),createSession:async(_res,_sql,id,hash)=>{assert.equal(id,user.id);boundHash=hash;return issued}});
