@@ -26,7 +26,7 @@ try {
   await db.exec(migrate);
   const get = async sql => (await db.query(sql)).rows;
   const migration = (await get('SELECT * FROM ecg_split_migration_checks'))[0];
-  assert.equal(migration.snapshot_revision,'42');
+  assert.equal(Number(migration.snapshot_revision),42);
   assert.equal(migration.issue_count,2);
   assert.equal(migration.issue_photo_count,1);
   assert.equal(migration.room_count,2);
@@ -34,7 +34,7 @@ try {
   assert.equal(migration.kitchen_photo_count,2);
   const originals = (await get("SELECT data,revision FROM app_state WHERE id='main'"))[0];
   assert.deepEqual(originals.data,source,'original source must remain byte-equivalent at JSON semantics');
-  assert.equal(originals.revision,'42');
+  assert.equal(Number(originals.revision),42);
   const issueRows = await get('SELECT id,payload FROM ecg_issue_records ORDER BY sort_order');
   assert.equal(issueRows[0].payload.photo,undefined);
   assert.equal(issueRows[1].payload.photo,null,'null photo semantics preserved');
