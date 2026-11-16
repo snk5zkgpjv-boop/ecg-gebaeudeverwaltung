@@ -4,7 +4,7 @@ const can=p=>p.role!=='technician'&&(p.role==='admin'||(p.permissions?.useAI??p.
 export default async function handler(req,res){if(req.query?.timeVoice==='1')return timeVoiceHandler(req,res);if(req.method!=='POST')return res.status(405).json({error:'Methode nicht erlaubt'});
 if(!process.env.DATABASE_URL)return res.status(500).json({error:'DATABASE_URL fehlt'});
 if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:'KI ist noch nicht konfiguriert.'});
-const sql=neon(process.env.DATABASE_URL),a=await requireUser(req,res,sql);
+const sql=neon(process.env.DATABASE_URL),a=await requireUser(req,res,sql,{profileOnly:true});
 if(!a)return;
 if(!can(a.profile))return res.status(403).json({error:'KI-Funktion nicht freigeschaltet.'});
 const task=req.body?.task,image=req.body?.image;
