@@ -9,7 +9,7 @@ try {
   await db.exec(sql); // Bootstrap is idempotent for an empty/test database.
   const rows = (await db.query("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")).rows;
   const tables = rows.map(row => row.tablename);
-  const expected=[...sql.matchAll(/CREATE TABLE IF NOT EXISTS\\s+(\\w+)/gi)].map(match=>match[1]).sort();
+  const expected=[...sql.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)/gi)].map(match=>match[1]).sort();
   assert.equal(expected.length,18,'canonical schema contains all 18 application tables');
   assert.deepEqual(tables,expected,'exact canonical table inventory');
   const columns = (await db.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name='app_state'")).rows;
