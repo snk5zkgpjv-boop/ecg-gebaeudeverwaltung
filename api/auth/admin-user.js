@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
 
   const sql = neon(process.env.DATABASE_URL);
-  const auth = await requireUser(req, res, sql);
+  const auth = await requireUser(req, res, sql, { profileOnly: true });
   if (!auth) return;
   if (!canManageUsers(auth.profile)) {
     return res.status(403).json({ error: 'Die Benutzerverwaltung ist für dieses Konto nicht freigeschaltet.' });

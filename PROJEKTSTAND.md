@@ -1,6 +1,12 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 17.11.2026 (Raum-Kalender-Verknüpfung als Feature-Branch in Prüfung; weitere historische Nachweise nachfolgend).
+Stand: 17.11.2026 (profilbezogene Authentifizierung für Kalender, Benutzerverwaltung und Sprache in Prüfung; historische Nachweise nachfolgend).
+
+## Profilbezogene Authentifizierung ohne vollständigen app_state-Transfer – 17.11.2026
+
+Die Endpunkte `api/calendar.js` und `api/auth/admin-user.js` benötigen im Authentifizierungspfad nur das autoritative Benutzerprofil beziehungsweise die Benutzerliste und rufen daher `requireUser(...,{profileOnly:true})` auf. `lib/time-voice-handler.js` verwendet für GET und die nicht-synchronisierenden Aktionen denselben schlanken Pfad. Ausschließlich `POST` mit `action: 'sync'` benötigt über die Authentifizierung weiterhin das vollständige `app_state`-Dokument. Die Zeiterfassungsaktion `save` liest zur revisionssicheren Änderung wie bisher den aktuellen vollständigen Zustand direkt in ihrer bestehenden SQL-Schleife; diese Speicherung wird nicht verändert. Die bestehenden Rollen-, Rechte- und Sitzungsprüfungen bleiben unverändert.
+
+Neue synthetische PostgreSQL-PGlite-Integration `tests/auth-profile-only-handlers.mjs` führt die tatsächlichen Kalender-, Benutzerverwaltungs- und Sprachhandler mit der echten `requireUser`-Logik und einer SQL-Protokollierung aus. Für die profilbezogenen Aufrufe darf kein `SELECT data FROM app_state` vorkommen; Synchronisierung muss weiterhin den vollständigen Zustand lesen. Den tatsächlichen Status der gesamten CI und der Vercel-Vorschau erst nach vollständiger Prüfung als bestanden ausweisen. Kein Test auf produktiven Gemeindedaten.
 
 ## Räume, Kalender und Reinigung – Entwicklung 17.11.2026
 
