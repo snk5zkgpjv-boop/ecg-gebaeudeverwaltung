@@ -9,6 +9,7 @@ import { syncOrganizationTimes } from '../lib/organization-sync.js';
 import { handleTimeChange } from '../lib/time-change.js';
 import { deleteIssue } from '../lib/issue-delete.js';
 import { createIssue } from '../lib/issue-create.js';
+import {issuesInTables,readTableIssues,readTablePhoto,readTableIssue,createTableIssue,updateTableIssue,updateTablePhoto,deleteTableIssue} from '../lib/issue-tables.js';
 import { maintenanceDocuments } from '../lib/maintenance-documents.js';
 import { eventUsage } from '../lib/event-usage.js';
 import { runSheet } from '../lib/run-sheet.js';
@@ -292,7 +293,14 @@ function accepted(current, incoming, profile) {
 export default async function handler(req, res) {
   if(req.query?.bankAccount==='1')return financeBankAccount(req,res);
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
-  const sql = neon(process.env.DATABASE_URL);
+  return stateWithSql(req,res,neon(process.env.DATABASE_URL));
+}
+
+// Export a database-injected entrypoint so integration tests exercise the real
+// HTTP handlers, sessions and role checks without production credentials.
+export async function stateWithSql(req,res,sql) {
+  const tableMode=issuesInTables();
+  if(tableMode)res.setHeader('X-ECG-Issues-Source','tables');
   if (req.method === 'GET' && req.query?.issuePhoto != null) {
     res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -301,10 +309,10 @@ export default async function handler(req, res) {
     const auth=await requireUser(req,res,sql,{profileOnly:true});
     if(!auth)return;
     if(auth.profile.role==='financeDeacon' && !has(auth.profile,'manageRooms') && !has(auth.profile,'manageIssues'))return res.status(403).json({error:'Keine Berechtigung für Mängelfotos.'});
-    const rows=await sql`SELECT item->>'photo' AS photo FROM app_state a
-      CROSS JOIN LATERAL jsonb_array_elements(COALESCE(a.data->'issues','[]'::jsonb)) item
-      WHERE a.id='main' AND item->>'id'=${issueId} LIMIT 1`;
-    const photo=rows[0]?.photo;
+    const photo=tableMode?await readTablePhoto(sql,issueId):
+      (await sql`SELECT item->>'photo' AS photo FROM app_state a
+        CROSS JOIN LATERAL jsonb_array_elements(COALESCE(a.data->'issues','[]'::jsonb)) item
+        WHERE a.id='main' AND item->>'id'=${issueId} LIMIT 1`)[0]?.photo;
     const match=/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(photo||'');
     if(!match)return res.status(404).json({error:'Mängelfoto nicht gefunden.'});
     const mime=match[1]==='png'?'image/png':match[1]==='webp'?'image/webp':'image/jpeg';
@@ -338,8 +346,13 @@ export default async function handler(req, res) {
   if(req.query?.duties==='1')return eventDuties(req,res,sql,has);
   if(['eigene','team','freigaben','stamm'].includes(req.query?.personnel))return personnel(req,res,sql);
   if(['self','list'].includes(req.query?.members))return members(req,res,sql);
-  const auth = await requireUser(req, res, sql);
+  const auth = await requireUser(req, res, sql,tableMode&&req.method==='GET'?{profileOnly:true}:{});
   if (!auth) return;
+  if(tableMode&&req.method==='GET'){
+    // Avoid pulling legacy issue/photo JSONB when the table snapshot is authoritative.
+    const rows=await sql`SELECT data-'issues' AS data FROM app_state WHERE id='main' LIMIT 1`;
+    auth.state={...(rows[0]?.data||{}),issues:await readTableIssues(sql)};
+  }
 
   try {
     if (req.query?.eventUsage === '1') return await eventUsage(req, res, sql, auth, has);
@@ -365,8 +378,14 @@ export default async function handler(req, res) {
     }
     if (req.method === 'PATCH') {
       if (['deacon','financeDeacon'].includes(auth.profile.role) && (req.body?.createIssue || req.body?.deleteIssueId) && !has(auth.profile,'manageIssues'))return res.status(403).json({error:'Mängel sind nur lesbar.'});
-      if (req.body?.createIssue && Object.keys(req.body).length === 1) return await createIssue(sql, auth, req.body.createIssue, res);
-      if (typeof req.body?.deleteIssueId === 'string' && Object.keys(req.body).length === 1) return await deleteIssue(sql, auth, req.body.deleteIssueId, res);
+      if (req.body?.createIssue && Object.keys(req.body).length === 1) return tableMode?
+        createTableIssue(sql,auth,req.body.createIssue,res):createIssue(sql, auth, req.body.createIssue, res);
+      if (typeof req.body?.deleteIssueId === 'string' && Object.keys(req.body).length === 1) return tableMode?
+        deleteTableIssue(sql,auth,req.body.deleteIssueId,res,has):deleteIssue(sql, auth, req.body.deleteIssueId, res);
+      if(tableMode && req.body?.updateIssue && Object.keys(req.body).length===1)
+        return updateTableIssue(sql,auth,req.body.updateIssue,res,has);
+      if(tableMode && req.body?.updateIssuePhoto && Object.keys(req.body).length===1)
+        return updateTablePhoto(sql,auth,req.body.updateIssuePhoto,res,has);
       if (req.body?.timeChange && Object.keys(req.body).length === 1) return handleTimeChange(sql, auth, req.body.timeChange, res, syncOrganizationTimes);
       if (auth.profile.role === 'technician') return res.status(403).json({ error: 'Persönliche Planung ist für die Technikrolle nicht freigeschaltet.' });
       if (typeof req.body?.shareTimes === 'boolean' && Object.keys(req.body).every(key => key === 'shareTimes')) {
@@ -377,7 +396,8 @@ export default async function handler(req, res) {
       if (req.body?.issuePlan && Object.keys(req.body).every(key => key === 'issuePlan')) {
         const raw = req.body.issuePlan;
         const issueId = String(raw.issueId || '');
-        const issue = (auth.state.issues || []).find(item => item.id === issueId);
+        const issue = tableMode?await readTableIssue(sql,issueId):
+          (auth.state.issues || []).find(item => item.id === issueId);
         if (!issue) return res.status(404).json({ error: 'Hinweis nicht gefunden.' });
         const estimatedMinutes = raw.estimatedMinutes === null || raw.estimatedMinutes === '' ? null : Number(raw.estimatedMinutes);
         if (estimatedMinutes !== null && (!Number.isInteger(estimatedMinutes) || estimatedMinutes < 5 || estimatedMinutes > 1440)) {
@@ -421,6 +441,8 @@ export default async function handler(req, res) {
       if (req.body.protocol !== 1 || !req.body.changes || typeof req.body.changes !== 'object' || Array.isArray(req.body.changes)) {
         return res.status(428).json({error:'Bitte die App neu laden, bevor du speicherst.'});
       }
+      if(tableMode && Object.hasOwn(req.body.changes,'issues'))
+        return res.status(409).json({error:'Mängel müssen einzeln gespeichert werden. Bitte die App neu laden.',conflict:true});
       if (['deacon','financeDeacon'].includes(auth.profile.role)) {
         const editRights={rooms:'manageRooms',outdoorAreas:'manageRooms',templates:'manageTasks',eventTaskDone:'manageTasks',issues:'manageIssues',users:'manageUsers',maintenanceAssets:'manageMaintenance',calendarEvents:'manageCalendar',eventRules:'manageCalendar',eventChecklists:'manageCalendar',eventDocumentSettings:'manageCalendar',inventory:'manageInventory',materials:'manageInventory',storageLocations:'manageInventory',loans:'manageInventory',shopping:'manageInventory'};
         if(Object.keys(req.body.changes).some(key=>!Object.hasOwn(editRights,key)||!has(auth.profile,editRights[key])))return res.status(403).json({error:'Für diese Änderung fehlt das Schreibrecht.'});

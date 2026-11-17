@@ -19,7 +19,7 @@ async function readAppResponse(url,options={},timeoutMs=12000){
  try{
   const response=await fetch(url,{...options,signal:controller.signal});
   const body=await response.json();
-  return {ok:response.ok,status:response.status,json:async()=>body};
+  return {ok:response.ok,status:response.status,headers:response.headers,json:async()=>body};
  }finally{clearTimeout(timer);upstream?.removeEventListener('abort',abort);}
 }
 function workNavigationSections(user){

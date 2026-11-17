@@ -296,6 +296,7 @@ function cacheAppState(){
 function save(){cacheAppState();syncCloudDebounced();}
 let syncTimer; function syncCloudDebounced(){clearTimeout(syncTimer);syncTimer=setTimeout(syncCloud,700)}
 let authSession=null;
+let issuesTableMode=false;
 async function authHeaders(extra={}){return {...extra,...(authSession?.user?.appUserId?{'X-ECG-User-Id':authSession.user.appUserId}:{})}}
 let cloudBase;
 function rememberCloudBase(session, remote) {
@@ -308,7 +309,7 @@ async function syncCloud(fetcher=fetch){
   const local=JSON.parse(JSON.stringify(cloudPayload()));
   const changes=Object.create(null);
   for(const [field,value] of Object.entries(local)){
-    if(['timeEntries','timeEntryIdsSeen','timeEntriesReadOnly','sharedTimeUsers','myTimeSharing'].includes(field)) continue;
+    if(['timeEntries','timeEntryIdsSeen','timeEntriesReadOnly','sharedTimeUsers','myTimeSharing'].includes(field) || (issuesTableMode&&field==='issues')) continue;
     if(JSON.stringify(value)!==JSON.stringify(base.local[field])) changes[field]={before:base.remote[field],after:value};
   }
   if(!Object.keys(changes).length) return true;
@@ -337,7 +338,7 @@ async function syncCloud(fetcher=fetch){
   return false;
 }
 function acceptCloudState(remote,session,epoch,issueEpoch){const original=structuredClone(remote);if(epoch!==timeChangeEpoch)remote.timeEntries=state.timeEntries;if(issueEpoch!==issueChangeEpoch){remote.issues=state.issues;remote.myIssuePlanning=state.myIssuePlanning;}mergeCloudState(remote);bindAuthUser();rememberCloudBase(session,original);cacheAppState();render();void flushTimeChanges();return true}
-async function pullCloud(){if(!state.settings.cloudSync||!authSession)return;const session=authSession,owner=state.currentUserId,epoch=timeChangeEpoch,issueEpoch=issueChangeEpoch;try{const r=await fetch('/api/state',{headers:await authHeaders()});if(r.ok){const remote=await r.json();if(state.currentUserId!==owner||authSession!==session)return;if(remote?.version){return acceptCloudState(remote,session,epoch,issueEpoch)}}else if(authSession===session&&state.currentUserId===owner&&[401,403,409].includes(r.status)){showLoginGate('Bitte erneut anmelden.')}}catch{}}
+async function pullCloud(){if(!state.settings.cloudSync||!authSession)return;const session=authSession,owner=state.currentUserId,epoch=timeChangeEpoch,issueEpoch=issueChangeEpoch;try{const r=await fetch('/api/state',{headers:await authHeaders()});if(r.ok){issuesTableMode=r.headers?.get?.('X-ECG-Issues-Source')==='tables';const remote=await r.json();if(state.currentUserId!==owner||authSession!==session)return;if(remote?.version){return acceptCloudState(remote,session,epoch,issueEpoch)}}else if(authSession===session&&state.currentUserId===owner&&[401,403,409].includes(r.status)){showLoginGate('Bitte erneut anmelden.')}}catch{}}
 
 const taskIntervalDays={daily:1,weekly:7,biweekly:14,monthly:30,quarterly:90,semiannual:182,annual:365};
 function taskIntervalElapsed(task){const days=taskIntervalDays[task.interval];if(!days)return false;const last=new Date(task.lastDone).getTime();return !Number.isFinite(last)||Date.now()-last>=days*86400000}
@@ -719,10 +720,62 @@ function issueCompletedAt(i){return i.completedAt?new Date(i.completedAt):null}
 function issueArchiveDate(i){const d=issueCompletedAt(i);return d?new Date(d.getTime()+7*24*60*60*1000):null}
 function isIssueArchived(i){const d=issueArchiveDate(i);return i.status==='done'&&d&&Date.now()>=d.getTime()}
 function setIssueStatusValue(i,v){if(!i)return;if(v==='done'){if(i.status!=='done'||!i.completedAt)i.completedAt=nowISO()}else{i.completedAt=null}i.status=v}
-window.saveIssueEdit=id=>{const i=state.issues.find(x=>x.id===id);const newStatus=$('#eiStatus').value;Object.assign(i,{roomId:$('#eiRoom').value,outdoorId:$('#eiOutdoor').value,assetId:$('#eiAsset').value,priority:$('#eiPri').value,text:$('#eiText').value.trim(),photo:pendingPhoto});setIssueStatusValue(i,newStatus);pendingPhoto=null;save();closeModal();openIssue(id)};
-window.setIssue=(id,v)=>{const i=state.issues.find(x=>x.id===id);setIssueStatusValue(i,v);save();render()};
-window.setIssueAndStay=(id,v)=>{const i=state.issues.find(x=>x.id===id);setIssueStatusValue(i,v);save();closeModal();openIssue(id)};
-window.markIssueDone=id=>{const i=state.issues.find(x=>x.id===id);setIssueStatusValue(i,'done');save();closeModal();openIssue(id)};
+// In table mode each issue is changed via one authenticated row-level PATCH.
+// The default jsonb branch retains the previous save/PUT behavior.
+const updatingIssues=new Set();
+async function saveIssueFields(id,changes,after,photo){
+ const original=state.issues.find(issue=>issue.id===id);if(!original)return;
+ if(!issuesTableMode){
+  const {status,...otherChanges}=changes;
+  Object.assign(original,otherChanges);
+  if(Object.hasOwn(changes,'status'))setIssueStatusValue(original,status);
+  if(photo!==undefined)original.photo=photo;
+  save();after();return;
+ }
+ if(updatingIssues.has(id))return;
+ if(!authSession){alert('Bitte zuerst anmelden.');return;}
+ const owner=state.currentUserId;updatingIssues.add(id);
+ try{
+  const response=await fetch('/api/state',{method:'PATCH',
+   headers:await authHeaders({'content-type':'application/json'}),
+   body:JSON.stringify({updateIssue:{id,changes}})});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||result.ok!==true||result.issue?.id!==id)
+   throw Error(result.error||'Die Mangeländerung wurde nicht bestätigt.');
+  if(photo!==undefined){
+   const uploaded=await fetch('/api/state',{method:'PATCH',
+    headers:await authHeaders({'content-type':'application/json'}),
+    body:JSON.stringify({updateIssuePhoto:{id,photo}})});
+   if(!uploaded.ok){
+    const detail=await uploaded.json().catch(()=>({}));
+    throw Error(detail.error||'Das neue Foto wurde nicht gespeichert.');
+   }
+   result.issue.hasPhoto=true;
+  }
+  if(owner!==state.currentUserId)return;
+  issueChangeEpoch++;
+  state.issues=state.issues.map(issue=>issue.id===id?result.issue:issue);
+  try{cacheAppState()}catch(error){console.warn('issue cache unavailable',error?.name)}
+  after();
+ }catch(error){if(owner===state.currentUserId)alert(error.message||'Speichern fehlgeschlagen. Bitte erneut versuchen.')}
+ finally{updatingIssues.delete(id)}
+}
+window.saveIssueEdit=async id=>{
+ const i=state.issues.find(x=>x.id===id);if(!i)return;
+ const changes={roomId:$('#eiRoom').value,outdoorId:$('#eiOutdoor').value,
+  assetId:$('#eiAsset').value,priority:$('#eiPri').value,text:$('#eiText').value.trim(),
+  status:$('#eiStatus').value};
+ const photo=pendingPhoto;
+ if(issuesTableMode){
+  await saveIssueFields(id,changes,()=>{pendingPhoto=null;closeModal();openIssue(id)},typeof photo==='string'?photo:undefined);
+ }else{
+  const {status,...details}=changes;
+  Object.assign(i,{...details,photo});setIssueStatusValue(i,status);pendingPhoto=null;save();closeModal();openIssue(id);
+ }
+};
+window.setIssue=(id,v)=>saveIssueFields(id,{status:v},()=>render());
+window.setIssueAndStay=(id,v)=>saveIssueFields(id,{status:v},()=>{closeModal();openIssue(id)});
+window.markIssueDone=id=>saveIssueFields(id,{status:'done'},()=>{closeModal();openIssue(id)});
 window.showOpenIssues=()=>{const open=state.issues.filter(i=>i.status!=='done');if(open.length===1){openIssue(open[0].id);return}state.activeTab='issues';state.issueListMode='active';save();render()};
 window.setIssueListMode=mode=>{state.issueListMode=mode;try{save()}catch(e){console.warn(e)}render()};
 
@@ -1364,6 +1417,7 @@ async function bootAuth(){
   }
   if(response.status===401)return showLoginGate();
   if(!response.ok)throw Error('Bereich nicht erreichbar');
+  issuesTableMode=response.headers?.get?.('X-ECG-Issues-Source')==='tables';
   const entry=await response.json();
   authSession={user:entry.user};
   if(openPortalHome(entry.user))return;

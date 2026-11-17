@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {applyStateChanges} from '../lib/concurrent-state.js';
 
 const html = readFileSync('index.html','utf8');
-const server = readFileSync('api/state.js','utf8').replace(/^import .*;$/gm,'').replace('export default async function','async function');
+const server = readFileSync('api/state.js','utf8').replace(/^import .*;$/gm,'').replace('export default async function','async function').replace('export async function stateWithSql','async function stateWithSql');
 const profile = {id:'lead',role:'coordinator'};
 let data={version:6,inventory:[],calendarEvents:[],rooms:[],issues:[],eventChecklists:[],timeEntries:[]};
 let forceRace=false;
@@ -15,7 +15,7 @@ async function sql(strings,payload,expected) {
   data=JSON.parse(payload);return [{revision:1}];
 }
 const context=vm.createContext({process:{env:{DATABASE_URL:'test'}},structuredClone,console,applyStateChanges,
-  requireUser:async()=>({profile,state:structuredClone(data)}),neon:()=>sql,syncOrganizationTimes:async()=>({})});
+  requireUser:async()=>({profile,state:structuredClone(data)}),neon:()=>sql,syncOrganizationTimes:async()=>({}),issuesInTables:()=>false});
 vm.runInContext(server,context);
 async function send(body){
   const res={setHeader(){},status(code){this.code=code;return this;},json(body){this.body=body;return this;}};
@@ -25,7 +25,7 @@ async function send(body){
 function device(){
   const state=structuredClone(data);state.settings={cloudSync:true};
   const alerts=[];
-  const c=vm.createContext({state,authSession:{},alert:msg=>alerts.push(msg),document:{},$:()=>null,
+  const c=vm.createContext({state,issuesTableMode:false,authSession:{},alert:msg=>alerts.push(msg),document:{},$:()=>null,
     cloudPayload:()=>state,authHeaders:async()=>({}),fetch:async(_,request)=>send(JSON.parse(request.body))});
   vm.runInContext(html.slice(html.indexOf('let cloudBase;'),html.indexOf('async function pullCloud')),c);
   c.rememberCloudBase(c.authSession,structuredClone(data));
