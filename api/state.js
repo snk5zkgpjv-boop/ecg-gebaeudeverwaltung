@@ -300,7 +300,7 @@ export default async function handler(req, res) {
 // HTTP handlers, sessions and role checks without production credentials.
 export async function stateWithSql(req,res,sql) {
   const tableMode=issuesInTables();
-  res.setHeader('X-ECG-Issues-Source',tableMode?'tables':'jsonb');
+  if(tableMode)res.setHeader('X-ECG-Issues-Source','tables');
   if (req.method === 'GET' && req.query?.issuePhoto != null) {
     res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
