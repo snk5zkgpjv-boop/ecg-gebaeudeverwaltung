@@ -726,8 +726,9 @@ const updatingIssues=new Set();
 async function saveIssueFields(id,changes,after,photo){
  const original=state.issues.find(issue=>issue.id===id);if(!original)return;
  if(!issuesTableMode){
-  Object.assign(original,changes);
-  if(Object.hasOwn(changes,'status'))setIssueStatusValue(original,changes.status);
+  const {status,...otherChanges}=changes;
+  Object.assign(original,otherChanges);
+  if(Object.hasOwn(changes,'status'))setIssueStatusValue(original,status);
   if(photo!==undefined)original.photo=photo;
   save();after();return;
  }
