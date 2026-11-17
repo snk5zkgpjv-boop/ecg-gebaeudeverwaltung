@@ -6,8 +6,8 @@ const styles=html.slice(html.indexOf('/* ECG transparent-film door inserts'),htm
 const print=html.slice(html.indexOf('body.qr-print-mode .qr-sheet'),html.indexOf('\n}',html.indexOf('body.qr-print-mode .qr-sheet')));
 assert.match(roomPrint,/qr-label-number/);
 assert.match(roomPrint,/qr-label-watermark/);
-assert.match(roomPrint,/qr-label-brand-text/);
-assert.match(roomPrint,/embedded-4-8ef55a643706\\.png/);
+assert.match(roomPrint,/qr-label-brand-mark/);
+assert.match(roomPrint,/\/willkommen\/ecg-wortmarke\.png/);
 assert.match(roomPrint,/qr-label-qr/);
 assert.ok(roomPrint.indexOf('qr-label-watermark') < roomPrint.indexOf('qr-label-qr'));
 assert.doesNotMatch(roomPrint,/qr-label-meta|QR-ID:|Raum-ID:|ecg\.technik/i);
