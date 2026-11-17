@@ -61,7 +61,7 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 .qr-label-number{font-family:Arial,Helvetica,sans-serif;font-size:clamp(34px,5vw,55px);font-weight:800;color:#8d153f;line-height:1}
 .qr-label-brand{display:flex;align-items:center;justify-content:flex-end;gap:5px;max-width:57%;min-width:0}
 .qr-label-brand-text{font-family:Arial,Helvetica,sans-serif;font-size:clamp(9px,1.5vw,16px);font-weight:400;line-height:1.12;text-align:right;white-space:nowrap}
-.qr-label-brand-mark{display:block;width:30px;height:34px;object-fit:contain;flex:none}
+.qr-label-brand-mark{display:block;width:min(100%,180px);height:auto;max-height:43px;object-fit:contain;flex:none}
 .qr-label-name{position:relative;z-index:1;font-family:Arial,Helvetica,sans-serif;font-size:clamp(19px,2.6vw,30px);font-weight:400;line-height:1.12;text-align:center;align-self:center;overflow-wrap:anywhere;margin:auto 0;padding:5px 0}
 .qr-label-qr{position:relative;z-index:2;width:57px;height:57px;object-fit:contain;align-self:flex-start;margin-top:auto;flex:none}
 .qr-label small{display:none}
@@ -78,7 +78,7 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
   body.qr-print-mode .qr-label{width:100%!important;aspect-ratio:1.72!important;min-height:0!important;padding:4mm 5mm 3mm!important;background:transparent!important;border:0.2mm dashed #bbb!important;box-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body.qr-print-mode .qr-label-number{font-size:25pt!important;color:#8d153f!important}
   body.qr-print-mode .qr-label-brand-text{font-size:9pt!important}
-  body.qr-print-mode .qr-label-brand-mark{width:9mm!important;height:10mm!important}
+  body.qr-print-mode .qr-label-brand-mark{width:43mm!important;max-width:100%!important;height:auto!important;max-height:12mm!important}
   body.qr-print-mode .qr-label-watermark{font-size:63pt!important;right:5%!important;bottom:-7%!important;color:rgba(65,65,65,.105)!important}
   body.qr-print-mode .qr-label-name{font-size:15pt!important;line-height:1.12!important}
   body.qr-print-mode .qr-label-qr{width:15mm!important;height:15mm!important}
@@ -621,7 +621,7 @@ window.showAllRoomQRs=()=>{
    return (order[a.floor]??6)-(order[b.floor]??6)||a.name.localeCompare(b.name,'de');
  });
  modal(`<div class="row print-hide"><div><h2>QR-Codes – Räume</h2><div class="meta">${rooms.length} Raum-QR-Codes</div></div><div class="spacer"></div><button class="btn primary" onclick="printRoomQRSheet()">Drucken / als PDF sichern</button><button class="btn" onclick="exportRoomQRList()">Liste exportieren</button></div>
- <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><span class="qr-label-watermark" aria-hidden="true">${esc(r.number||'')}</span><div class="qr-label-header"><span class="qr-label-number">${esc(r.number||'–')}</span><span class="qr-label-brand"><span class="qr-label-brand-text">Evangeliums<br>Christengemeinde</span><img class="qr-label-brand-mark" src="/assets/embedded-4-8ef55a643706.png" alt="ECG-Logo"></span></div><div class="qr-label-name">${esc(r.name)}</div><img class="qr-label-qr" src="${qrUrl(r)}" alt="QR ${esc(r.name)}"></div>`).join('')}</div>
+ <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><span class="qr-label-watermark" aria-hidden="true">${esc(r.number||'')}</span><div class="qr-label-header"><span class="qr-label-number">${esc(r.number||'–')}</span><span class="qr-label-brand"><img class="qr-label-brand-mark" src="/willkommen/ecg-wortmarke.png" alt="Evangeliums-Christengemeinde"></span></div><div class="qr-label-name">${esc(r.name)}</div><img class="qr-label-qr" src="${qrUrl(r)}" alt="QR ${esc(r.name)}"></div>`).join('')}</div>
  <div class="row print-hide" style="margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)
 };
 window.printRoomQRSheet=()=>{
