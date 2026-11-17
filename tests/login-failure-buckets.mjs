@@ -34,7 +34,7 @@ try{
 
  observedSql.length=0;
  for(let i=0;i<5;i++)assert.equal((await signIn('203.0.113.10','wrong-password')).code,401);
- assert.equal(observedSql.filter(query=>/^\\s*(?:CREATE|ALTER|DROP)\\b/i.test(query)).length,0,
+ assert.equal(observedSql.filter(query=>/^\s*(?:CREATE|ALTER|DROP)\b/i.test(query)).length,0,
    'real login handler must not execute schema DDL');
  const blocked=await signIn('203.0.113.10','wrong-password');
  assert.equal(blocked.code,429,'sixth failure from same IP is throttled');
