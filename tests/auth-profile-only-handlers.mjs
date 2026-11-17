@@ -1,8 +1,9 @@
+import {readFileSync as readCanonicalSchema} from 'node:fs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {PGlite} from '@electric-sql/pglite';
-import {createSession,ensureAuthSchema,hashPassword,requireUser} from '../lib/auth.js';
+import {createSession,hashPassword,requireUser} from '../lib/auth.js';
 
 const db=new PGlite();
 const queries=[];
@@ -39,8 +40,7 @@ const loadHandler=(path,extra={})=>{
 };
 
 try {
-  await ensureAuthSchema(sql);
-  await db.exec('CREATE TABLE app_state (id text PRIMARY KEY, data jsonb NOT NULL)');
+  await db.exec(readCanonicalSchema(new URL('../scripts/schema.sql',import.meta.url),'utf8'));
   const passwordHash=hashPassword('fixture-password-never-used-in-production');
   const rows=await sql`INSERT INTO ecg_app_users(app_user_id,email,name,password_hash,must_change_password,active)
     VALUES('fixture-admin','fixture-admin@example.test','Fixture Admin',${passwordHash},false,true) RETURNING id`;
