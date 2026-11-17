@@ -57,7 +57,7 @@ try{
    if(url.pathname==='/api/calendar')return json(200,{events:[],syncedAt:new Date().toISOString()});
    throw Error('Unexpected API '+url.pathname);
   });
-  await page.goto(origin+'/?bereich=maengel');
+  await page.goto(origin+'/?bereich=pflege');
   await page.waitForFunction(()=>state?.currentUserId==='synthetic'&&issuesTableMode===true);
   await page.evaluate(()=>window.addIssue());
   await page.locator('#isText').fill('Synthetic persistent issue');
