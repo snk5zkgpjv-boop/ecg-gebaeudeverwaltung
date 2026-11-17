@@ -1,4 +1,4 @@
--- ECG database baseline. Idempotent for an empty PostgreSQL database.
+-- ECG canonical database schema. Idempotent for an empty PostgreSQL database.
 -- This is a development/bootstrap schema, not a production migration or backup.
 -- Never run against live production without separate review and a complete backup.
 
@@ -39,11 +39,13 @@ CREATE TABLE IF NOT EXISTS ecg_password_resets (
 CREATE TABLE IF NOT EXISTS ecg_auth_rate_limits (
   id text PRIMARY KEY,
   attempts integer NOT NULL,
-  window_start timestamptz NOT NULL DEFAULT now()
+  window_start timestamptz NOT NULL DEFAULT now(),
+  account_id text
 );
+CREATE INDEX IF NOT EXISTS ecg_auth_rate_limits_account_id_idx ON ecg_auth_rate_limits(account_id);
 
 
--- Source: scripts/staff-schema.sql
+-- Domain: staff (consolidated from legacy bootstrap definitions)
 CREATE TABLE IF NOT EXISTS ecg_staff (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  name text NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 120),
@@ -54,7 +56,7 @@ CREATE TABLE IF NOT EXISTS ecg_staff (
 CREATE UNIQUE INDEX IF NOT EXISTS ecg_staff_name_key ON ecg_staff(lower(trim(name)));
 
 
--- Source: scripts/personnel-schema.sql
+-- Domain: personnel (consolidated from legacy bootstrap definitions)
 CREATE TABLE IF NOT EXISTS ecg_absences (
  id uuid PRIMARY KEY,
  owner_id text NOT NULL,
@@ -70,7 +72,7 @@ CREATE TABLE IF NOT EXISTS ecg_absences (
 );
 
 
--- Source: scripts/coverage-schema.sql
+-- Domain: coverage (consolidated from legacy bootstrap definitions)
 ALTER TABLE ecg_staff ADD COLUMN IF NOT EXISTS account_id text;
 CREATE UNIQUE INDEX IF NOT EXISTS ecg_staff_account_key ON ecg_staff(account_id) WHERE account_id IS NOT NULL;
 ALTER TABLE ecg_staff ADD COLUMN IF NOT EXISTS cover_group text NOT NULL DEFAULT '' CHECK(cover_group IN ('','cleaning','caretaker'));
@@ -79,7 +81,7 @@ ALTER TABLE ecg_absences ADD COLUMN IF NOT EXISTS handover text NOT NULL DEFAULT
 ALTER TABLE ecg_absences ADD COLUMN IF NOT EXISTS planned_staff uuid REFERENCES ecg_staff(id);
 
 
--- Source: scripts/members-schema.sql
+-- Domain: members (consolidated from legacy bootstrap definitions)
 CREATE TABLE IF NOT EXISTS ecg_members (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  account_id text UNIQUE,
@@ -91,7 +93,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS ecg_members_identity ON ecg_members
  (lower(trim(data->>'name')), (data->>'birthDate'), lower(trim(data->>'email')));
 
 
--- Source: scripts/duties-schema.sql
+-- Domain: duties (consolidated from legacy bootstrap definitions)
 CREATE TABLE IF NOT EXISTS ecg_event_duties (
  id uuid PRIMARY KEY,
  event_id text NOT NULL,
@@ -108,7 +110,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS ecg_event_duty_slot ON ecg_event_duties(event_
 CREATE INDEX IF NOT EXISTS ecg_event_duty_inbox ON ecg_event_duties(assignee,starts_at);
 
 
--- Source: scripts/finance-pilot-schema.sql
+-- Domain: finance-pilot (consolidated from legacy bootstrap definitions)
 -- Exclusive ECG synthetic pilot. Fixed sample receipts, no bank or RH integration.
 CREATE TABLE IF NOT EXISTS ecg_demo_expenses (
  receipt_id text PRIMARY KEY CHECK(receipt_id IN ('M-001','M-002','M-003')),
@@ -123,7 +125,7 @@ CREATE TABLE IF NOT EXISTS ecg_demo_expenses (
 );
 
 
--- Runtime schema: lib/maintenance-documents.js
+-- Domain: maintenance documents
 CREATE TABLE IF NOT EXISTS ecg_maintenance_documents (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   asset_id text NOT NULL,
@@ -147,4 +149,58 @@ CREATE TABLE IF NOT EXISTS ecg_data_repairs (
   after_entry jsonb NOT NULL,
   reason text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
+);
+
+
+-- Split-state shadow structures; app_state remains authoritative until an explicit separate cutover.
+CREATE TABLE IF NOT EXISTS ecg_issue_records (
+  id text PRIMARY KEY,
+  sort_order integer NOT NULL CHECK (sort_order >= 0),
+  room_id text NOT NULL DEFAULT '',
+  status text NOT NULL DEFAULT '',
+  payload jsonb NOT NULL CHECK (jsonb_typeof(payload)='object'),
+  source_revision bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ecg_issue_records_room ON ecg_issue_records(room_id);
+CREATE INDEX IF NOT EXISTS ecg_issue_records_status ON ecg_issue_records(status);
+
+CREATE TABLE IF NOT EXISTS ecg_issue_photos (
+  issue_id text PRIMARY KEY REFERENCES ecg_issue_records(id) ON DELETE CASCADE,
+  image_data_url text NOT NULL,
+  source_revision bigint NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ecg_room_records (
+  id text PRIMARY KEY,
+  sort_order integer NOT NULL CHECK(sort_order >= 0),
+  payload jsonb NOT NULL CHECK(jsonb_typeof(payload)='object'),
+  source_revision bigint NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ecg_time_records (
+  id text PRIMARY KEY,
+  sort_order integer NOT NULL CHECK(sort_order >= 0),
+  user_id text NOT NULL,
+  starts_at timestamptz,
+  ends_at timestamptz,
+  payload jsonb NOT NULL CHECK(jsonb_typeof(payload)='object'),
+  source_revision bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ecg_time_records_owner_start ON ecg_time_records(user_id,starts_at);
+
+CREATE TABLE IF NOT EXISTS ecg_kitchen_photos (
+  photo_key text PRIMARY KEY,
+  jpeg_base64 text NOT NULL,
+  source_revision bigint NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ecg_split_migration_checks (
+  snapshot_revision bigint PRIMARY KEY,
+  captured_at timestamptz NOT NULL DEFAULT now(),
+  issue_count integer NOT NULL,
+  issue_photo_count integer NOT NULL,
+  room_count integer NOT NULL,
+  time_count integer NOT NULL,
+  kitchen_photo_count integer NOT NULL,
+  status text NOT NULL DEFAULT 'shadow' CHECK(status IN ('shadow','verified'))
 );
