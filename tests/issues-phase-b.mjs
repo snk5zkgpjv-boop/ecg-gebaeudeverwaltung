@@ -89,6 +89,14 @@ try{
  assert.equal(first.code,200);assert.equal(second.code,200);
  assert.equal((await readTableIssue(sql,id)).status,'done');
  assert.equal((await readTableIssue(sql,otherId)).status,'work');
+ const replacementPhoto='data:image/jpeg;base64,YWJk';
+ assert.equal((await call('finance','PATCH',{updateIssuePhoto:{id,photo:replacementPhoto}})).code,403,
+   'unauthorized photo edits are rejected');
+ assert.equal((await call('admin','PATCH',{updateIssuePhoto:{id,photo:replacementPhoto}})).code,200,
+   'authorized photo replacement');
+ assert.equal((await readTableIssue(sql,id)).photo,replacementPhoto,'separate photo table changed');
+ const changedPhoto=await call('admin','GET',null,{issuePhoto:id});
+ assert.equal(Buffer.from(changedPhoto.body).toString(),'abd','replacement photo available via protected endpoint');
  const oldJsonb=(await sql`SELECT data->'issues' AS issues FROM app_state WHERE id='main'`)[0].issues;
  assert.equal(oldJsonb[0].status,'open','table mode leaves legacy issues JSONB untouched');
 
@@ -114,7 +122,7 @@ try{
  const back=(await sql`SELECT data->'issues' AS issues FROM app_state WHERE id='main'`)[0].issues;
  const tableIssues=await readTableIssues(sql);
  assert.equal(back.length,tableIssues.length);
- assert.equal(back[0].photo,photo);
+ assert.equal(back[0].photo,replacementPhoto);
  assert.equal(back[0].status,'done');
  assert.equal(back[1].status,'work');
  await db.exec(await readFile(new URL('../scripts/issues-forward-copy.sql',import.meta.url),'utf8'));
