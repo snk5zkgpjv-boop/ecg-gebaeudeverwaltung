@@ -293,7 +293,12 @@ function accepted(current, incoming, profile) {
 export default async function handler(req, res) {
   if(req.query?.bankAccount==='1')return financeBankAccount(req,res);
   if (!process.env.DATABASE_URL) return res.status(500).json({ error: 'DATABASE_URL fehlt' });
-  const sql = neon(process.env.DATABASE_URL);
+  return stateWithSql(req,res,neon(process.env.DATABASE_URL));
+}
+
+// Export a database-injected entrypoint so integration tests exercise the real
+// HTTP handlers, sessions and role checks without production credentials.
+export async function stateWithSql(req,res,sql) {
   const tableMode=issuesInTables();
   res.setHeader('X-ECG-Issues-Source',tableMode?'tables':'jsonb');
   if (req.method === 'GET' && req.query?.issuePhoto != null) {
