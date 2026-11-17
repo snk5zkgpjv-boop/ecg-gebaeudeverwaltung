@@ -44,6 +44,27 @@ Die Tabellen verwenden bewusst zunächst einzelne JSONB-Payloads je Fachdatensat
 - Schreibpfade für `PATCH`, `PUT`, Mängel-Löschen/-Anlegen und Zeitänderungen vollständig inventarisieren und **atomar** auf die neuen Tabellen umstellen. Stale-Browser-Schutz, Aufgabenerledigungen, QR-Räume, Synchronisierung und private Zeitbuchungen müssen erhalten bleiben.
 - Bis zum vollständigen Nachweis beide Quellen konsistent halten; hierzu dedizierte Übergangsstrategie und Idempotenztests.
 
+## Phase B – Mängel als eigener, zunächst abgeschalteter Tabellenpfad (17.11.2026)
+
+**Voraussetzung geprüft:** Der echte Produktions-`pg_dump` im Custom-Format ohne `neon_auth` wurde mit `pg_restore --single-transaction --exit-on-error` in eine zuvor leere getrennte Datenbank wiederhergestellt. Alle 18 Tabellen, einschließlich `ecg_issue_records` und `ecg_issue_photos`, hatten übereinstimmende Zeilenzahlen und vollständige Inhaltshashes. Login, Sitzungsprüfung und Speichern gegen das Restore-Ziel wurden mit synthetischen Daten erfolgreich ausgeführt; Änderungen wurden zurückgerollt. Die Restore-Kopie bleibt bis zum Abschluss von Phase B bestehen.
+
+Die neue schreibende Betriebsart ist ausschließlich bei **`ISSUES_SOURCE=tables`** aktiv. Bei fehlender oder anders gesetzter Variable gilt unverändert `jsonb`. Die neue Mängelliste und der gesicherte Einzel-Fotoabruf stammen dann aus `ecg_issue_records` bzw. `ecg_issue_photos`; Berechtigungs- und Sichtbarkeitsprüfungen bleiben vorgeschaltet. Die Mängel-PATCH-Operation `{updateIssue:{id,changes}}` akzeptiert nur `text`, `priority`, `roomId`, `outdoorId`, `assetId` und `status`; kein Foto. Ein gesonderter authentifizierter `updateIssuePhoto`-Aufruf speichert Ersatzfotos. Andere Mängel-Operationen (Anlegen, Löschen) verwenden im Tabellenbetrieb einzelne Transaktionen. Alter vollständiger `PUT` mit `changes.issues` wird dort ausdrücklich abgelehnt; andere Fachbereiche behalten ihren Speicherweg.
+
+### Betreiberablauf – Umschaltung ausdrücklich separat
+
+1. **Schreibstopp** für alle Web-App-Clients und sonstige externe Schreiber herstellen und durchsetzen. Neue Browser-Tabs erst nach Freigabe zulassen.
+2. Einen **frischen `pg_dump --format=custom --no-owner --no-acl --exclude-schema=neon_auth`** als überprüfte private Rückfallkopie anlegen. Die bestehende Restore-Probe nicht löschen.
+3. Die veraltete Schattenkopie der Mängel im selben Schreibstopp mit `scripts/issues-forward-copy.sql` aus `app_state.data->'issues'` neu erzeugen. Das Skript ersetzt nur `ecg_issue_records` und `ecg_issue_photos` in einer Transaktion und verweigert die Übernahme bei inhaltlicher Abweichung, einschließlich Bildinhalten.
+4. Erst nach dokumentiertem Gleichheitsnachweis **`ISSUES_SOURCE=tables`** in den Vercel-*Production*-Variablen setzen und den überprüften Commit **neu deployen**. Nicht lediglich eine bestehende Vorschau auf Produktion umstellen.
+5. Fachtest auf einem **echten iPhone**: Mangel mit Testdaten anlegen, Foto ansehen, erledigen, Seite neu laden und den gespeicherten Status erneut überprüfen. Berechtigungen ebenfalls kontrollieren.
+6. Erst nach dokumentiert erfolgreichem Fachtest den Schreibstopp aufheben. Tabellen sind ab diesem Zeitpunkt die maßgebliche Quelle für Mängel. `app_state.data->'issues'` bleibt unverändert als historischer Stand bestehen.
+
+### Rückweg nach Freigabe von Tabellenänderungen
+
+**Kein blindes Zurückschalten:** Sobald `ISSUES_SOURCE=tables` aktiv bearbeitet wurde, enthält das ältere `app_state.data->'issues'` nicht die neu erfassten und geänderten Mängel. Vor einer Rückkehr zu `jsonb` zunächst die App erneut in einen vollständigen Schreibstopp versetzen, die aktuelle Tabellenlage sichern und `scripts/issues-backcopy.sql` unter Aufsicht ausführen. Das Skript schreibt ausschließlich die rekonstruierte Mängelliste einschließlich Fotos zurück in `app_state.data->'issues'`, prüft innerhalb derselben Transaktion die JSONB-Gleichheit und bricht bei Fehler ab. Anschließend `ISSUES_SOURCE=jsonb` in Vercel setzen, neu deployen und die Mängelverwaltung erneut auf dem Mobilgerät prüfen. Erst danach den Schreibstopp beenden.
+
+**Grenzen:** Eine Umstellung findet nicht innerhalb dieses PRs statt. Parallel einreichende Google-/API-/Browser-Schreibvorgänge lassen sich allein durch den Vercel-Schalter nicht anhalten. Der Betreiber muss den vollständigen Schreibstopp sicherstellen. Die Tabellenmigration betrifft ausschließlich Mängel; Räume, Zeiten und Küchenfotos bleiben für eigenständige PRs vorgesehen. Ein Wiederherstellungsarchiv darf niemals als öffentliches CI-Artefakt oder Repo-Datei abgelegt werden.
+
 ## Phase C: Cutover (eigene Freigabe)
 
 - Letzte Änderungen gegen die alte JSONB-Quelle stoppen, Delta-Synchronisierung durchführen, Zeilen-/Inhaltsprüfsummen und Benutzerrechte kontrollieren.
