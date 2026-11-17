@@ -174,8 +174,8 @@ export default async function handler(req, res) {
       : await readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigured, rangeStart, rangeEnd);
     const { calendarName } = result;
     // Read the authoritative room IDs and aliases; never infer IDs from a partial name.
-    const roomRows = await sql`SELECT data->'rooms' AS rooms FROM app_state WHERE id='main'`;
-    const events = attachCalendarRooms(result.events, roomRows[0]?.rooms || []);
+    const roomRows = readOnly || week ? [] : await sql`SELECT data->'rooms' AS rooms FROM app_state WHERE id='main'`;
+    const events = readOnly || week ? result.events : attachCalendarRooms(result.events, roomRows[0]?.rooms || []);
 
     if(week){res.setHeader('Cache-Control','private, no-store');return res.json({events:events.map(({title,start,allDay,cancelled})=>({title,start,allDay,cancelled}))});}
     const syncedAt = new Date().toISOString();
