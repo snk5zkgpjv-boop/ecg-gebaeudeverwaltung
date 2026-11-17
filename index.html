@@ -53,10 +53,18 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 
 .room-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 .room-actions .btn{flex:1;min-width:88px}
+/* ECG transparent-film door inserts: no printed glass, metal holders or white fill. */
 .qr-sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
-.qr-label{border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;break-inside:avoid;background:#fff}
-.qr-label img{width:170px;height:170px;object-fit:contain}
-.qr-label b{display:block;margin-top:8px;font-size:var(--ecg-meta)}.qr-label small{display:block;color:var(--muted);margin-top:3px}
+.qr-label{position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;aspect-ratio:1.72;padding:12px 14px;break-inside:avoid;background:transparent;color:#111;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;border:1px dashed #b9c0c0}
+.qr-label-watermark{position:absolute;z-index:-1;right:6%;bottom:-8%;font-size:clamp(86px,12vw,160px);line-height:1;font-weight:800;letter-spacing:-.09em;color:rgba(65,65,65,.105);pointer-events:none;white-space:nowrap}
+.qr-label-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:1px 0 5px;border-bottom:1px solid #595959}
+.qr-label-number{font-family:Arial,Helvetica,sans-serif;font-size:clamp(34px,5vw,55px);font-weight:800;color:#8d153f;line-height:1}
+.qr-label-brand{display:flex;align-items:center;justify-content:flex-end;gap:5px;max-width:57%;min-width:0}
+.qr-label-brand-text{font-family:Arial,Helvetica,sans-serif;font-size:clamp(9px,1.5vw,16px);font-weight:400;line-height:1.12;text-align:right;white-space:nowrap}
+.qr-label-brand-mark{display:block;width:min(100%,180px);height:auto;max-height:43px;object-fit:contain;flex:none}
+.qr-label-name{position:relative;z-index:1;font-family:Arial,Helvetica,sans-serif;font-size:clamp(19px,2.6vw,30px);font-weight:400;line-height:1.12;text-align:center;align-self:center;overflow-wrap:anywhere;margin:auto 0;padding:5px 0}
+.qr-label-qr{position:relative;z-index:2;width:57px;height:57px;object-fit:contain;align-self:flex-start;margin-top:auto;flex:none}
+.qr-label small{display:none}
 .room-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 @media(max-width:760px){.qr-sheet{grid-template-columns:1fr}.room-actions .btn{min-width:0}.brandmark,.brandmark img{width:52px;height:52px}}
 @media print{
@@ -65,9 +73,16 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
   body.qr-print-mode .modal-backdrop{position:static!important;background:white!important;display:block!important}
   body.qr-print-mode .modal{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;border-radius:0!important;box-shadow:none!important}
   body.qr-print-mode .print-hide{display:none!important}
-  body.qr-print-mode .qr-sheet{grid-template-columns:repeat(3,1fr)!important;gap:8mm!important}
-  body.qr-print-mode .qr-label{border:1px solid #ccc!important;padding:6mm!important}
-  body.qr-print-mode .qr-label img{width:42mm!important;height:42mm!important}
+  @page{size:A4;margin:12mm}
+  body.qr-print-mode .qr-sheet{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7mm!important}
+  body.qr-print-mode .qr-label{width:100%!important;aspect-ratio:1.72!important;min-height:0!important;padding:4mm 5mm 3mm!important;background:transparent!important;border:0.2mm dashed #bbb!important;box-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.qr-print-mode .qr-label-number{font-size:25pt!important;color:#8d153f!important}
+  body.qr-print-mode .qr-label-brand-text{font-size:9pt!important}
+  body.qr-print-mode .qr-label-brand-mark{width:43mm!important;max-width:100%!important;height:auto!important;max-height:12mm!important}
+  body.qr-print-mode .qr-label-watermark{font-size:63pt!important;right:5%!important;bottom:-7%!important;color:rgba(65,65,65,.105)!important}
+  body.qr-print-mode .qr-label-name{font-size:15pt!important;line-height:1.12!important}
+  body.qr-print-mode .qr-label-qr{width:15mm!important;height:15mm!important}
+
 }
 
 
@@ -400,6 +415,27 @@ function generatedEventTasks(){
      }
    }
  }
+ // A room booking is a planned use; flag one review per room per calendar week.
+ // Cancelled events never generate new checks. Completion is recorded against
+ // a stable room/week identifier instead of one task per event.
+ const pending=new Map();
+ for(const ev of (state.calendarEvents||[])){
+   if(ev.cancelled||/fällt aus|abgesagt|entfällt/i.test(ev.title||''))continue;
+   const end=new Date(ev.end).getTime();
+   if(!Number.isFinite(end)||end>now||now-end>lookback||!ev.roomId)continue;
+   const room=state.rooms.find(r=>r.id===ev.roomId);
+   if(!room)continue;
+   const day=calendarDayKey(ev.end);
+   const stamp=new Date(day+'T12:00:00Z');
+   const wd=(stamp.getUTCDay()+6)%7;
+   stamp.setUTCDate(stamp.getUTCDate()-wd);
+   const week=stamp.toISOString().slice(0,10);
+   const id='room-use__'+room.id+'__'+week;
+   const previous=pending.get(id);
+   if(!previous||new Date(previous.event.end)<new Date(ev.end))
+     pending.set(id,{id,title:'Raum nach Nutzung kontrollieren; bei Bedarf reinigen',room,event:ev,rule:null,interval:'afterevent',status:'open'});
+ }
+ out.push(...[...pending.values()].filter(task=>!state.eventTaskDone?.[task.id]));
  return out
 }
 function upcomingEvents(limit=6){
@@ -474,7 +510,7 @@ function dashboard(){
   <div class="section-title"><h2>Heute fällig</h2></div>${dueGroups.length?dueGroups.map(([floor,items])=>`<div class="card" style="margin-bottom:12px"><div class="row" style="padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:4px"><h3 style="margin:0">${esc(floor)}</h3><div class="spacer"></div><span class="pill warn">${items.length} fällig</span></div>${todayRoomGroups(items)}</div>`).join(''):'<div class="card"><div class="empty">Aktuell nichts fällig.</div></div>'}
   ${completedRoomsToday()?`<div class="card"><h3>Heute erledigte Wochenreinigungen</h3>${completedRoomsToday()}</div>`:''}
   ${can('manageCalendar')?`<div class="section-title"><h2>Kommende Veranstaltungen</h2><div class="spacer"></div><button class="btn tiny" onclick="go('calendar')">Kalender öffnen</button></div>
-  <div class="card calendar-card">${upcoming.length?upcoming.map(ev=>{const d=eventDateLabel(ev),rule=eventRuleFor(ev);return `<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${d.time}${ev.location?` · ${esc(ev.location)}`:''}</div></div><span class="pill ${ev.cancelled?'warn':rule?'ok':''}">${ev.cancelled?'fällt aus':rule?'Aufgabenregel':'Kalender'}</span></div>`}).join(''):'<div class="empty">Keine kommenden Veranstaltungen.</div>'}</div>`:''}
+  <div class="card calendar-card">${upcoming.length?upcoming.map(ev=>{const d=eventDateLabel(ev),rule=eventRuleFor(ev);return `<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${d.time}${ev.location?` · ${esc(ev.location)}`:''}${ev.roomId?` · <span class="pill ok">Raum zugeordnet</span>`:ev.location?` · <span class="pill warn">Raumzuordnung offen</span>`:''}</div></div><span class="pill ${ev.cancelled?'warn':rule?'ok':''}">${ev.cancelled?'fällt aus':rule?'Aufgabenregel':'Kalender'}</span></div>`}).join(''):'<div class="empty">Keine kommenden Veranstaltungen.</div>'}</div>`:''}
   ${can('viewMaintenance')?`<div class="section-title"><h2>Technik & Wartung</h2><div class="spacer"></div><button class="btn tiny" onclick="showMaintenance()">Öffnen</button></div><div class="card"><div class="row"><div><b>${(state.maintenanceAssets||[]).filter(m=>['overdue','due'].includes(maintenanceStatus(m).key)).length}</b><div class="meta">Wartungen fällig / bald fällig</div></div><div class="spacer"></div><span class="pill">🔧</span></div></div>`:''}<div class="section-title"><h2>Schnellzugriff</h2></div><div class="grid room-list">${can('manageCalendar')?`<div class="card room" onclick="go('calendar')"><h3>Kalender & Veranstaltungen</h3><div class="meta">Google-Kalender und Folgeaufgaben</div></div>`:''}${state.rooms.slice(0,3).map(roomCard).join('')}</div>`
 }
 window.startTime=()=>{const u=currentUser();if(!u){alert('Bitte zuerst Benutzer auswählen.');return}const roomId=$('#timeRoom')?.value||'',r=state.rooms.find(x=>x.id===roomId),note=$('#timeNote')?.value.trim()||'';state.timeRunning={id:uid('time'),userId:u.id,start:nowISO(),roomId,workLabel:r?`${r.floor} – ${r.name}`:'Allgemein / kein Raum',note};save();render();startTimerTick()};
@@ -551,6 +587,8 @@ function editRoom(id){
    <div class="field"><label>Raumname</label><input id="erName" value="${esc(r.name)}"></div>
    <div class="field"><label>Etage</label><select id="erFloor">${['Basisgeschoss','UG','EG','1. OG','2. OG','3. OG','DG','Außen'].map(f=>`<option ${r.floor===f?'selected':''}>${f}</option>`).join('')}</select></div>
    <div class="field"><label>Raumtyp</label><input id="erType" value="${esc(r.type)}"></div>
+   <div class="field"><label>Raumnummer am Türschild</label><input id="erNumber" value="${esc(r.number||'')}" placeholder="z. B. 1.05"></div>
+   <div class="field wide"><label>Weitere Ortsnamen im Google Kalender (je Zeile einer)</label><textarea id="erAliases" rows="3" placeholder="Zimmer Nr. 2">${esc((r.calendarAliases||[]).join('\n'))}</textarea></div>
    <div class="field wide"><label>Hinweis</label><textarea id="erNotes" rows="3">${esc(r.notes||'')}</textarea></div>
    <div class="field wide"><label>Vorgeschlagene Reinigungsaufgaben</label><div id="roomAiTaskPreview" class="notice">${id?'Mit einem neuen KI-Foto kannst du weitere Vorschläge vorbereiten.':'Nach der Fotoauswertung erscheinen die Vorschläge hier.'}</div></div>
  </div>
@@ -561,9 +599,9 @@ function editRoom(id){
 window.editRoom=editRoom;
 let pendingRoomAiTasks=[];
 let pendingRoomPhoto='';
-window.saveRoomEdit=id=>{if(id){const r=state.rooms.find(x=>x.id===id);r.name=$('#erName').value.trim();r.floor=$('#erFloor').value;r.type=$('#erType').value.trim();r.notes=$('#erNotes').value.trim();r.photo=pendingRoomPhoto||r.photo||null;if(pendingRoomAiTasks.length){const existing=new Set(r.tasks.map(x=>x.title.trim().toLowerCase()));r.tasks.push(...pendingRoomAiTasks.filter(x=>x.title&&!existing.has(x.title.trim().toLowerCase())).map(x=>t(x.title,x.interval)))}}else state.rooms.push(room($('#erName').value.trim()||'Neuer Raum',$('#erFloor').value,$('#erType').value.trim()||'Raum',pendingRoomAiTasks.filter(x=>x.title).map(x=>t(x.title,x.interval)),{notes:$('#erNotes').value.trim(),photo:pendingRoomPhoto||null}));pendingRoomAiTasks=[];pendingRoomPhoto='';save();closeModal();render()};
+window.saveRoomEdit=id=>{if(id){const r=state.rooms.find(x=>x.id===id);r.name=$('#erName').value.trim();r.floor=$('#erFloor').value;r.type=$('#erType').value.trim();r.number=$('#erNumber').value.trim();r.calendarAliases=$('#erAliases').value.split('\n').map(s=>s.trim()).filter(Boolean);r.notes=$('#erNotes').value.trim();r.photo=pendingRoomPhoto||r.photo||null;if(pendingRoomAiTasks.length){const existing=new Set(r.tasks.map(x=>x.title.trim().toLowerCase()));r.tasks.push(...pendingRoomAiTasks.filter(x=>x.title&&!existing.has(x.title.trim().toLowerCase())).map(x=>t(x.title,x.interval)))}}else state.rooms.push(room($('#erName').value.trim()||'Neuer Raum',$('#erFloor').value,$('#erType').value.trim()||'Raum',pendingRoomAiTasks.filter(x=>x.title).map(x=>t(x.title,x.interval)),{number:$('#erNumber').value.trim(),calendarAliases:$('#erAliases').value.split('\n').map(s=>s.trim()).filter(Boolean),notes:$('#erNotes').value.trim(),photo:pendingRoomPhoto||null}));pendingRoomAiTasks=[];pendingRoomPhoto='';save();closeModal();render()};
 window.deleteRoom=id=>{if(!can('manageRooms'))return;if(confirm('Raum wirklich löschen?')){state.roomDeleteIds=[...new Set([...(state.roomDeleteIds||[]),id])];state.rooms=state.rooms.filter(r=>r.id!==id);save();closeModal();render()}};
-window.duplicateRoom=id=>{const s=state.rooms.find(r=>r.id===id);const c=JSON.parse(JSON.stringify(s));c.id=uid('room');c.qrId=uid('qr');c.name=s.name+' – Kopie';c.tasks=c.tasks.map(x=>({...x,id:uid('task'),status:'open',lastDone:null}));state.rooms.push(c);save();closeModal();render();openRoom(c.id)};
+window.duplicateRoom=id=>{const s=state.rooms.find(r=>r.id===id);const c=JSON.parse(JSON.stringify(s));c.id=uid('room');c.qrId=uid('qr');c.name=s.name+' – Kopie';c.number='';c.calendarAliases=[];c.tasks=c.tasks.map(x=>({...x,id:uid('task'),status:'open',lastDone:null}));state.rooms.push(c);save();closeModal();render();openRoom(c.id)};
 window.addTask=id=>{modal(`<h2>Aufgabe hinzufügen</h2><div class="field"><label>Aufgabe</label><input id="atTitle"></div><div class="field" style="margin-top:10px"><label>Intervall</label><select id="atInterval">${Object.entries(intervals).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="saveTask('${id}')">Hinzufügen</button><button class="btn" onclick="closeModal();editRoom('${id}')">Abbrechen</button></div>`)};
 window.saveTask=id=>{state.rooms.find(r=>r.id===id).tasks.push(t($('#atTitle').value.trim()||'Neue Aufgabe',$('#atInterval').value));save();closeModal();editRoom(id)};
 window.editTask=(rid,tid)=>{const r=state.rooms.find(x=>x.id===rid),task=r.tasks.find(x=>x.id===tid);modal(`<h2>Aufgabe bearbeiten</h2><div class="field"><label>Aufgabe</label><input id="etTitle" value="${esc(task.title)}"></div><div class="field" style="margin-top:10px"><label>Intervall</label><select id="etInterval">${Object.entries(intervals).map(([k,v])=>`<option value="${k}" ${task.interval===k?'selected':''}>${v}</option>`).join('')}</select></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="saveTaskEdit('${rid}','${tid}')">Speichern</button><button class="btn danger" onclick="deleteTask('${rid}','${tid}')">Löschen</button><button class="btn" onclick="closeModal();editRoom('${rid}')">Abbrechen</button></div>`)};
@@ -575,7 +613,7 @@ window.showTemplates=()=>modal(`<h2>Raumvorlagen</h2><div class="grid">${state.t
 window.createFromTemplate=id=>{const tp=state.templates.find(t=>t.id===id),r=room(tp.name,tp.floor||'1. OG',tp.type,tp.tasks.map(x=>({...x,id:uid('task'),status:'open',lastDone:null})),{notes:tp.name==='Kinderstundenraum'?'Jeder Kinderstundenraum hat ein eigenes Waschbecken.':''});state.rooms.push(r);save();closeModal();editRoom(r.id)};
 
 function qrUrl(r){const payload=encodeURIComponent(`${location.origin}${location.pathname}?room=${r.qrId}`);return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${payload}`}
-window.showQR=id=>{const r=state.rooms.find(x=>x.id===id);modal(`<h2>QR-Code – ${esc(r.name)}</h2><div class="qrbox"><img src="${qrUrl(r)}" alt="QR-Code"><div class="meta" style="margin-top:10px">Dauerhafte Raum-ID: ${esc(r.qrId)}</div></div><p class="meta">Der QR-Code bleibt gültig, auch wenn der Raum oder die Gruppe später umbenannt wird.</p><div class="row wrap"><button class="btn primary" onclick="window.print()">Drucken</button><button class="btn" onclick="window.open(qrUrl(state.rooms.find(x=>x.id==='${r.id}')),'_blank')">QR-Bild öffnen</button><button class="btn" onclick="closeModal()">Schließen</button></div>`) };
+window.showQR=id=>{const r=state.rooms.find(x=>x.id===id);modal(`<h2>QR-Code – ${esc(r.name)}</h2><div class="qrbox"><b>${esc(r.name)}</b><div class="meta">${esc(r.floor)}${r.number?` · Raum ${esc(r.number)}`:''}</div><img src="${qrUrl(r)}" alt="QR-Code"><div class="meta" style="margin-top:10px">Dauerhafte Raum-ID: ${esc(r.qrId)}</div></div><p class="meta">Der QR-Code bleibt gültig, auch wenn der Raum oder die Gruppe später umbenannt wird.</p><div class="row wrap"><button class="btn primary" onclick="window.print()">Drucken</button><button class="btn" onclick="window.open(qrUrl(state.rooms.find(x=>x.id==='${r.id}')),'_blank')">QR-Bild öffnen</button><button class="btn" onclick="closeModal()">Schließen</button></div>`) };
 window.scanQR=()=>{const code=prompt('QR-ID oder vollständigen Raum-Code eingeben:');if(!code)return;const r=state.rooms.find(r=>code.includes(r.qrId)||r.qrId===code);if(r)openRoom(r.id);else alert('Kein passender Raum gefunden.')};
 window.showAllRoomQRs=()=>{
  const rooms=[...state.rooms].sort((a,b)=>{
@@ -583,7 +621,7 @@ window.showAllRoomQRs=()=>{
    return (order[a.floor]??6)-(order[b.floor]??6)||a.name.localeCompare(b.name,'de');
  });
  modal(`<div class="row print-hide"><div><h2>QR-Codes – Räume</h2><div class="meta">${rooms.length} Raum-QR-Codes</div></div><div class="spacer"></div><button class="btn primary" onclick="printRoomQRSheet()">Drucken / als PDF sichern</button><button class="btn" onclick="exportRoomQRList()">Liste exportieren</button></div>
- <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><img src="${qrUrl(r)}" alt="QR ${esc(r.name)}"><b>${esc(r.name)}</b><small>${esc(r.floor)} · ${esc(r.type)}</small><small>Raum-ID: ${esc(r.qrId)}</small></div>`).join('')}</div>
+ <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><span class="qr-label-watermark" aria-hidden="true">${esc(r.number||'')}</span><div class="qr-label-header"><span class="qr-label-number">${esc(r.number||'–')}</span><span class="qr-label-brand"><img class="qr-label-brand-mark" src="/willkommen/ecg-wortmarke.png" alt="Evangeliums-Christengemeinde"></span></div><div class="qr-label-name">${esc(r.name)}</div><img class="qr-label-qr" src="${qrUrl(r)}" alt="QR ${esc(r.name)}"></div>`).join('')}</div>
  <div class="row print-hide" style="margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)
 };
 window.printRoomQRSheet=()=>{
@@ -971,12 +1009,56 @@ function calendarView(eventsOnly=false){
  const settings=`<div class="section-title"><h2>Kalender & Veranstaltungen</h2></div>
  <div class="calendar-sync"><b>Google Kalender:</b><span>${esc(calendarName)}</span><div class="spacer"></div><span class="pill ${lastSync?'ok':'warn'}">${lastSync?'synchronisiert':'Einrichtung erforderlich'}</span></div>
  <div class="notice" style="margin-top:10px"><b>${lastSync?`Letzte Aktualisierung: ${new Date(lastSync).toLocaleString('de-DE')}`:'Noch keine erfolgreiche Aktualisierung'}</b><br>Termine werden beim Öffnen automatisch und über die Schaltfläche sofort aktualisiert.</div>
- <div class="row wrap" style="margin-top:10px"><button id="calendarSyncButton" class="btn primary" onclick="syncGoogleCalendar()">Jetzt synchronisieren</button></div>`;
+ <div class="row wrap" style="margin-top:10px"><button id="calendarSyncButton" class="btn primary" onclick="syncGoogleCalendar()">Jetzt synchronisieren</button>${admin?`<button class="btn" onclick="createCalendarEvent()">+ Termin mit Raum</button>`:''}</div>`;
  return `${eventsOnly?'':settings}<div class="section-title"><h2>Veranstaltungen</h2><button class="btn tiny" onclick="render({calendarToday:true})">Heute</button><div class="spacer"></div>${admin?'<button class="btn" onclick="showEventRules()">Aufgabenregeln</button>':''}</div>
- <div class="card calendar-card">${events.length?events.map(ev=>{const day=ev.allDay?String(ev.start).slice(0,10):calendarDayKey(ev.start);const marker=!todayInserted&&day>=today?todayMarker:'';if(marker)todayInserted=true;const d=eventDateLabel(ev),rule=eventRuleFor(ev),check=eventChecklistFor(ev.id),p=check?checklistProgress(check):null;return `${marker}<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div class="event-main"><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${new Date(ev.start).toLocaleString('de-DE',{weekday:'short',hour:'2-digit',minute:'2-digit'})} – ${new Date(ev.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}${ev.location?` · ${esc(ev.location)}`:''}</div>${ev.description?`<details><summary>Zusatzinformationen</summary><p style="white-space:pre-wrap">${esc(calendarPlainDescription(ev.description))}</p></details>`:''}${rule?`<div class="event-task-source">Folgeaufgaben: ${esc(rule.label)}</div>`:''}${!ev.cancelled?`<div class="event-actions">${admin?`<button class="btn tiny" onclick="openRunSheet(${esc(JSON.stringify(ev.id))})">Ablaufplan</button>`:''}${check?`<button class="btn tiny primary" onclick="openEventChecklist('${check.id}')">Abnahmeliste ${p.done}/${p.total}</button><button class="btn tiny" onclick="printEventChecklist('${check.id}')">PDF / Drucken</button><button class="btn tiny soft" onclick="createEventAgreement('${ev.id}')">Nutzungsvereinbarung</button>`:`<button class="btn tiny" onclick="createEventChecklist('${ev.id}')">+ Aufgaben-/Abnahmeliste</button><button class="btn tiny soft" onclick="createEventAgreement(${esc(JSON.stringify(ev.id))})">Nutzungsvereinbarung</button>`}</div>`:''}</div><span class="pill ${ev.cancelled?'warn':check?'ok':rule?'ok':''}">${ev.cancelled?'fällt aus':check?'Liste angelegt':rule?'automatisch':'ohne Regel'}</span></div>`}).join(''):'<div class="empty">Noch keine Kalendertermine synchronisiert.</div>'}${todayInserted?'':todayMarker}</div>`
+ <div class="card calendar-card">${events.length?events.map(ev=>{const day=ev.allDay?String(ev.start).slice(0,10):calendarDayKey(ev.start);const marker=!todayInserted&&day>=today?todayMarker:'';if(marker)todayInserted=true;const d=eventDateLabel(ev),rule=eventRuleFor(ev),check=eventChecklistFor(ev.id),p=check?checklistProgress(check):null;return `${marker}<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div class="event-main"><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${new Date(ev.start).toLocaleString('de-DE',{weekday:'short',hour:'2-digit',minute:'2-digit'})} – ${new Date(ev.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}${ev.location?` · ${esc(ev.location)}`:''}${ev.roomId?` · <span class="pill ok">Raum zugeordnet</span>`:ev.location?` · <span class="pill warn">Raumzuordnung offen</span>`:''}</div>${ev.ecgCreatedByName||ev.googleCreatorName||ev.googleCreatorEmail||ev.googleOrganizerEmail?`<div class="event-meta">Erstellt in ECG: ${esc(ev.ecgCreatedByName||"nicht über ECG erfasst")}${ev.ecgCreatedAt?` · ${new Date(ev.ecgCreatedAt).toLocaleString("de-DE")}`:""}</div><div class="event-meta">Google-Ersteller: ${esc(ev.googleCreatorName||ev.googleCreatorEmail||"nicht verfügbar")}</div><div class="event-meta">Google-Organisator: ${esc(ev.googleOrganizerName||ev.googleOrganizerEmail||"nicht verfügbar")}</div>`:`<div class="event-meta">Erstellerangaben über diesen Kalenderzugang nicht verfügbar</div>`}${ev.description?`<details><summary>Zusatzinformationen</summary><p style="white-space:pre-wrap">${esc(calendarPlainDescription(ev.description))}</p></details>`:''}${rule?`<div class="event-task-source">Folgeaufgaben: ${esc(rule.label)}</div>`:''}${!ev.cancelled?`<div class="event-actions">${admin&&!ev.roomId?`<button class="btn tiny" onclick="assignCalendarRoom(${esc(JSON.stringify(ev.id))})">Raum zuordnen</button>`:''}${admin?`<button class="btn tiny" onclick="openRunSheet(${esc(JSON.stringify(ev.id))})">Ablaufplan</button>`:''}${check?`<button class="btn tiny primary" onclick="openEventChecklist('${check.id}')">Abnahmeliste ${p.done}/${p.total}</button><button class="btn tiny" onclick="printEventChecklist('${check.id}')">PDF / Drucken</button><button class="btn tiny soft" onclick="createEventAgreement('${ev.id}')">Nutzungsvereinbarung</button>`:`<button class="btn tiny" onclick="createEventChecklist('${ev.id}')">+ Aufgaben-/Abnahmeliste</button><button class="btn tiny soft" onclick="createEventAgreement(${esc(JSON.stringify(ev.id))})">Nutzungsvereinbarung</button>`}</div>`:''}</div><span class="pill ${ev.cancelled?'warn':check?'ok':rule?'ok':''}">${ev.cancelled?'fällt aus':check?'Liste angelegt':rule?'automatisch':'ohne Regel'}</span></div>`}).join(''):'<div class="empty">Noch keine Kalendertermine synchronisiert.</div>'}${todayInserted?'':todayMarker}</div>`
 }
 window.syncGoogleCalendar=async(silent=false)=>{if(!can('manageCalendar'))return;const button=$('#calendarSyncButton');if(button){button.disabled=true;button.textContent='Synchronisiere …'}try{const r=await fetch('/api/calendar'),b=await r.json();if(!r.ok)throw new Error(b.error||'Kalender konnte nicht synchronisiert werden.');state.calendarEvents=b.events||[];state.settings={...(state.settings||{}),calendarLastSync:b.syncedAt,calendarName:b.calendarName||ECG_CALENDAR_NAME};localStorage.setItem('cleaningAppState',JSON.stringify(state));render();if(!silent)alert(`${state.calendarEvents.length} Kalendertermine wurden aktualisiert.`)}catch(e){if(!silent)alert(e.message||'Kalender konnte nicht synchronisiert werden.');if(button){button.disabled=false;button.textContent='Jetzt synchronisieren'}}};
 window.maybeSyncGoogleCalendar=async()=>{if(!can('manageCalendar'))return;const last=state.settings?.calendarLastSync?new Date(state.settings.calendarLastSync).getTime():0;if(Date.now()-last>15*60*1000)await syncGoogleCalendar(true)};
+window.createCalendarEvent=()=>{
+ if(!can('manageCalendar'))return;
+ const rooms=[...state.rooms].sort((a,b)=>a.name.localeCompare(b.name,'de'));
+ if(!rooms.length){alert('Bitte zuerst Räume in der Gebäudeansicht anlegen.');return}
+ const options=rooms.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.floor)+' – '+esc(r.name)+(r.number?' (Raum '+esc(r.number)+')':'')+'</option>').join('');
+ modal('<h2>Termin mit Raum anlegen</h2><div class="formgrid"><div class="field wide"><label>Termin</label><input id="calendarNewTitle" maxlength="180" placeholder="z. B. Jugendkreis"></div><div class="field"><label>Beginn</label><input id="calendarNewStart" type="datetime-local"></div><div class="field"><label>Ende</label><input id="calendarNewEnd" type="datetime-local"></div><div class="field wide"><label>Raum</label><select id="calendarNewRoom">'+options+'</select></div></div><p class="meta">Der Termin wird direkt im ECG-Google-Kalender angelegt, sofern der Google-Schreibzugriff freigegeben ist. Bei einer Belegung wird nicht gebucht.</p><div id="calendarCreateStatus" class="meta"></div><div class="row wrap" style="margin-top:12px"><button id="calendarCreateButton" class="btn primary" onclick="saveCalendarEvent()">In Google Kalender speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>');
+};
+window.saveCalendarEvent=async()=>{
+ if(!can('manageCalendar'))return;
+ const title=$('#calendarNewTitle')?.value.trim(),start=$('#calendarNewStart')?.value,end=$('#calendarNewEnd')?.value,roomId=$('#calendarNewRoom')?.value;
+ const status=$('#calendarCreateStatus'),button=$('#calendarCreateButton');
+ if(!title||!start||!end||!roomId||!(new Date(end)>new Date(start))){if(status)status.textContent='Bitte Titel, Raum und einen gültigen Zeitraum eingeben.';return}
+ button.disabled=true;
+ try{
+   const response=await fetch('/api/calendar-event',{method:'POST',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({title,start:new Date(start).toISOString(),end:new Date(end).toISOString(),roomId})});
+   const body=await response.json();
+   if(!response.ok)throw Error(body.error||'Termin konnte nicht erstellt werden.');
+   closeModal();
+   await syncGoogleCalendar();
+ }catch(error){
+   if(status)status.textContent=error.message||'Speichern fehlgeschlagen.';
+   if(button)button.disabled=false;
+ }
+};
+window.assignCalendarRoom=eventId=>{
+ if(!can('manageCalendar')||!can('manageRooms'))return;
+ const ev=state.calendarEvents.find(x=>x.id===eventId);
+ if(!ev)return;
+ if(!ev.location?.trim()){alert('Der Google-Termin hat keinen Ort. Bitte zuerst im Google Kalender einen eindeutigen Raumnamen eintragen.');return}
+ const options=state.rooms.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.floor)+' – '+esc(r.name)+'</option>').join('');
+ modal('<h2>Kalenderort zuordnen</h2><p>Google-Ort: <b>'+esc(ev.location)+'</b></p><div class="field"><label>ECG-Raum</label><select id="calendarRoomSelect">'+options+'</select></div><p class="meta">Die Ortsbezeichnung wird als Alias am gewählten Raum hinterlegt. Anschließend bitte den Google Kalender synchronisieren. Google selbst wird nicht geändert.</p><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveCalendarRoomAlias('+esc(JSON.stringify(ev.id))+')">Zuordnen</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>');
+};
+window.saveCalendarRoomAlias=async eventId=>{
+ if(!can('manageRooms')||!can('manageCalendar'))return;
+ const ev=state.calendarEvents.find(x=>x.id===eventId),room=state.rooms.find(r=>r.id===$('#calendarRoomSelect')?.value);
+ if(!ev||!room||!ev.location?.trim())return;
+ const norm=s=>String(s||'').normalize('NFKC').toLocaleLowerCase('de-DE').replace(/\b(?:nr\.?|nummer)\b/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
+ const key=norm(ev.location);
+ if(state.rooms.some(r=>r.id!==room.id&&[r.name,r.number,...(r.calendarAliases||[])].some(a=>key&&norm(a)===key))){alert('Dieser Ortsname ist schon einem anderen Raum zugeordnet. Bitte Schreibweise prüfen.');return}
+ room.calendarAliases=[...new Set([...(room.calendarAliases||[]),ev.location])];
+ save();closeModal();
+ if(state.settings.cloudSync && !(await syncCloud())){alert('Die Raumzuordnung wurde noch nicht auf dem Server gespeichert. Bitte Synchronisierung prüfen.');return}
+ await syncGoogleCalendar();
+};
 window.showEventRules=()=>modal(`<h2>Veranstaltungsregeln</h2><p class="meta">Wenn ein Kalendertermin diese Bezeichnung enthält, erzeugt die App nach Veranstaltungsende die hinterlegten Aufgaben für passende Räume.</p><div>${(state.eventRules||[]).map(r=>`<div class="event-rule"><div class="row"><div><b>${esc(r.label)}</b><div class="meta">Kalender enthält: „${esc(r.keyword)}“</div></div><div class="spacer"></div><button class="btn tiny" onclick="closeModal();editEventRule('${r.id}')">Bearbeiten</button></div><div class="meta" style="margin-top:7px">Räume: ${esc((r.roomMatch||[]).join(', '))}</div><div class="meta">Aufgaben: ${esc((r.tasks||[]).join(' · '))}</div></div>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="closeModal();editEventRule()">+ Regel</button><button class="btn" onclick="closeModal()">Schließen</button></div>`);
 window.editEventRule=id=>{const r=id?state.eventRules.find(x=>x.id===id):{label:'',keyword:'',roomMatch:[],tasks:[]};modal(`<h2>${id?'Regel bearbeiten':'Regel anlegen'}</h2><div class="formgrid"><div class="field"><label>Name</label><input id="erLabel" value="${esc(r.label||'')}"></div><div class="field"><label>Kalendertext enthält</label><input id="erKeyword" value="${esc(r.keyword||'')}"></div><div class="field wide"><label>Räume / Raumtypen (mit Komma trennen)</label><input id="erRooms" value="${esc((r.roomMatch||[]).join(', '))}" placeholder="z. B. Jugendraum, Foyer"></div><div class="field wide"><label>Aufgaben (eine pro Zeile)</label><textarea id="erTasks" style="min-height:150px">${esc((r.tasks||[]).join('\n'))}</textarea></div></div><div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveEventRule('${id||''}')">Speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>`)};
 window.saveEventRule=id=>{const data={label:$('#erLabel').value.trim(),keyword:$('#erKeyword').value.trim(),roomMatch:$('#erRooms').value.split(',').map(x=>x.trim()).filter(Boolean),tasks:$('#erTasks').value.split('\n').map(x=>x.trim()).filter(Boolean)};if(!data.label||!data.keyword){alert('Bitte Name und Kalendertext eintragen.');return}if(id)Object.assign(state.eventRules.find(x=>x.id===id),data);else state.eventRules.push({id:uid('erule'),...data});save();closeModal();render()};
