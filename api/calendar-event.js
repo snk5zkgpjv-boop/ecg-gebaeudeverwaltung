@@ -9,7 +9,7 @@ export default async function handler(req,res){
   const sql=neon(process.env.DATABASE_URL);
   const auth=await requireUser(req,res,sql);
   if(!auth)return;
-  if(auth.profile.role==='technician'||!(auth.profile.role==='admin'||auth.profile.permissions?.manageCalendar))
+  if(auth.profile.role==='technician'||!(auth.profile.role==='admin'||(auth.profile.permissions?.manageCalendar ?? auth.profile.role==='coordinator')))
     return res.status(403).json({error:'Keine Berechtigung zur Terminplanung'});
   if(process.env.GOOGLE_CALENDAR_WRITE_ENABLED!=='true')
     return res.status(503).json({error:'Google-Schreibzugriff ist noch nicht freigegeben.'});
