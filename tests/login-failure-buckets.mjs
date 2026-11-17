@@ -1,10 +1,11 @@
+import {readFileSync as readCanonicalSchema} from 'node:fs';
 import assert from 'node:assert/strict';
 import { PGlite } from '@electric-sql/pglite';
-import { hashPassword, ensureAuthSchema, tokenHash } from '../lib/auth.js';
+import { hashPassword, tokenHash } from '../lib/auth.js';
 import { loginWithSql } from '../api/auth/login.js';
 import { resetPasswordWithSql } from '../api/auth/reset-password.js';
 import {
-  ensureAuthRateLimitSchema, clientIpFromRequest,
+  clientIpFromRequest,
   pruneExpiredAuthAttempts,
 } from '../lib/auth-rate-limit.js';
 
@@ -21,9 +22,8 @@ const replacement='synthetic-new-password';
 const req=(ip,password,account=email)=>({method:'POST',headers:{'x-forwarded-for':ip+', 198.51.100.44'},body:{email:account,password}});
 async function signIn(ip,password,account=email){const res=response();await loginWithSql(req(ip,password,account),res,sql);return res;}
 try{
- await ensureAuthSchema(sql);
- await ensureAuthRateLimitSchema(sql);
- await db.exec("CREATE TABLE app_state (id text PRIMARY KEY,data jsonb NOT NULL)");
+ await db.exec(readCanonicalSchema(new URL('../scripts/schema.sql',import.meta.url),'utf8'));
+ 
  const hash=hashPassword(original);
  const users=await sql`INSERT INTO ecg_app_users(app_user_id,email,name,password_hash,must_change_password,active) VALUES ('fixture-admin',${email},'Synthetic',${hash},false,true) RETURNING id`;
  const userId=users[0].id;
