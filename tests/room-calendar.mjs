@@ -15,6 +15,8 @@ assert.deepEqual(matchCalendarRoom({location:'Freizeitraum',cancelled:true},room
 const duplicate=[...rooms,{id:'raum-3',name:'Anderer Raum',calendarAliases:['Zimmer 2']}];
 assert.deepEqual(matchCalendarRoom({location:'Zimmer 2'},duplicate),{status:'ambiguous',roomId:null});
 const events=attachCalendarRooms([{id:'evt1',location:'Freizeitraum'},{id:'evt2',location:'Zimmer 3'}],rooms);
+assert.deepEqual(matchCalendarRoom({location:'Alter Name',googleRoomId:'frei'},rooms),{status:'matched',roomId:'frei'});
+assert.deepEqual(matchCalendarRoom({location:'Freizeitraum',googleRoomId:'removed'},rooms),{status:'unknown',roomId:null});
 assert.equal(events[0].roomId,'frei');
 assert.equal(events[0].roomMatchStatus,'matched');
 assert.equal(events[1].roomId,null);
