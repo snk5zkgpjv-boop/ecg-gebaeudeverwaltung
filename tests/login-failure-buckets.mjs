@@ -13,7 +13,9 @@ const db=new PGlite();
 const observedSql=[];
 const sql=async(strings,...values)=>{
  let query=strings[0];
- for(let i=0;i<values.length;i++)query+='
+ for(let i=0;i<values.length;i++)query+='$'+(i+1)+strings[i+1];
+ observedSql.push(query);
+ return (await db.query(query,values)).rows;
 };
 const response=()=>({code:200,headers:{},setHeader(k,v){this.headers[k]=v},status(c){this.code=c;return this},json(data){this.body=data;return this}});
 const email='fixture@example.test';
