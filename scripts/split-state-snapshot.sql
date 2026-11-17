@@ -1,6 +1,6 @@
 -- ECG: an intentionally non-destructive one-time snapshot of app_state.
 -- Run in a disposable, isolated test database first. Requires the schema in
--- scripts/split-state-schema.sql. This does not switch live application reads.
+-- scripts/schema.sql. This does not switch live application reads.
 -- Refuse re-run on populated shadow tables to prevent overwriting newer data.
 BEGIN;
 DO $$

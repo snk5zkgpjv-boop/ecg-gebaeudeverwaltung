@@ -1,7 +1,7 @@
 import {randomBytes} from 'node:crypto';
 import {neon} from '../../lib/db.js';
-import {ensureAuthSchema,tokenHash} from '../../lib/auth.js';
-import {ensureAuthRateLimitSchema,consumeAuthAttempt} from '../../lib/auth-rate-limit.js';
+import {tokenHash} from '../../lib/auth.js';
+import {consumeAuthAttempt} from '../../lib/auth-rate-limit.js';
 
 const NEUTRAL_RESPONSE={ok:true,message:'Falls ein aktives Konto existiert, wurde eine E-Mail versendet.'};
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -26,8 +26,6 @@ export async function forgotPasswordWithDependencies(req,res,{sql,env=process.en
   }
   const email=String(req.body?.email||'').trim().toLowerCase();
   if(!email||email.length>254)return res.status(200).json(NEUTRAL_RESPONSE);
-  await ensureAuthSchema(sql);
-  await ensureAuthRateLimitSchema(sql);
   if(!await consumeAuthAttempt(sql,'reset',email,3,60)){
     res.setHeader('Retry-After','3600');
     return res.status(429).json({error:'Zu viele Anfragen. Bitte später erneut versuchen.'});

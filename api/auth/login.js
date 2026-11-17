@@ -1,10 +1,10 @@
 import { neon } from '../../lib/db.js';
 import {
-  ensureAuthSchema, verifyPassword, hashPassword, createSession,
+  verifyPassword, hashPassword, createSession,
   appState, profileFor, publicUser,
 } from '../../lib/auth.js';
 import {
-  ensureAuthRateLimitSchema, consumeAuthAttempt, clearLoginAttempts,
+  consumeAuthAttempt, clearLoginAttempts,
   clientIpFromRequest,
 } from '../../lib/auth-rate-limit.js';
 
@@ -21,8 +21,6 @@ export async function loginWithSql(req, res, sql) {
     return res.status(401).json({ error: 'E-Mail-Adresse oder Kennwort ist falsch.' });
   }
 
-  await ensureAuthSchema(sql);
-  await ensureAuthRateLimitSchema(sql);
   const rows = await sql`SELECT * FROM ecg_app_users WHERE lower(email)=${email} AND active=true LIMIT 1`;
   const user = rows[0];
   const passwordMatches = verifyPassword(password, user?.password_hash || DUMMY_PASSWORD_HASH);

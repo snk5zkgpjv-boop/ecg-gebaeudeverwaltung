@@ -30,7 +30,7 @@ Die Tabellen verwenden bewusst zunächst einzelne JSONB-Payloads je Fachdatensat
 ## Phase A: Nicht-destruktive Kopie
 
 1. **Voraussetzung:** Backup und isolierter Restore vollständig erfolgreich, Datenbankziel bestätigt, Schreibzugriffe während der Aufnahme kontrolliert.
-2. `scripts/split-state-schema.sql` erstellt die zusätzlichen Tabellen.
+2. `scripts/schema.sql` erstellt die zusätzlichen Tabellen.
 3. `scripts/split-state-snapshot.sql` kopiert die vier Fachbereiche aus `app_state` innerhalb einer Transaktion, ohne das Original zu ändern. Eine wiederholte Kopie in nichtleere Tabellen wird verweigert.
 4. Die SQL-Prüfung rekonstruiert alle kopierten JSON-Daten samt Fotos und vergleicht sie mit der Quelle. Bei Abweichung wird die Transaktion abgebrochen.
 5. `tests/split-state-snapshot.mjs` führt den Ablauf mit ausschließlich fiktiven Daten in einer isolierten PGlite-Datenbank durch.

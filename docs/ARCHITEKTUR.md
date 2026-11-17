@@ -1,6 +1,6 @@
 # ECG Tool – Architektur und Datenmodell
 
-Stand: 16.11.2026. Technische Bestandsaufnahme anhand des Quellcodes, der SQL-Dateien und des ausschließlich lesend geprüften produktiven Tabellenschemas. Keine personenbezogenen Daten und keine Zugangsdaten.
+Stand: 17.11.2026. Technische Bestandsaufnahme anhand des Quellcodes, der SQL-Dateien und des ausschließlich lesend geprüften produktiven Tabellenschemas. Keine personenbezogenen Daten und keine Zugangsdaten.
 
 ## Systemüberblick
 
@@ -18,7 +18,7 @@ Stand: 16.11.2026. Technische Bestandsaufnahme anhand des Quellcodes, der SQL-Da
 | `ecg_app_users` | Login-Konten und verknüpfte Anwendungsprofil-ID |
 | `ecg_app_sessions` | Sitzungen, gehashte Tokens |
 | `ecg_password_resets` | Einmalige Kennwortrücksetz-Tokens |
-| `ecg_auth_rate_limits` | Datenbankgestützte Anmeldung-/Rücksetzbegrenzung |
+| `ecg_auth_rate_limits` | Datenbankgestützte Anmeldung-/Rücksetzbegrenzung; `account_id` für gehashte Konto-Zähler |
 | `ecg_members` | Separat gespeicherter Mitglieder-Testbereich |
 | `ecg_staff` | Mitarbeitende |
 | `ecg_absences` | Abwesenheiten |
@@ -26,8 +26,14 @@ Stand: 16.11.2026. Technische Bestandsaufnahme anhand des Quellcodes, der SQL-Da
 | `ecg_demo_expenses` | Abgegrenztes Testjournal für Musterauslagen |
 | `ecg_maintenance_documents` | Geschützte Wartungsanleitungen |
 | `ecg_data_repairs` | Reparaturprotokolle für Datenkorrekturen |
+| `ecg_issue_records` | Shadow-Kopie der Mängelobjekte ohne eingebettete Bilddaten |
+| `ecg_issue_photos` | Shadow-Kopie von Mängelfotos |
+| `ecg_room_records` | Shadow-Kopie der Raumobjekte |
+| `ecg_time_records` | Shadow-Kopie der Zeiteinträge |
+| `ecg_kitchen_photos` | Shadow-Kopie von Küchenbildern |
+| `ecg_split_migration_checks` | Prüfprotokoll der Shadow-Schnappschussrevision |
 
-Das konsolidierte leere Bootstrap-Schema steht in `scripts/schema.sql`. Es ersetzt weder die produktive Datenbank noch ein Backup. Der verwaltete Neon-Authentifizierungsbestand ist nicht Bestandteil der unabhängigen Anwendungstabellen.
+Das kanonische Bootstrap-Schema aller **18 Anwendungstabellen** steht ausschließlich in `scripts/schema.sql`. Die älteren Teil-Schemata wurden entfernt. Anfragen (Login, Rücksetzung, Administration, Wartungsdokumente) führen keine DDL mehr aus; für eine neue/leere Datenbank muss das Bootstrap-Schema vor dem ersten Request separat angelegt werden. Es ersetzt weder die produktive Datenbank noch ein Backup. Der verwaltete Neon-Authentifizierungsbestand ist nicht Bestandteil der unabhängigen Anwendungstabellen.
 
 ## Authentifizierung und Rechte
 
