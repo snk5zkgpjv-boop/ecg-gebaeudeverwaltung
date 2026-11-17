@@ -56,7 +56,7 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 .qr-sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
 .qr-label{border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;break-inside:avoid;background:#fff}
 .qr-label img{width:170px;height:170px;object-fit:contain}
-.qr-label b{display:block;margin-top:8px;font-size:var(--ecg-meta)}.qr-label small{display:block;color:var(--muted);margin-top:3px}
+.qr-label b{display:block;margin-top:8px;font-size:var(--ecg-body)}.qr-label small{display:block;color:var(--muted);margin-top:3px}
 .room-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 @media(max-width:760px){.qr-sheet{grid-template-columns:1fr}.room-actions .btn{min-width:0}.brandmark,.brandmark img{width:52px;height:52px}}
 @media print{
@@ -68,6 +68,8 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
   body.qr-print-mode .qr-sheet{grid-template-columns:repeat(3,1fr)!important;gap:8mm!important}
   body.qr-print-mode .qr-label{border:1px solid #ccc!important;padding:6mm!important}
   body.qr-print-mode .qr-label img{width:42mm!important;height:42mm!important}
+  body.qr-print-mode .qr-label b{font-size:13pt!important}
+  body.qr-print-mode .qr-label small{font-size:9pt!important}
 }
 
 
@@ -551,6 +553,8 @@ function editRoom(id){
    <div class="field"><label>Raumname</label><input id="erName" value="${esc(r.name)}"></div>
    <div class="field"><label>Etage</label><select id="erFloor">${['Basisgeschoss','UG','EG','1. OG','2. OG','3. OG','DG','Außen'].map(f=>`<option ${r.floor===f?'selected':''}>${f}</option>`).join('')}</select></div>
    <div class="field"><label>Raumtyp</label><input id="erType" value="${esc(r.type)}"></div>
+   <div class="field"><label>Raumnummer am Türschild</label><input id="erNumber" value="${esc(r.number||'')}" placeholder="z. B. 1.05"></div>
+   <div class="field wide"><label>Weitere Ortsnamen im Google Kalender (je Zeile einer)</label><textarea id="erAliases" rows="3" placeholder="Zimmer Nr. 2">${esc((r.calendarAliases||[]).join('\n'))}</textarea></div>
    <div class="field wide"><label>Hinweis</label><textarea id="erNotes" rows="3">${esc(r.notes||'')}</textarea></div>
    <div class="field wide"><label>Vorgeschlagene Reinigungsaufgaben</label><div id="roomAiTaskPreview" class="notice">${id?'Mit einem neuen KI-Foto kannst du weitere Vorschläge vorbereiten.':'Nach der Fotoauswertung erscheinen die Vorschläge hier.'}</div></div>
  </div>
@@ -561,7 +565,7 @@ function editRoom(id){
 window.editRoom=editRoom;
 let pendingRoomAiTasks=[];
 let pendingRoomPhoto='';
-window.saveRoomEdit=id=>{if(id){const r=state.rooms.find(x=>x.id===id);r.name=$('#erName').value.trim();r.floor=$('#erFloor').value;r.type=$('#erType').value.trim();r.notes=$('#erNotes').value.trim();r.photo=pendingRoomPhoto||r.photo||null;if(pendingRoomAiTasks.length){const existing=new Set(r.tasks.map(x=>x.title.trim().toLowerCase()));r.tasks.push(...pendingRoomAiTasks.filter(x=>x.title&&!existing.has(x.title.trim().toLowerCase())).map(x=>t(x.title,x.interval)))}}else state.rooms.push(room($('#erName').value.trim()||'Neuer Raum',$('#erFloor').value,$('#erType').value.trim()||'Raum',pendingRoomAiTasks.filter(x=>x.title).map(x=>t(x.title,x.interval)),{notes:$('#erNotes').value.trim(),photo:pendingRoomPhoto||null}));pendingRoomAiTasks=[];pendingRoomPhoto='';save();closeModal();render()};
+window.saveRoomEdit=id=>{if(id){const r=state.rooms.find(x=>x.id===id);r.name=$('#erName').value.trim();r.floor=$('#erFloor').value;r.type=$('#erType').value.trim();r.number=$('#erNumber').value.trim();r.calendarAliases=$('#erAliases').value.split('\n').map(s=>s.trim()).filter(Boolean);r.notes=$('#erNotes').value.trim();r.photo=pendingRoomPhoto||r.photo||null;if(pendingRoomAiTasks.length){const existing=new Set(r.tasks.map(x=>x.title.trim().toLowerCase()));r.tasks.push(...pendingRoomAiTasks.filter(x=>x.title&&!existing.has(x.title.trim().toLowerCase())).map(x=>t(x.title,x.interval)))}}else state.rooms.push(room($('#erName').value.trim()||'Neuer Raum',$('#erFloor').value,$('#erType').value.trim()||'Raum',pendingRoomAiTasks.filter(x=>x.title).map(x=>t(x.title,x.interval)),{number:$('#erNumber').value.trim(),calendarAliases:$('#erAliases').value.split('\n').map(s=>s.trim()).filter(Boolean),notes:$('#erNotes').value.trim(),photo:pendingRoomPhoto||null}));pendingRoomAiTasks=[];pendingRoomPhoto='';save();closeModal();render()};
 window.deleteRoom=id=>{if(!can('manageRooms'))return;if(confirm('Raum wirklich löschen?')){state.roomDeleteIds=[...new Set([...(state.roomDeleteIds||[]),id])];state.rooms=state.rooms.filter(r=>r.id!==id);save();closeModal();render()}};
 window.duplicateRoom=id=>{const s=state.rooms.find(r=>r.id===id);const c=JSON.parse(JSON.stringify(s));c.id=uid('room');c.qrId=uid('qr');c.name=s.name+' – Kopie';c.tasks=c.tasks.map(x=>({...x,id:uid('task'),status:'open',lastDone:null}));state.rooms.push(c);save();closeModal();render();openRoom(c.id)};
 window.addTask=id=>{modal(`<h2>Aufgabe hinzufügen</h2><div class="field"><label>Aufgabe</label><input id="atTitle"></div><div class="field" style="margin-top:10px"><label>Intervall</label><select id="atInterval">${Object.entries(intervals).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="saveTask('${id}')">Hinzufügen</button><button class="btn" onclick="closeModal();editRoom('${id}')">Abbrechen</button></div>`)};
@@ -575,7 +579,7 @@ window.showTemplates=()=>modal(`<h2>Raumvorlagen</h2><div class="grid">${state.t
 window.createFromTemplate=id=>{const tp=state.templates.find(t=>t.id===id),r=room(tp.name,tp.floor||'1. OG',tp.type,tp.tasks.map(x=>({...x,id:uid('task'),status:'open',lastDone:null})),{notes:tp.name==='Kinderstundenraum'?'Jeder Kinderstundenraum hat ein eigenes Waschbecken.':''});state.rooms.push(r);save();closeModal();editRoom(r.id)};
 
 function qrUrl(r){const payload=encodeURIComponent(`${location.origin}${location.pathname}?room=${r.qrId}`);return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${payload}`}
-window.showQR=id=>{const r=state.rooms.find(x=>x.id===id);modal(`<h2>QR-Code – ${esc(r.name)}</h2><div class="qrbox"><img src="${qrUrl(r)}" alt="QR-Code"><div class="meta" style="margin-top:10px">Dauerhafte Raum-ID: ${esc(r.qrId)}</div></div><p class="meta">Der QR-Code bleibt gültig, auch wenn der Raum oder die Gruppe später umbenannt wird.</p><div class="row wrap"><button class="btn primary" onclick="window.print()">Drucken</button><button class="btn" onclick="window.open(qrUrl(state.rooms.find(x=>x.id==='${r.id}')),'_blank')">QR-Bild öffnen</button><button class="btn" onclick="closeModal()">Schließen</button></div>`) };
+window.showQR=id=>{const r=state.rooms.find(x=>x.id===id);modal(`<h2>QR-Code – ${esc(r.name)}</h2><div class="qrbox"><b>${esc(r.name)}</b><div class="meta">${esc(r.floor)}${r.number?` · Raum ${esc(r.number)}`:''}</div><img src="${qrUrl(r)}" alt="QR-Code"><div class="meta" style="margin-top:10px">Dauerhafte Raum-ID: ${esc(r.qrId)}</div></div><p class="meta">Der QR-Code bleibt gültig, auch wenn der Raum oder die Gruppe später umbenannt wird.</p><div class="row wrap"><button class="btn primary" onclick="window.print()">Drucken</button><button class="btn" onclick="window.open(qrUrl(state.rooms.find(x=>x.id==='${r.id}')),'_blank')">QR-Bild öffnen</button><button class="btn" onclick="closeModal()">Schließen</button></div>`) };
 window.scanQR=()=>{const code=prompt('QR-ID oder vollständigen Raum-Code eingeben:');if(!code)return;const r=state.rooms.find(r=>code.includes(r.qrId)||r.qrId===code);if(r)openRoom(r.id);else alert('Kein passender Raum gefunden.')};
 window.showAllRoomQRs=()=>{
  const rooms=[...state.rooms].sort((a,b)=>{
@@ -583,7 +587,7 @@ window.showAllRoomQRs=()=>{
    return (order[a.floor]??6)-(order[b.floor]??6)||a.name.localeCompare(b.name,'de');
  });
  modal(`<div class="row print-hide"><div><h2>QR-Codes – Räume</h2><div class="meta">${rooms.length} Raum-QR-Codes</div></div><div class="spacer"></div><button class="btn primary" onclick="printRoomQRSheet()">Drucken / als PDF sichern</button><button class="btn" onclick="exportRoomQRList()">Liste exportieren</button></div>
- <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><img src="${qrUrl(r)}" alt="QR ${esc(r.name)}"><b>${esc(r.name)}</b><small>${esc(r.floor)} · ${esc(r.type)}</small><small>Raum-ID: ${esc(r.qrId)}</small></div>`).join('')}</div>
+ <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><img src="${qrUrl(r)}" alt="QR ${esc(r.name)}"><b>${esc(r.name)}</b><small>${esc(r.floor)}${r.number?` · Raum ${esc(r.number)}`:''} · ${esc(r.type)}</small><small>Raum-ID: ${esc(r.qrId)}</small></div>`).join('')}</div>
  <div class="row print-hide" style="margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)
 };
 window.printRoomQRSheet=()=>{
