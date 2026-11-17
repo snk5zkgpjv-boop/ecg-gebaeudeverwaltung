@@ -48,7 +48,8 @@ try{
    assert.equal(r.code,403,'finance role with no rights cannot read issue photos');
    r=await make('test-admin','../bad');
    assert.equal(r.code,400,'invalid issue ID is rejected');
-   r=await stateWithSql({method:'GET',query:{issuePhoto:'issue_fixture'},headers:{}},response(),sql);
+   r=response();
+   await stateWithSql({method:'GET',query:{issuePhoto:'issue_fixture'},headers:{}},r,sql);
    assert.equal(r.code,401,'no session cannot read photo');
  }
  console.log('PASS: real media handler: both sources, auth, finance authorization, invalid ID, no-store, binary JPEG.');
