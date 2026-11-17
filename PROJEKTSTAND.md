@@ -1,6 +1,17 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 16.11.2026 (PUBLIC_APP_URL für Reset-Mail in Prüfung; historische Nachweise nachfolgend).
+Stand: 17.11.2026 (Raum-Kalender-Verknüpfung als Feature-Branch in Prüfung; weitere historische Nachweise nachfolgend).
+
+## Räume, Kalender und Reinigung – Entwicklung 17.11.2026
+
+**Feature-Branch (nicht produktiv):** `feature/room-calendar-cleaning-20261117`.
+Im bestehenden Raumformular sind eine optionale Türschild-Raumnummer und alternative Google-Ortsbezeichnungen ergänzt. Der bestehende QR-Identifier bleibt unverändert; QR-Einzel- und Sammeldruck zeigen die Raumdaten mit an. Das tatsächliche Türschild-Originaldesign konnte noch nicht anhand der früheren Fotos abgeglichen werden.
+
+Der Kalender-Synchronisationsendpunkt ermittelt anhand **exakter** normalisierter Ortsnamen und hinterlegter Aliasse eindeutige ECG-Raum-IDs. Mehrdeutige, unbekannte oder leere Angaben werden nicht geraten; abgesagte Termine erzeugen keine Raumzuordnung. Bei unbekannten Orten kann ein Benutzer mit Kalender- und Raumverwaltungsrecht einen Alias zuordnen, sofern er nicht bereits einem anderen Raum gehört. Die App bietet nach beendeter zugeordneter Raumnutzung eine zusammengefasste Kontrolle pro Raum und Kalenderwoche als Aufgabe an. Sie zeigt **geplante** Nutzung, keinen tatsächlichen Anwesenheitsnachweis. Kontrollen sind innerhalb eines Siebentage-Rückblickfensters sichtbar; eine dauerhafte historische Reinigungsliste ist noch nicht implementiert.
+
+Für Termine über die App steht ein Raum-Dropdown und ein neuer, serverseitig geschützter POST-Endpunkt `/api/calendar-event` bereit. Schreibzugriffe sind **standardmäßig deaktiviert**, bis `GOOGLE_CALENDAR_WRITE_ENABLED=true`, eine zugängliche `GOOGLE_CALENDAR_ID` und ein entsprechend freigegebenes Google-Dienstkonto eingerichtet und überprüft sind. Der Endpunkt prüft auf bereits bekannte Raumbelegungen innerhalb des Zeitfensters, kann aber keine Reservierung bei parallel schreibenden Google-Nutzern atomar garantieren. Eine bloße freie Ortsangabe bleibt nicht bindend.
+
+Technischer Test im Branch: `tests/room-calendar.mjs` deckt Alias-Auflösung, fehlende Angaben, Mehrdeutigkeiten und Absagen ab. **CI, Gesamt- und Browserregression, echte Google-Schreibrechte sowie Produktivdeployment sind noch nicht bestätigt**. Kein produktiver Google-Termin oder Datenbestand wurde für diese Entwicklung verändert.
 
 ## Kennwort-Reset: ausschließlich konfigurierte öffentliche HTTPS-Adresse – 16.11.2026
 
