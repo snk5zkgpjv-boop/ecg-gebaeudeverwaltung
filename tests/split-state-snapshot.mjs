@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 
-const schema = await readFile(new URL('../scripts/split-state-schema.sql', import.meta.url), 'utf8');
+const schema = await readFile(new URL('../scripts/schema.sql', import.meta.url), 'utf8');
 const migrate = await readFile(new URL('../scripts/split-state-snapshot.sql', import.meta.url), 'utf8');
 const db = new PGlite();
 const source = {
@@ -20,9 +20,8 @@ const source = {
   eventUsageAgreements: [{id:'private-fixture'}]
 };
 try {
-  await db.exec("CREATE TABLE app_state (id text PRIMARY KEY, data jsonb NOT NULL, revision bigint NOT NULL, updated_at timestamptz DEFAULT now())");
-  await db.query('INSERT INTO app_state(id,data,revision) VALUES($1,$2::jsonb,$3)', ['main',JSON.stringify(source),42]);
   await db.exec(schema);
+  await db.query('INSERT INTO app_state(id,data,revision) VALUES($1,$2::jsonb,$3)', ['main',JSON.stringify(source),42]);
   await db.exec(migrate);
   const get = async sql => (await db.query(sql)).rows;
   const migration = (await get('SELECT * FROM ecg_split_migration_checks'))[0];
