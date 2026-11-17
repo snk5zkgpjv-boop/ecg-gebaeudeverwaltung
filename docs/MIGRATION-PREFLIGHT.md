@@ -1,10 +1,10 @@
 # ECG – migrationsfähige Betriebsumgebung (Vorabprüfung)
 
-Stand: 16.11.2026. Vorbereitung ohne Umschaltung oder reale Datenübertragung.
+Stand: 17.11.2026. Vorbereitung ohne Umschaltung oder reale Datenübertragung.
 
 ## Was dieser neue Prüfweg leistet
 
-`scripts/migration-preflight.sh` führt eine reine Metadatenprüfung auf PostgreSQL aus: Serverversion, vorhandene Schemata, Tabellen, ungefähre Zeilenzahlen aus Statistiken, Tabellengrößen, Erweiterungen, Constraints und Größen der JSON-Bereiche in `app_state`. Es gibt keine personenbezogenen Tabellenzeilen aus. Die Verbindung setzt `default_transaction_read_only=on` und die SQL-Datei zusätzlich eine lesende Transaktion. Fehler führen zum Abbruch.
+`scripts/migration-preflight.sh` führt eine reine Metadatenprüfung auf PostgreSQL aus: Serverversion, vorhandene Schemata, Tabellen, ungefähre Zeilenzahlen aus Statistiken, Tabellengrößen, Erweiterungen, Constraints und Größen der JSON-Bereiche in `app_state`. Es gibt keine personenbezogenen Tabellenzeilen aus. Der Shell-Preflight vergleicht anschließend rein lesend die Tabellennamen aus `scripts/schema.sql` gegen `public.pg_tables` und bricht mit `MISSING`/Exit-Code 4 ab, falls eine der aktuell 18 Tabellen fehlt. Die Verbindung setzt `default_transaction_read_only=on` und die SQL-Datei zusätzlich eine lesende Transaktion. Fehler führen zum Abbruch.
 
 Beispiel auf einem betreiberkontrollierten Rechner mit einer separaten, nur lokal lesbaren PostgreSQL-Service-Konfiguration:
 
@@ -13,7 +13,7 @@ export PGSERVICE=ecg_inventory_readonly
 bash scripts/migration-preflight.sh > ecg-private-inventory.txt
 ```
 
-Service-Datei, Kennwort, Servernamen, Berichte und Rohdaten nicht ins Repository oder in öffentliche CI-Artefakte schreiben. Ein Produktionsbericht ist intern zu verwahren; dieser PR führt den Prüfweg nicht gegen die produktive Datenbank aus.
+Service-Datei, Kennwort, Servernamen, Berichte und Rohdaten nicht ins Repository oder in öffentliche CI-Artefakte schreiben. Ein Produktionsbericht ist intern zu verwahren. **Vor Merge von PR #86** muss der Betreiber den Shell-Bericht aus der Produktion bestätigen: `PASS: all 18 tables from scripts/schema.sql exist in public`. Ein anderweitiger read-only Tabellennamenabgleich ersetzt diesen Betreiber-Gate-Nachweis nicht.
 
 ## Gesicherte Entscheidungen aus dem Betreiberplan
 
