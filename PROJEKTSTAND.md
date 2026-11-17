@@ -1,6 +1,12 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 17.11.2026 (Kanonisches 18-Tabellen-Schema im PR #86; Produktionsfreigabe gesperrt).
+Stand: 17.11.2026 (Mängel Phase B als separater, standardmäßig inaktiver Tabellenpfad in Prüfung).
+
+## Mängel Phase B – Tabellenpfad mit Rückweg (17.11.2026, PR in Prüfung)
+
+Voraussetzung erfüllt: echter 9,49-MB-Produktions-`pg_dump` und `pg_restore` in eine zuvor leere getrennte Neon-Testdatenbank. Für alle 18 Tabellen einschließlich `ecg_issue_records` und `ecg_issue_photos` stimmten Zeilenzahlen und vollständige Inhaltshashes. Login, Sitzungs- und tatsächlicher `/api/state`-GET/PUT-Handler wurden am Restore-Ziel mit synthetischen Daten erfolgreich getestet; die Änderungen wurden zurückgerollt. Diese Restore-Kopie bleibt bis Abschluss des PRs erhalten.
+
+**Nur Entwicklungsbranch:** Mit `ISSUES_SOURCE=tables` werden Mängellisten, gesicherte Fotos, Erstellen, Löschen und einzelne Änderungen über die Mängeltabellen verarbeitet. `PATCH updateIssue` verwendet eine Feld-Whitelist und keine Foto-Bytes. `jsonb` bleibt Standard; die produktive Variable wird nicht verändert. Veralteter allgemeiner PUT darf Mängel im Tabellenmodus nicht überschreiben. Getrennte, transaktionale SQL-Skripte für den frischen Vorwärtsabgleich und die Rückkopie sind Bestandteil des PRs. Eine echte produktive Umschaltung benötigt einen erneuten Dump, vollständigen Schreibstopp, neuen Foto-/Mängel-Inhaltsvergleich, Vercel-Redeploy und iPhone-Fachprüfung. Rollen- und parallele Änderungsprüfungen laufen ausschließlich mit synthetischen Daten; die abschließenden Tests und die Vorschau sind vor dem Merge zu dokumentieren.
 
 ## Schema-Source-of-Truth und DDL-Entfernung – 17.11.2026
 
