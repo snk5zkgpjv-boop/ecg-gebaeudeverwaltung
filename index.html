@@ -769,7 +769,8 @@ window.saveIssueEdit=async id=>{
  if(issuesTableMode){
   await saveIssueFields(id,changes,()=>{pendingPhoto=null;closeModal();openIssue(id)},typeof photo==='string'?photo:undefined);
  }else{
-  Object.assign(i,{...changes,photo});setIssueStatusValue(i,changes.status);pendingPhoto=null;save();closeModal();openIssue(id);
+  const {status,...details}=changes;
+  Object.assign(i,{...details,photo});setIssueStatusValue(i,status);pendingPhoto=null;save();closeModal();openIssue(id);
  }
 };
 window.setIssue=(id,v)=>saveIssueFields(id,{status:v},()=>render());
