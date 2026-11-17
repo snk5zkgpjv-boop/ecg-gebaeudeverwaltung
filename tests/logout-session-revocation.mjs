@@ -1,6 +1,7 @@
+import {readFileSync as readCanonicalSchema} from 'node:fs';
 import assert from 'node:assert/strict';
 import {PGlite} from '@electric-sql/pglite';
-import {createSession,ensureAuthSchema,hashPassword,tokenHash} from '../lib/auth.js';
+import {createSession,hashPassword,tokenHash} from '../lib/auth.js';
 import logoutHandler,{logoutWithSql} from '../api/auth/logout.js';
 import {sessionWithSql} from '../api/auth/session.js';
 
@@ -20,8 +21,7 @@ const request=(method,cookie='')=>({method,headers:{cookie}});
 const issuedCookie=res=>res.headers['Set-Cookie'].split(';')[0];
 
 try {
-  await ensureAuthSchema(sql);
-  await db.exec("CREATE TABLE app_state (id text PRIMARY KEY,data jsonb NOT NULL)");
+  await db.exec(readCanonicalSchema(new URL('../scripts/schema.sql',import.meta.url),'utf8'));
   const passwordHash=hashPassword('synthetic-only-password');
   const email='session-fixture@example.test';
   const [user]=await sql`INSERT INTO ecg_app_users(app_user_id,email,name,password_hash,must_change_password,active)
