@@ -122,6 +122,7 @@ async function readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigure
     end: eventTime(item.end, Boolean(item.end?.date)),
     ...(item.start?.date?{startDate:item.start.date,endDateExclusive:item.end?.date}:{}),
     location: item.location || '',
+    googleRoomId: item.extendedProperties?.private?.ecgRoomId || '',
     description: item.description || '',
     cancelled: item.status === 'cancelled',
     allDay: Boolean(item.start?.date),
