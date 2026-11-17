@@ -1,12 +1,11 @@
 import {neon} from '../../lib/db.js';
-import {ensureAuthSchema,tokenHash,hashPassword} from '../../lib/auth.js';
-import {ensureAuthRateLimitSchema,clearLoginAttempts} from '../../lib/auth-rate-limit.js';
+import {tokenHash,hashPassword} from '../../lib/auth.js';
+import {clearLoginAttempts} from '../../lib/auth-rate-limit.js';
 
 export async function resetPasswordWithSql(req,res,sql){
   if(req.method!=='POST')return res.status(405).json({error:'Methode nicht erlaubt'});
   const token=String(req.body?.token||''),pw=String(req.body?.newPassword||'');
   if(pw.length<10)return res.status(400).json({error:'Das Kennwort muss mindestens 10 Zeichen haben.'});
-  await ensureAuthSchema(sql);
   // One statement claims the token, changes the password and revokes sessions.
   // A concurrent request waits on the token row and rechecks used_at afterwards.
   const rows=await sql`WITH claimed AS (
@@ -20,7 +19,6 @@ export async function resetPasswordWithSql(req,res,sql){
     DELETE FROM ecg_app_sessions WHERE user_id IN (SELECT id FROM changed)
   ) SELECT id,email FROM changed`;
   if(!rows[0])return res.status(400).json({error:'Der Link ist ungültig oder abgelaufen.'});
-  await ensureAuthRateLimitSchema(sql);
   await clearLoginAttempts(sql,rows[0].email);
   return res.status(200).json({ok:true});
 }
