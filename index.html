@@ -996,10 +996,34 @@ function calendarView(eventsOnly=false){
  const settings=`<div class="section-title"><h2>Kalender & Veranstaltungen</h2></div>
  <div class="calendar-sync"><b>Google Kalender:</b><span>${esc(calendarName)}</span><div class="spacer"></div><span class="pill ${lastSync?'ok':'warn'}">${lastSync?'synchronisiert':'Einrichtung erforderlich'}</span></div>
  <div class="notice" style="margin-top:10px"><b>${lastSync?`Letzte Aktualisierung: ${new Date(lastSync).toLocaleString('de-DE')}`:'Noch keine erfolgreiche Aktualisierung'}</b><br>Termine werden beim Öffnen automatisch und über die Schaltfläche sofort aktualisiert.</div>
- <div class="row wrap" style="margin-top:10px"><button id="calendarSyncButton" class="btn primary" onclick="syncGoogleCalendar()">Jetzt synchronisieren</button></div>`;
+ <div class="row wrap" style="margin-top:10px"><button id="calendarSyncButton" class="btn primary" onclick="syncGoogleCalendar()">Jetzt synchronisieren</button>${admin?`<button class="btn" onclick="createCalendarEvent()">+ Termin mit Raum</button>`:''}</div>`;
  return `${eventsOnly?'':settings}<div class="section-title"><h2>Veranstaltungen</h2><button class="btn tiny" onclick="render({calendarToday:true})">Heute</button><div class="spacer"></div>${admin?'<button class="btn" onclick="showEventRules()">Aufgabenregeln</button>':''}</div>
  <div class="card calendar-card">${events.length?events.map(ev=>{const day=ev.allDay?String(ev.start).slice(0,10):calendarDayKey(ev.start);const marker=!todayInserted&&day>=today?todayMarker:'';if(marker)todayInserted=true;const d=eventDateLabel(ev),rule=eventRuleFor(ev),check=eventChecklistFor(ev.id),p=check?checklistProgress(check):null;return `${marker}<div class="event-row"><div class="event-date">${d.day}<span>${d.mon}</span></div><div class="event-main"><div class="event-title">${esc(ev.title)}</div><div class="event-meta">${new Date(ev.start).toLocaleString('de-DE',{weekday:'short',hour:'2-digit',minute:'2-digit'})} – ${new Date(ev.end).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}${ev.location?` · ${esc(ev.location)}`:''}${ev.roomId?` · <span class="pill ok">Raum zugeordnet</span>`:ev.location?` · <span class="pill warn">Raumzuordnung offen</span>`:''}</div>${ev.description?`<details><summary>Zusatzinformationen</summary><p style="white-space:pre-wrap">${esc(calendarPlainDescription(ev.description))}</p></details>`:''}${rule?`<div class="event-task-source">Folgeaufgaben: ${esc(rule.label)}</div>`:''}${!ev.cancelled?`<div class="event-actions">${admin&&!ev.roomId?`<button class="btn tiny" onclick="assignCalendarRoom(${esc(JSON.stringify(ev.id))})">Raum zuordnen</button>`:''}${admin?`<button class="btn tiny" onclick="openRunSheet(${esc(JSON.stringify(ev.id))})">Ablaufplan</button>`:''}${check?`<button class="btn tiny primary" onclick="openEventChecklist('${check.id}')">Abnahmeliste ${p.done}/${p.total}</button><button class="btn tiny" onclick="printEventChecklist('${check.id}')">PDF / Drucken</button><button class="btn tiny soft" onclick="createEventAgreement('${ev.id}')">Nutzungsvereinbarung</button>`:`<button class="btn tiny" onclick="createEventChecklist('${ev.id}')">+ Aufgaben-/Abnahmeliste</button><button class="btn tiny soft" onclick="createEventAgreement(${esc(JSON.stringify(ev.id))})">Nutzungsvereinbarung</button>`}</div>`:''}</div><span class="pill ${ev.cancelled?'warn':check?'ok':rule?'ok':''}">${ev.cancelled?'fällt aus':check?'Liste angelegt':rule?'automatisch':'ohne Regel'}</span></div>`}).join(''):'<div class="empty">Noch keine Kalendertermine synchronisiert.</div>'}${todayInserted?'':todayMarker}</div>`
 }
+window.createCalendarEvent=()=>{
+ if(!can('manageCalendar'))return;
+ const rooms=[...state.rooms].sort((a,b)=>a.name.localeCompare(b.name,'de'));
+ if(!rooms.length){alert('Bitte zuerst Räume in der Gebäudeansicht anlegen.');return}
+ const options=rooms.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.floor)+' – '+esc(r.name)+(r.number?' (Raum '+esc(r.number)+')':'')+'</option>').join('');
+ modal('<h2>Termin mit Raum anlegen</h2><div class="formgrid"><div class="field wide"><label>Termin</label><input id="calendarNewTitle" maxlength="180" placeholder="z. B. Jugendkreis"></div><div class="field"><label>Beginn</label><input id="calendarNewStart" type="datetime-local"></div><div class="field"><label>Ende</label><input id="calendarNewEnd" type="datetime-local"></div><div class="field wide"><label>Raum</label><select id="calendarNewRoom">'+options+'</select></div></div><p class="meta">Der Termin wird direkt im ECG-Google-Kalender angelegt, sofern der Google-Schreibzugriff freigegeben ist. Bei einer Belegung wird nicht gebucht.</p><div id="calendarCreateStatus" class="meta"></div><div class="row wrap" style="margin-top:12px"><button id="calendarCreateButton" class="btn primary" onclick="saveCalendarEvent()">In Google Kalender speichern</button><button class="btn" onclick="closeModal()">Abbrechen</button></div>');
+};
+window.saveCalendarEvent=async()=>{
+ if(!can('manageCalendar'))return;
+ const title=$('#calendarNewTitle')?.value.trim(),start=$('#calendarNewStart')?.value,end=$('#calendarNewEnd')?.value,roomId=$('#calendarNewRoom')?.value;
+ const status=$('#calendarCreateStatus'),button=$('#calendarCreateButton');
+ if(!title||!start||!end||!roomId||!(new Date(end)>new Date(start))){if(status)status.textContent='Bitte Titel, Raum und einen gültigen Zeitraum eingeben.';return}
+ button.disabled=true;
+ try{
+   const response=await fetch('/api/calendar-event',{method:'POST',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify({title,start:new Date(start).toISOString(),end:new Date(end).toISOString(),roomId})});
+   const body=await response.json();
+   if(!response.ok)throw Error(body.error||'Termin konnte nicht erstellt werden.');
+   closeModal();
+   await syncGoogleCalendar();
+ }catch(error){
+   if(status)status.textContent=error.message||'Speichern fehlgeschlagen.';
+   if(button)button.disabled=false;
+ }
+};
 window.assignCalendarRoom=eventId=>{
  if(!can('manageCalendar')||!can('manageRooms'))return;
  const ev=state.calendarEvents.find(x=>x.id===eventId);
