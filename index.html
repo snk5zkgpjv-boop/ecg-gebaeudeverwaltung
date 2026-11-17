@@ -54,9 +54,15 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
 .room-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 .room-actions .btn{flex:1;min-width:88px}
 .qr-sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
-.qr-label{border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;break-inside:avoid;background:#fff}
-.qr-label img{width:170px;height:170px;object-fit:contain}
-.qr-label b{display:block;margin-top:8px;font-size:var(--ecg-body)}.qr-label small{display:block;color:var(--muted);margin-top:3px}
+.qr-label{border:1px solid #bec2c0;border-radius:2px;padding:12px;text-align:center;break-inside:avoid;background:#fff;min-height:180px;display:grid;grid-template-rows:auto 1fr auto;gap:7px;position:relative;color:#202124}
+.qr-label-header{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #777;padding-bottom:4px}
+.qr-label-number{font-size:36px;font-weight:800;color:#8d153f;line-height:1}
+.qr-label-brand{font-size:10px;text-align:right;line-height:1.15}
+.qr-label-name{font-size:19px;font-weight:550;line-height:1.15;align-self:center;overflow-wrap:anywhere}
+.qr-label-footer{display:flex;justify-content:space-between;align-items:end;gap:8px}
+.qr-label-qr{width:68px;height:68px;object-fit:contain;display:block;flex:none}
+.qr-label-meta{font-size:10px;text-align:right;color:#62666b;overflow-wrap:anywhere}
+.qr-label small{display:block;margin-top:3px}
 .room-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 @media(max-width:760px){.qr-sheet{grid-template-columns:1fr}.room-actions .btn{min-width:0}.brandmark,.brandmark img{width:52px;height:52px}}
 @media print{
@@ -66,10 +72,11 @@ color:#202124;border-top:4px solid var(--accent);min-height:150px;display:flex;f
   body.qr-print-mode .modal{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;border-radius:0!important;box-shadow:none!important}
   body.qr-print-mode .print-hide{display:none!important}
   body.qr-print-mode .qr-sheet{grid-template-columns:repeat(3,1fr)!important;gap:8mm!important}
-  body.qr-print-mode .qr-label{border:1px solid #ccc!important;padding:6mm!important}
-  body.qr-print-mode .qr-label img{width:42mm!important;height:42mm!important}
-  body.qr-print-mode .qr-label b{font-size:13pt!important}
-  body.qr-print-mode .qr-label small{font-size:9pt!important}
+  body.qr-print-mode .qr-label{border:0.4mm solid #aaa!important;padding:4mm!important;min-height:48mm!important;break-inside:avoid!important}
+  body.qr-print-mode .qr-label-number{font-size:25pt!important;color:#8d153f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.qr-print-mode .qr-label-name{font-size:13pt!important}
+  body.qr-print-mode .qr-label-qr{width:19mm!important;height:19mm!important}
+  body.qr-print-mode .qr-label-meta{font-size:7pt!important}
 }
 
 
@@ -608,7 +615,7 @@ window.showAllRoomQRs=()=>{
    return (order[a.floor]??6)-(order[b.floor]??6)||a.name.localeCompare(b.name,'de');
  });
  modal(`<div class="row print-hide"><div><h2>QR-Codes – Räume</h2><div class="meta">${rooms.length} Raum-QR-Codes</div></div><div class="spacer"></div><button class="btn primary" onclick="printRoomQRSheet()">Drucken / als PDF sichern</button><button class="btn" onclick="exportRoomQRList()">Liste exportieren</button></div>
- <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><img src="${qrUrl(r)}" alt="QR ${esc(r.name)}"><b>${esc(r.name)}</b><small>${esc(r.floor)}${r.number?` · Raum ${esc(r.number)}`:''} · ${esc(r.type)}</small><small>Raum-ID: ${esc(r.qrId)}</small></div>`).join('')}</div>
+ <div class="qr-sheet">${rooms.map(r=>`<div class="qr-label"><div class="qr-label-header"><span class="qr-label-number">${esc(r.number||'–')}</span><span class="qr-label-brand">Evangeliums<br>Christengemeinde</span></div><div class="qr-label-name">${esc(r.name)}</div><div class="qr-label-footer"><img class="qr-label-qr" src="${qrUrl(r)}" alt="QR ${esc(r.name)}"><div class="qr-label-meta">${esc(r.floor)} · ${esc(r.type)}<small>QR-ID: ${esc(r.qrId)}</small></div></div></div>`).join('')}</div>
  <div class="row print-hide" style="margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button></div>`)
 };
 window.printRoomQRSheet=()=>{
