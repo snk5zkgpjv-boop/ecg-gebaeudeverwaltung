@@ -57,7 +57,7 @@ export default async function handler(req,res){
       listUrl.searchParams.set('pageToken',body.nextPageToken);
     }while(true);
     if(conflicts.length)return res.status(409).json({error:'Der Raum ist im ausgewählten Zeitraum bereits belegt.'});
-    const event={summary:title.trim(),location:room.name,description:'',start:{dateTime:new Date(from).toISOString(),timeZone:'Europe/Berlin'},end:{dateTime:new Date(to).toISOString(),timeZone:'Europe/Berlin'}};
+    const event={summary:title.trim(),location:room.name,description:'',extendedProperties:{private:{ecgRoomId:room.id}},start:{dateTime:new Date(from).toISOString(),timeZone:'Europe/Berlin'},end:{dateTime:new Date(to).toISOString(),timeZone:'Europe/Berlin'}};
     const created=await fetch(url,{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(event),signal:AbortSignal.timeout(15000)});
     if(!created.ok){console.error('google calendar event create failed',created.status);return res.status(502).json({error:'Google Kalender hat den Termin nicht angenommen.'});}
     const body=await created.json();
