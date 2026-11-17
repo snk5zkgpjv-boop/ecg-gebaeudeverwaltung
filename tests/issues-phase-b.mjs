@@ -105,6 +105,8 @@ try{
  assert.equal(deleteByClean.code,403,'cleaner cannot delete');
  assert.equal((await call('admin','PATCH',{deleteIssueId:fresh})).code,200,'authorized delete');
  assert.equal(await readTableIssue(sql,fresh),null);
+ assert.equal((await call('admin','PATCH',{deleteIssueId:fresh})).code,200,'idempotent delete retry');
+ assert.equal((await call('cleaner','PATCH',{createIssue:creation})).code,409,'deleted issue cannot be resurrected');
 
  // Capture table changes (including the original jpeg), and round-trip
  // back into JSONB. The operator scripts are never used on production.
