@@ -1,6 +1,14 @@
 # Projektstand – ECG Gebäudeverwaltungs-App
 
-Stand: 17.11.2026 (profilbezogene Authentifizierung für Kalender, Benutzerverwaltung und Sprache in Prüfung; historische Nachweise nachfolgend).
+Stand: 17.11.2026 (Kanonisches 18-Tabellen-Schema im PR #86; Produktionsfreigabe gesperrt).
+
+## Schema-Source-of-Truth und DDL-Entfernung – 17.11.2026
+
+**PR #86: Entwicklungsbranch, kein Merge und keine produktive Schemaänderung.** Alle 18 Anwendungstabellen einschließlich sechs Split-State-Shadow-Tabellen sind in `scripts/schema.sql` zusammengeführt; die Spalte `ecg_auth_rate_limits.account_id` und ihr Index sind ergänzt. Die sechs früheren Domain-Schema-Dateien und `scripts/split-state-schema.sql` sind im Branch entfernt. Laufzeit-Handler (Anmeldung, Rücksetzung, Admin-Benutzer, Wartungsdokumente) rufen keine DDL-Erstellung mehr auf. Die Schema-Helfer selbst bleiben für isolierte Tests erhalten.
+
+Der Bootstrap-, Restore-, Split-State- und SQL-PREPARE-Test wird ausschließlich aus `scripts/schema.sql` aufgebaut; der Restore-Vergleich erfasst die Tabelleliste automatisch. Für den realen Login wird im SQL-Protokoll ausdrücklich geprüft, dass keine CREATE/ALTER/DROP-Anweisung erfolgt. `docs/DATENSICHERUNG.md`, `docs/ARCHITEKTUR.md` und die read-only Preflight-Tabellenprüfung sind angepasst.
+
+**Merge-Gate:** Die reine Produktions-Metadatenabfrage fand 18 benannte Anwendungstabellen und die Rate-Limit-Spalte `account_id` vor. Die vorgeschriebene ausdrücklich bestätigte Betreiberausgabe von `scripts/migration-preflight.sh` liegt noch nicht vor; PR daher nicht mergen. Vor Merge sind zudem vollständige GitHub-CI-, Browser- und Vercel-Prüfungen nötig. Der PR führt keinerlei produktive Datenbankänderung aus. Nach Merge muss eine leere Datenbank vor Start separat aus dem kanonischen Schema aufgebaut werden; fehlende Tabellen führen dann zu echten Anfragefehlern.
 
 ## Profilbezogene Authentifizierung ohne vollständigen app_state-Transfer – 17.11.2026
 
