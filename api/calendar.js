@@ -4,6 +4,7 @@ import { neon } from '../lib/db.js';
 import {serviceAccountAccessToken} from '../lib/google-calendar-token.js';
 import { createHash } from 'node:crypto';
 import ical from 'node-ical';
+import { attachCalendarRooms } from '../lib/room-calendar.js';
 import { requireUser } from '../lib/auth.js';
 
 
@@ -171,7 +172,10 @@ export default async function handler(req, res) {
     const result = icalUrl
       ? await readIcalCalendar(icalUrl, rangeStart, rangeEnd)
       : await readGoogleCalendarApi(calendarId, apiKey, serviceAccountConfigured, rangeStart, rangeEnd);
-    const { events, calendarName } = result;
+    const { calendarName } = result;
+    // Read the authoritative room IDs and aliases; never infer IDs from a partial name.
+    const roomRows = await sql`SELECT data->'rooms' AS rooms FROM app_state WHERE id='main'`;
+    const events = attachCalendarRooms(result.events, roomRows[0]?.rooms || []);
 
     if(week){res.setHeader('Cache-Control','private, no-store');return res.json({events:events.map(({title,start,allDay,cancelled})=>({title,start,allDay,cancelled}))});}
     const syncedAt = new Date().toISOString();
