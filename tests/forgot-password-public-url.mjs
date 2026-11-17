@@ -1,6 +1,6 @@
+import {readFileSync as readCanonicalSchema} from 'node:fs';
 import assert from 'node:assert/strict';
 import {PGlite} from '@electric-sql/pglite';
-import {ensureAuthSchema} from '../lib/auth.js';
 import {forgotPasswordWithDependencies,resetBaseUrl} from '../api/auth/forgot-password.js';
 
 const db=new PGlite();
@@ -26,7 +26,7 @@ async function run(email,env=goodEnv,sendMail=send){
  return res;
 }
 try{
- await ensureAuthSchema(sql);
+ await db.exec(readCanonicalSchema(new URL('../scripts/schema.sql',import.meta.url),'utf8'));
  await sql`INSERT INTO ecg_app_users(app_user_id,email,name,password_hash,must_change_password,active)
    VALUES('fixture-user',${known},'Synthetic <Tester>', 'synthetic-hash',false,true)`;
  const configured=await run(known);
